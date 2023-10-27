@@ -1,0 +1,30 @@
+{
+  "name": "rukhak-backend",
+  "version": "1.0.0",
+  "description": "Backend for rukhak app",
+  "main": "server.js",
+  "author": "DnD team",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon ./src/server.js",
+    "lint": "eslint ./src/ --ignore-path .gitignore --ignore-pattern internals/scripts"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-validator": "^7.0.1",
+    "http-status": "^1.7.3",
+    "mongoose": "^7.6.3",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.52.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^5.0.1",
+    "nodemon": "^3.0.1",
+    "prettier": "^3.0.3"
+  }
+}
