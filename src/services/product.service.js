@@ -1,5 +1,5 @@
 import Product from "../models/product.model.js";
-import AppError from "../utils/AppError.js";
+import APIError from "../utils/APIError.js";
 
 const productService = {
   async createProduct(productInput) {
@@ -10,7 +10,11 @@ const productService = {
   async getProduct(productId) {
     const product = Product.findById(productId);
     if (!product) {
-      return next(AppError("There is no document found with this ID.", 404));
+      throw new APIError({
+        status: 404,
+        message: "There is no document found with this ID.",
+        errors,
+      });
     }
     return product;
   },
@@ -21,7 +25,11 @@ const productService = {
       runValidators: true,
     });
     if (!product) {
-      return next(AppError("There is no document found with this ID.", 404));
+      throw new APIError({
+        status: 404,
+        message: "There is no document found with this ID.",
+        errors,
+      });
     }
     return product;
   },
@@ -29,13 +37,25 @@ const productService = {
   async deleteProduct(productId) {
     const product = Product.findByIdAndRemove(productId);
     if (!product) {
-      return next(AppError("There is no document found with this ID.", 404));
+      throw new APIError({
+        status: 404,
+        message: "There is no document found with this ID.",
+        errors,
+      });
     }
     return product;
   },
 
   async getAllProducts() {
-    return Product.find();
+    const products = await Product.find();
+    if (products.length === 0) {
+      throw new APIError({
+        status: 404,
+        message: "There is no document found.",
+        errors,
+      });
+    }
+    return products;
   },
 };
 

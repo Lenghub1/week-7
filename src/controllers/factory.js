@@ -1,5 +1,5 @@
 import catchAsync from "../utils/catchAsync.js";
-import AppError from "../utils/AppError.js";
+import AppError from "../utils/APIError.js";
 
 const factory = {
   create(createDocService) {
@@ -22,9 +22,7 @@ const factory = {
   updateById(updateDocService) {
     return catchAsync(async (req, res, next) => {
       const updateDoc = await updateDocService(req.params.id, req.body);
-      if (!doc) {
-        return next(AppError("There is no document found with this ID.", 404));
-      }
+
       res.json({
         message: "Data Updated",
         data: { updateDoc },
@@ -35,9 +33,7 @@ const factory = {
   deleteById(deleteDocService) {
     return catchAsync(async (req, res, next) => {
       const doc = await deleteDocService(req.params.id);
-      if (doc === undefined) {
-        return next(AppError("There is no document found with this ID.", 404));
-      }
+
       res.json({
         message: "Document Deleted",
         data: null,
