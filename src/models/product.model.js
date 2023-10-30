@@ -18,7 +18,6 @@ const productSchema = new mongoose.Schema(
     unitPrice: {
       type: Number,
       required: true,
-      min: 1,
     },
     unit: {
       type: String,
@@ -33,7 +32,23 @@ const productSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
-    categories: [String],
+    categories: String,
+    sellerId: {
+      type: mongoose.Schema.ObjectId,
+      ref: "User",
+    },
+    reviewId: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: "ProductReview",
+      },
+    ],
+    moreDetails: {
+      commonName: String,
+      placing: String,
+      watering: String,
+      soilType: String,
+    },
   },
   {
     toJSON: { virtuals: true },

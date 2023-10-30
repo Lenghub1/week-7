@@ -16,6 +16,14 @@ const productReviewSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    upVotes: {
+      type: number,
+      default: 0,
+    },
+    downVotes: {
+      type: number,
+      default: 0,
+    },
     productId: {
       type: mongoose.Schema.ObjectId,
       ref: "Product",
