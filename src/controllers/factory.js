@@ -1,19 +1,23 @@
 import catchAsync from "../utils/catchAsync.js";
-import AppError from "../utils/APIError.js";
 
 const factory = {
   create(createDocService) {
     return catchAsync(async (req, res, next) => {
-      await createDocService(req.body);
-      res.json({ message: "Create a product" });
+      const newProduct = await createDocService(req.body);
+
+      res.json({
+        message: "Create a product",
+        data: { newProduct },
+      });
     });
   },
 
   getById(getDocService) {
     return catchAsync(async (req, res, next) => {
       const doc = await getDocService(req.params.id);
+
       res.json({
-        message: "Data Retrived",
+        message: "Data Retrieved",
         data: { doc },
       });
     });
@@ -32,7 +36,7 @@ const factory = {
 
   deleteById(deleteDocService) {
     return catchAsync(async (req, res, next) => {
-      const doc = await deleteDocService(req.params.id);
+      await deleteDocService(req.params.id);
 
       res.json({
         message: "Document Deleted",
@@ -44,8 +48,9 @@ const factory = {
   getAll(getAllDocsService) {
     return catchAsync(async (req, res, next) => {
       const docs = await getAllDocsService();
+
       res.json({
-        message: "Data Retrived",
+        message: "Data Retrieved",
         results: docs.length,
         data: { docs },
       });
