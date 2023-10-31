@@ -1,16 +1,17 @@
 import mongoose from "mongoose";
+import User from "./user.model.js";
 
-const sellerSchema = mongoose.Schema(
-  {
+const sellerSchema = User.discriminator(
+  "Seller",
+  new mongoose.Schema({
     phoneNumber: {
       type: String,
       required: true,
+      trim: true,
     },
-    email: {
+    storeName: {
       type: String,
       required: true,
-      lowercase: true,
-      unique: true,
       trim: true,
     },
     storeAddress: {
@@ -23,21 +24,8 @@ const sellerSchema = mongoose.Schema(
       address: String,
       description: String,
     },
-    storeName: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-  },
-  {
-    timestamps: true,
-  }
+  })
 );
 
-const Seller = mongoose.model("Seller", sellerSchema);
+const Seller = mongoose.model("Seller", sellerSchema.scheme);
 export default Seller;
