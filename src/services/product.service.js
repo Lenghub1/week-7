@@ -60,6 +60,14 @@ const productService = {
   async createProduct(productInput) {
     const newProduct = new Product(productInput);
     await newProduct.save();
+    if (!newProduct) {
+      throw new APIError({
+        status: 400,
+        message: "Cannot Create New Document",
+        errors,
+      });
+    }
+    return newProduct;
   },
 
   /**
@@ -69,6 +77,7 @@ const productService = {
    */
   async deleteProduct(productId) {
     const product = await Product.findByIdAndRemove(productId);
+    console.log(product);
     if (!product) {
       throw new APIError({
         status: 404,
