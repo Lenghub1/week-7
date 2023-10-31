@@ -7,7 +7,13 @@ const router = express.Router();
 
 router
   .route("/")
-  .post(createProductValidator, runValidation, controller.createProduct);
-//.get(controller.getAllProducts)
+  .post(createProductValidator, runValidation, controller.createProduct)
+  .get(controller.getAllProducts);
+
+router
+  .route("/:id")
+  .get(controller.getProduct)
+  .patch(controller.updateProduct)
+  .delete(controller.deleteProduct);
 
 export default router;
