@@ -34,12 +34,12 @@ const productSchema = new mongoose.Schema(
     },
     categories: String,
     sellerId: {
-      type: mongoose.Schema.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
     reviewId: [
       {
-        type: mongoose.Schema.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "ProductReview",
       },
     ],

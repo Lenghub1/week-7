@@ -25,11 +25,11 @@ const productReviewSchema = new mongoose.Schema(
       default: 0,
     },
     productId: {
-      type: mongoose.Schema.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "Product",
     },
     userId: {
-      type: mongoose.Schema.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
   },
