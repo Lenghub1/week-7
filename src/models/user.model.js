@@ -1,16 +1,20 @@
 import mongoose from "mongoose";
+import validator from "validator";
+import slugify from "slugify";
 
-const userSchema = mongoose.Schema(
+const userSchema = new mongoose.Schema(
   {
     firstName: {
       type: String,
       required: true,
       trim: true,
+      match: /^[a-zA-Z ]+$/, // Include atleast one string
     },
     lastName: {
       type: String,
       required: true,
       trim: true,
+      match: /^[a-zA-Z ]+$/,
     },
     email: {
       type: String,
@@ -18,17 +22,30 @@ const userSchema = mongoose.Schema(
       lowercase: true,
       unique: true,
       trim: true,
+      validate: validator.isEmail,
     },
     profilePicture: String,
-
+    slug: String,
     password: {
       type: String,
       required: true,
-      minlength: 8,
+      validate: {
+        validator(val) {
+          return validator.isStrongPassword(val, {
+            minSymbols: 0,
+            minUppercase: 0,
+          });
+        },
+      },
     },
     passwordConfirm: {
       type: String,
       required: true,
+      validate: {
+        validator(val) {
+          return val === this.password;
+        },
+      },
     },
     role: {
       type: String,
@@ -49,6 +66,14 @@ const userSchema = mongoose.Schema(
     toObject: { virtuals: true },
   }
 );
+
+userSchema.pre("save", function (next) {
+  if (this.isModified("firsName") || this.isModified("lastName")) {
+    const fullName = `${this.firstName} ${this.lastName}`;
+    this.slug = slugify(fullName, { lower: true, strict: true });
+  }
+  next();
+});
 
 const User = mongoose.model("User", userSchema);
 export default User;
