@@ -24,6 +24,14 @@ const productSchema = new mongoose.Schema(
       enum: ["item", "kg"],
       default: "item",
     },
+    quantity: {
+      type: Number,
+      required: true,
+    },
+    media: {
+      type: [String],
+      required: true,
+    },
     createdAt: {
       type: Date,
       default: Date.now,

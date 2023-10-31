@@ -5,17 +5,11 @@ const productReviewSchema = new mongoose.Schema(
     review: String,
     rate: {
       type: Number,
+      required: true,
       min: 1,
       max: 5,
     },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
-    updatedAt: {
-      type: Date,
-      default: Date.now,
-    },
+    media: [String],
     upVotes: {
       type: number,
       default: 0,
@@ -34,6 +28,7 @@ const productReviewSchema = new mongoose.Schema(
     },
   },
   {
+    timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
   }
