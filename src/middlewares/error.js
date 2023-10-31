@@ -51,7 +51,7 @@ const converter = (err, req, res, next) => {
  */
 const notFound = (req, res, next) => {
   const err = new APIError({
-    statusCode: httpStatus.NOT_FOUND,
+    status: httpStatus.NOT_FOUND,
     message: "Not found",
   });
   return handler(err, req, res);
