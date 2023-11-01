@@ -9,6 +9,11 @@ const productSchema = new mongoose.Schema(
       minLength: 3,
       trim: true,
     },
+    slug: {
+      type: String,
+      unique: true,
+      index: true,
+    },
     description: {
       type: String,
       required: true,
@@ -21,26 +26,25 @@ const productSchema = new mongoose.Schema(
     },
     unit: {
       type: String,
-      enum: ["item", "kg"],
+      enum: ["item", "kg", "pot"],
       default: "item",
     },
-    quantity: {
+    availableStock: {
       type: Number,
       required: true,
+    },
+    soldItem: {
+      type: Number,
+      default: 0,
     },
     media: {
       type: [String],
       required: true,
     },
-    createdAt: {
-      type: Date,
-      default: Date.now,
+    categories: [String],
+    dimension: {
+      type: Object,
     },
-    updatedAt: {
-      type: Date,
-      default: Date.now,
-    },
-    categories: String,
     sellerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -48,17 +52,12 @@ const productSchema = new mongoose.Schema(
     reviewId: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "ProductReview",
+        ref: "Review",
       },
     ],
-    moreDetails: {
-      commonName: String,
-      placing: String,
-      watering: String,
-      soilType: String,
-    },
   },
   {
+    timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
   }

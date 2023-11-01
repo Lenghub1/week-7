@@ -1,5 +1,5 @@
 {
-  "extends": ["prettier", "plugin:node/recommended"],
+  "extends": ["prettier", "plugin:node/recommended-module"],
   "plugins": ["prettier"],
   "rules": {
     "prettier/prettier": "error",
@@ -14,9 +14,9 @@
     "no-underscore-dangle": "off",
     "class-methods-use-this": "off",
     "prefer-destructuring": ["error", { "object": true, "array": false }],
-    "no-unused-vars": ["warn", { "argsIgnorePattern": "req|res|next|val" }],
-    "parserOptions": {
-      "sourceType": "module"
-    }
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "req|res|next|val" }]
+  },
+  "parserOptions": {
+    "sourceType": "module"
   }
 }
