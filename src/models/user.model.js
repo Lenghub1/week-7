@@ -25,7 +25,10 @@ const userSchema = new mongoose.Schema(
       validate: validator.isEmail,
     },
     profilePicture: String,
-    slug: String,
+    slug: {
+      type: String,
+      unique: true,
+    },
     password: {
       type: String,
       required: true,
@@ -59,6 +62,7 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    refreshToken: [String],
   },
   {
     timestamps: true,
@@ -70,7 +74,7 @@ const userSchema = new mongoose.Schema(
 userSchema.pre("save", function (next) {
   if (this.isModified("firsName") || this.isModified("lastName")) {
     const fullName = `${this.firstName} ${this.lastName}`;
-    this.slug = slugify(fullName, { lower: true, strict: true });
+    this.slug = slugify(fullName + this.id, { lower: true, strict: true });
   }
   next();
 });

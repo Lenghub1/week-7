@@ -14,16 +14,12 @@ const reviewSchema = mongoose.Schema(
     },
     upVote: Number,
     downVote: Number,
-    createAt: {
-      type: Date,
-      default: Date.now,
-    },
-    User: {
+    user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      requred: true,
+      required: true,
     },
-    Product: {
+    product: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product",
       required: true,
