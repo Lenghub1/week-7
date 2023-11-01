@@ -14,6 +14,11 @@ const sellerSchema = User.discriminator(
       required: true,
       trim: true,
     },
+    sellerStatus: {
+      type: String,
+      enum: ["pending", "active", "inactive"],
+      default: "pending",
+    },
     storeAddress: {
       type: {
         type: String,
