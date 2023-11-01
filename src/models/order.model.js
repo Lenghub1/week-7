@@ -17,10 +17,7 @@ const orderSchema = new mongoose.Schema({
         type: Number,
         required: true,
       },
-      promotCode: {
-        type: String,
-      },
-      totalAmout: {
+      totalAmount: {
         type: Number,
         required: true,
       },
