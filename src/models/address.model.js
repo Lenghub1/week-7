@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const addressSchema = new mongoose.Schema({
-  pipPoint: {
+  pinPoint: {
     type: "Point",
     coordinates: [11.5, 104.9],
     required: true,
