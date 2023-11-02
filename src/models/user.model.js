@@ -37,16 +37,13 @@ const userSchema = new mongoose.Schema(
           return validator.isStrongPassword(val, {
             minSymbols: 0,
             minUppercase: 0,
+            minLength: 8,
+            minNumbers: 0,
+            minLowercase: 1,
           });
         },
-      },
-    },
-    passwordConfirm: {
-      type: String,
-      required: true,
-      validate: {
         validator(val) {
-          return val === this.password;
+          return val.trim() == val;
         },
       },
     },
@@ -72,9 +69,12 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.pre("save", function (next) {
-  if (this.isModified("firsName") || this.isModified("lastName")) {
+  if (this.isModified("firstName") || this.isModified("lastName")) {
     const fullName = `${this.firstName} ${this.lastName}`;
-    this.slug = slugify(fullName + this.id, { lower: true, strict: true });
+    this.slug = slugify(fullName + "-" + Date.now(), {
+      lower: true,
+      strict: true,
+    });
   }
   next();
 });
