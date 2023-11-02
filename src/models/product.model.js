@@ -1,11 +1,11 @@
 import mongoose from "mongoose";
+import slugify from "slugify";
 
 const productSchema = new mongoose.Schema(
   {
     title: {
       type: String,
       required: true,
-      unique: true,
       minLength: 3,
       trim: true,
     },
@@ -22,6 +22,8 @@ const productSchema = new mongoose.Schema(
     },
     unitPrice: {
       type: Number,
+      integer: true,
+      min: 0,
       required: true,
     },
     unit: {
@@ -31,9 +33,10 @@ const productSchema = new mongoose.Schema(
     },
     availableStock: {
       type: Number,
+      min: 0,
       required: true,
     },
-    soldItem: {
+    soldAmount: {
       type: Number,
       default: 0,
     },
@@ -49,12 +52,26 @@ const productSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-    reviewId: [
+    reviews: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Review",
+        _id: mongoose.Schema.Types.ObjectId,
+        rating: Number,
+        text: String,
+        userId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
       },
     ],
+    reviewCount: {
+      type: Number,
+      default: 0,
+    },
+    averageRating: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,
@@ -62,6 +79,16 @@ const productSchema = new mongoose.Schema(
     toObject: { virtuals: true },
   }
 );
+
+productSchema.pre("save", function (next) {
+  if (this.isModified("title")) {
+    this.slug = slugify(this.title + "-" + Date.now(), {
+      lower: true,
+      strict: true,
+    });
+  }
+  next();
+});
 
 const Product = mongoose.model("Product", productSchema);
 export default Product;
