@@ -1,17 +1,14 @@
 import mongoose from "mongoose";
 
 const addressSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
   pinPoint: {
     type: "Point",
     coordinates: [11.5, 104.9],
-    required: true,
-  },
-  fullName: {
-    type: String,
-    required: true,
-  },
-  phoneNumber: {
-    type: String,
     required: true,
   },
   addressLine: {
