@@ -29,7 +29,6 @@ const productService = {
       throw new APIError({
         status: 404,
         message: "There is no document found.",
-        errors,
       });
     }
     return products;
@@ -46,7 +45,6 @@ const productService = {
       throw new APIError({
         status: 404,
         message: "There is no document found with this ID.",
-        errors,
       });
     }
     return product;
@@ -64,7 +62,6 @@ const productService = {
       throw new APIError({
         status: 400,
         message: "Cannot Create New Document",
-        errors,
       });
     }
     return newProduct;
@@ -82,7 +79,6 @@ const productService = {
       throw new APIError({
         status: 404,
         message: "There is no document found with this ID.",
-        errors,
       });
     }
     return product;
@@ -103,7 +99,6 @@ const productService = {
       throw new APIError({
         status: 404,
         message: "There is no document found with this ID.",
-        errors,
       });
     }
     return product;
