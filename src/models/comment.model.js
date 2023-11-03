@@ -38,5 +38,5 @@ const commentSchema = new mongoose.Schema(
   }
 );
 
-const PostReview = mongoose.model("PostReview", commentSchema);
-export default PostReview;
+const Comment = mongoose.model("Comment", commentSchema);
+export default Comment;
