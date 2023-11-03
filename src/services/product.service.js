@@ -74,7 +74,6 @@ const productService = {
    */
   async deleteProduct(productId) {
     const product = await Product.findByIdAndRemove(productId);
-    console.log(product);
     if (!product) {
       throw new APIError({
         status: 404,
