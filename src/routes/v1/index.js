@@ -5,6 +5,7 @@ import sellerRoute from "./seller.route.js";
 import authRoute from "./auth.route.js";
 
 import postRoute from "./post.route.js";
+import commentRoute from "./comment.route.js";
 const router = express.Router();
 
 const defaultRoutes = [
@@ -27,6 +28,10 @@ const defaultRoutes = [
   {
     path: "/community",
     route: postRoute,
+  },
+  {
+    path: "/comments",
+    route: commentRoute,
   },
 ];
 
