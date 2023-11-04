@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import validator from "validator";
 import slugify from "slugify";
+import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
@@ -46,6 +47,7 @@ const userSchema = new mongoose.Schema(
           return val.trim() == val;
         },
       },
+      select: false,
     },
     role: {
       type: String,
@@ -78,6 +80,20 @@ userSchema.pre("save", function (next) {
   }
   next();
 });
+
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) {
+    return next();
+  }
+
+  this.password = await bcrypt.hash(this.password, 12);
+  next();
+});
+
+// Methods
+userSchema.methods.verifyPassword = async function (candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
 
 const User = mongoose.model("User", userSchema);
 export default User;

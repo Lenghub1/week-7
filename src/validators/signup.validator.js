@@ -1,7 +1,7 @@
 import { check } from "express-validator";
 import User from "../models/user.model.js";
 
-export const createAuthValidator = [
+export const createSignupValidator = [
   check("firstName").not().isEmpty().withMessage("First name cannot be empty."),
   check("lastName").not().isEmpty().withMessage("Last name cannot be empty."),
   check("email")
