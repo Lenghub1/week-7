@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { mongo } from "mongoose";
 import Review from "../models/review.model.js";
 import APIError from "../utils/APIError.js";
 import Product from "../models/product.model.js";
@@ -19,10 +19,11 @@ const reviewService = {
       const product = await Product.findById(review.product).session(session);
 
       // Update Product's review count and average rating
-      product.reviewCount += 1;
+      const newReviewCount = product.reviewCount + 1;
       product.averageRating =
         (product.reviewCount * product.averageRating + review.rating) /
-        product.reviewCount;
+        newReviewCount;
+      product.reviewCount = newReviewCount;
 
       // Add the new review to the start of the reviews array
       product.reviews.unshift({
@@ -53,8 +54,131 @@ const reviewService = {
       });
     }
   },
+  async deleteReview(productId, reviewId) {
+    const session = await mongoose.startSession();
+
+    try {
+      session.startTransaction();
+
+      const review = await Review.findByIdAndRemove(reviewId, {
+        session: session,
+      });
+      if (!review) {
+        throw new Error("Review not found");
+      }
+
+      const product = await Product.findById(productId).session(session);
+
+      // Remove the review from the embedded reviews array, if there is any
+      const isEmbeddedReview = product.reviews.some((r) =>
+        r._id.equals(review._id)
+      );
+      product.reviews = product.reviews.filter(
+        (r) => !r._id.equals(review._id)
+      );
+
+      // If the deleted review was in the embedded list, find the next most recent one
+      if (isEmbeddedReview && product.reviews.length < 10) {
+        const extraReview = await Review.findOne(
+          {
+            product: productId,
+            _id: { $nin: product.reviews.map((r) => r._id) },
+          },
+          null,
+          { sort: { createdAt: -1 }, session: session }
+        );
+
+        if (extraReview) {
+          product.reviews.push({
+            _id: extraReview._id,
+            rating: extraReview.rating,
+            upVote: extraReview.upVote,
+            downVote: extraReview.downVote,
+            review: extraReview.review,
+            userId: extraReview.userId,
+          });
+        }
+      }
+
+      let newAverageRating;
+      const newReviewCount = product.reviewCount - 1;
+      if (newReviewCount > 0) {
+        newAverageRating =
+          (product.reviewCount * product.averageRating - review.rating) /
+          newReviewCount;
+      } else {
+        newAverageRating = 0; // If no reviews left, reset average rating
+      }
+
+      product.reviewCount = newReviewCount;
+      product.averageRating = newAverageRating;
+
+      await product.save({ session });
+
+      await session.commitTransaction();
+      session.endSession();
+      return { message: "Review deleted successfully" };
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      throw new APIError({
+        status: 400,
+        message: "Failed to delete the review",
+        error: error,
+      });
+    }
+  },
+  async updateReview(productId, reviewId, updateData) {
+    const session = await mongoose.startSession();
+    try {
+      session.startTransaction();
+      const review = Review.findById(reviewId).session(session);
+      if (!review) {
+        throw new APIError({
+          status: 404,
+          message: "Review not found.",
+        });
+      }
+      for (const key in updateData) {
+        review[key] = updateData[key];
+      }
+
+      console.log(review);
+      await review.save({ session });
+
+      const product = await Product.findById(productId).session(session);
+
+      if (product) {
+        const reviewIndex = product.reviews.findIndex((r) =>
+          r._id.equals(review._id)
+        );
+        if (reviewIndex !== -1) {
+          product.reviews[reviewIndex] = {
+            ...product.reviews[reviewIndex].toObject(),
+            ...updateData,
+          };
+        }
+        product.averageRating =
+          (product.averageRating * product.reviewCount -
+            review.rating +
+            updateData.rating) /
+          product.reviewCount;
+
+        await product.save({ session });
+      }
+
+      await session.commitTransaction();
+      session.endSession();
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      throw new APIError({
+        status: 400,
+        message: "Failed to update the review.",
+        error: error,
+      });
+    }
+  },
 };
 
 export default reviewService;
-
-

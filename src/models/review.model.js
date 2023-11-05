@@ -12,8 +12,15 @@ const reviewSchema = mongoose.Schema(
       max: 5,
       required: true,
     },
-    upVote: Number,
-    downVote: Number,
+    upVote: {
+      type: Number,
+      default: 0,
+      index: true,
+    },
+    downVote: {
+      type: Number,
+      default: 0,
+    },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -31,6 +38,8 @@ const reviewSchema = mongoose.Schema(
     toObject: { virtuals: true },
   }
 );
+
+reviewSchema.index({ createAt: -1, upVote: -1 });
 
 const Review = mongoose.model("Review", reviewSchema);
 export default Review;
