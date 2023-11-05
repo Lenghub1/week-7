@@ -6,6 +6,11 @@ const orderSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
+  addressId: { 
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Address",
+    required: true,
+  },
   items: [
     {
       productId: {
@@ -38,4 +43,14 @@ const orderSchema = new mongoose.Schema({
 });
 
 const Order = mongoose.model("Order", orderSchema);
+
+Order
+  .findOne({ _id: orderId })
+  .populate('addressId') 
+  .exec(function(err, order) {
+    if (err) return handleError(err);
+    console.log(order);
+  });
+
+
 export default Order;
