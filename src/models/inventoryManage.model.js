@@ -40,10 +40,9 @@ const orderManageSchema = new mongoose.Schema({
 });
 
 orderManageSchema.post("save", async function (next) {
-  // 'this' refers to the order document that is being saved
   const order = this;
 
-  const update = order.item.map(async (item) => {
+  const update = order.items.map(async (item) => {
     const product = await mongoose.model("Product").findById(item.productId);
 
     if (!product) {
@@ -58,7 +57,7 @@ orderManageSchema.post("save", async function (next) {
     return product.save();
   });
 
-  await Promise.all(updatePromises);
+  await Promise.all(update);
 
   next();
 });
