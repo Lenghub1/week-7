@@ -1,5 +1,23 @@
 import mongoose from "mongoose";
 
+const productSchema = new mongoose.schema({
+    productId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+    },
+    title: {
+        type: String,
+        required: true,
+        unique: true,
+        min: 3,
+        trim: true,
+    },
+    price: {
+        type: Number,
+        required: true,
+    },
+});
+
 const orderHistorySchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -11,16 +29,8 @@ const orderHistorySchema = new mongoose.Schema({
         required: true
     },
     items: [{
-        productId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Product',
-            required: true
-        },
+        product: productSchema,
         quantity: {
-            type: Number,
-            required: true
-        },
-        price: {
             type: Number,
             required: true
         },
