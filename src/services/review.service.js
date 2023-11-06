@@ -30,8 +30,6 @@ const reviewService = {
         _id: review._id,
         review: review.review,
         rating: review.rating,
-        upVote: review.upVote || 0,
-        downVote: review.downVote || 0,
         userId: review.userId,
       });
       // Limit the reviews array to 10
@@ -92,8 +90,6 @@ const reviewService = {
           product.reviews.push({
             _id: extraReview._id,
             rating: extraReview.rating,
-            upVote: extraReview.upVote,
-            downVote: extraReview.downVote,
             review: extraReview.review,
             userId: extraReview.userId,
           });
@@ -132,7 +128,6 @@ const reviewService = {
     const session = await mongoose.startSession();
     try {
       session.startTransaction();
-      console.log(reviewId);
       const review = await Review.findById(reviewId).session(session);
       if (!review) {
         throw new APIError({
