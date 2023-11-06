@@ -30,7 +30,7 @@ const reviewSchema = mongoose.Schema(
   }
 );
 
-reviewSchema.index({ createAt: -1 });
+reviewSchema.index({ createdAt: -1 });
 
 const Review = mongoose.model("Review", reviewSchema);
 export default Review;

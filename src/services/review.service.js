@@ -83,7 +83,7 @@ const reviewService = {
             _id: { $nin: product.reviews.map((r) => r._id) },
           },
           null,
-          { sort: { createdAt: -1 }, session: session }
+          { session: session }
         );
 
         if (extraReview) {
