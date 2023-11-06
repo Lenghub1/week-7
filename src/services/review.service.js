@@ -117,7 +117,7 @@ const reviewService = {
 
       await session.commitTransaction();
       session.endSession();
-      return { message: "Review deleted successfully" };
+      return review;
     } catch (error) {
       await session.abortTransaction();
       session.endSession();
@@ -132,18 +132,20 @@ const reviewService = {
     const session = await mongoose.startSession();
     try {
       session.startTransaction();
-      const review = Review.findById(reviewId).session(session);
+      console.log(reviewId);
+      const review = await Review.findById(reviewId).session(session);
       if (!review) {
         throw new APIError({
           status: 404,
           message: "Review not found.",
         });
       }
+      const previousRating = review.rating;
+
       for (const key in updateData) {
         review[key] = updateData[key];
       }
 
-      console.log(review);
       await review.save({ session });
 
       const product = await Product.findById(productId).session(session);
@@ -160,7 +162,7 @@ const reviewService = {
         }
         product.averageRating =
           (product.averageRating * product.reviewCount -
-            review.rating +
+            previousRating +
             updateData.rating) /
           product.reviewCount;
 
@@ -169,6 +171,7 @@ const reviewService = {
 
       await session.commitTransaction();
       session.endSession();
+      return review;
     } catch (error) {
       await session.abortTransaction();
       session.endSession();

@@ -18,11 +18,12 @@ const reviewController = {
     const { productId } = req.params;
     const { reviewId, rating, review } = req.body;
     const updateData = { rating, review };
-    const updatedData = await reviewService.updateReview(
+    const updatedReview = await reviewService.updateReview(
       productId,
       reviewId,
       updateData
     );
+    res.status(200).json(updatedReview);
   }),
 };
 
