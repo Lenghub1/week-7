@@ -1,35 +1,29 @@
 import User from "../models/user.model.js";
 import catchAsync from "../utils/catchAsync.js";
-import jwt from "jsonwebtoken";
-import sendEmailWithNodemailer from "../utils/email.js";
-import APIError from "../utils/APIError.js";
 
+import APIError from "../utils/APIError.js";
+import authService from "../services/auth.service.js";
+
+// Signup
+// 1. Get the signup data
+// 2. Sign JWT for embed the data after click signup
+// 3. Send email with JWT
 const signup = catchAsync(async (req, res, next) => {
   const { email, firstName, lastName, password } = req.body;
-  console.log(email);
-
-  const token = jwt.sign(
-    { email, password, firstName, lastName },
-    process.env.ACCOUNT_ACTIVATION_TOKEN,
-    {
-      expiresIn: process.env.ACCOUNT_ACTICATION_TOKEN_EXPIRES,
-    }
+  const token = authService.signAccountActivateToken(
+    email,
+    password,
+    firstName,
+    lastName
   );
 
-  const emailData = {
-    from: "noreply@rukhak.com",
-    to: email,
-    subject: "ACCOUNT ACTIVATION LINK",
-    html: `<h1>Please use the following link to activate your account</h1>
-    <p>http://localhost:3000/auth/activate/${token}</p>
-    <hr />
-    <p>This email may contain sensitive information</p>
-    <p>http://localhost:3000</p>`,
-  };
-
-  sendEmailWithNodemailer(req, res, emailData);
+  authService.sendEmailActivateAccount(req, res, token, email);
 });
 
+// Activate Account
+// 1. Get the JWT send from client after click activate
+// 2. Check if token exist or not
+// 3. Verify the JWT
 const account_activation = catchAsync(async (req, res, next) => {
   const { token } = req.body;
   if (!token) {
@@ -40,51 +34,13 @@ const account_activation = catchAsync(async (req, res, next) => {
       })
     );
   }
-
-  jwt.verify(
-    token,
-    process.env.ACCOUNT_ACTIVATION_TOKEN,
-    async (err, decoded) => {
-      console.log(decoded);
-      if (err) {
-        return next(
-          new APIError({
-            status: 401,
-            message: "Link Expired! Please signup again",
-          })
-        );
-      }
-
-      const { email, firstName, lastName, password } = decoded;
-
-      if (!email || !firstName || !lastName || !password) {
-        return next(
-          new APIError({
-            status: 401,
-            message:
-              "Please sign up again! Make sure to fill in all required information.",
-          })
-        );
-      }
-
-      const user = await User.create({
-        email,
-        password,
-        firstName,
-        lastName,
-      });
-
-      console.log(email);
-      res.json({
-        message: "Account activated. Please log in to continue.",
-        data: {
-          user,
-        },
-      });
-    }
-  );
+  authService.verifyJWT(req, res, next, token);
 });
 
+// Login
+// 1. Get cookies and email and password from request
+// 2. Find user document with that email and password
+// 3. If found, assing JWT (access and refresh)
 const login = catchAsync(async (req, res, next) => {
   const cookies = req.cookies;
   const { email, password } = req.body;
@@ -100,9 +56,7 @@ const login = catchAsync(async (req, res, next) => {
     );
   }
 
-  const role = user.role; // might be useful in future
-
-  // 2. Sign access and refresh tokens
+  // Sign access and refresh tokens
   const accessToken = jwt.sign(
     { _id: user.id },
     process.env.ACCESS_TOKEN_SECRET,
@@ -117,7 +71,7 @@ const login = catchAsync(async (req, res, next) => {
       expiresIn: process.env.REFRESH_TOKEN_EXPIRES,
     }
   );
-  // 3. Create an array to store new refresh token
+  // Create an array to store new refresh token
   let newRefreshTokenArray = [];
   if (cookies?.jwt)
     newRefreshTokenArray = user.refreshToken.filter(
@@ -154,7 +108,6 @@ const login = catchAsync(async (req, res, next) => {
 
   res.json({
     message: "login succeed.",
-    role,
     accessToken,
   });
 });
