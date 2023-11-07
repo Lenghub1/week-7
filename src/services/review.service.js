@@ -177,6 +177,21 @@ const reviewService = {
       });
     }
   },
+  async getReviews(productId, page) {
+    // const lastCreatedAtDate = new Date(lastCreatedAt);
+    // console.log(lastCreatedAtDate);
+    const limit = 10;
+    const reviews = await Review.find(
+      {
+        product: productId,
+      },
+      { review: 1, rating: 1, userId: 1 }
+    )
+      .sort({ createdAt: -1 })
+      .skip(limit * page)
+      .limit(limit);
+    return reviews;
+  },
 };
 
 export default reviewService;

@@ -7,6 +7,7 @@ router
   .route("/:productId")
   .post(reviewController.createReview)
   .delete(reviewController.deleteReview)
-  .patch(reviewController.updateReview);
+  .patch(reviewController.updateReview)
+  .get(reviewController.getReviews);
 
 export default router;

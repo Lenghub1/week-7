@@ -25,6 +25,13 @@ const reviewController = {
     );
     res.status(200).json(updatedReview);
   }),
+  getReviews: catchAsync(async (req, res) => {
+    const { productId } = req.params;
+    const { page } = req.query;
+    console.log(page);
+    const moreReviews = await reviewService.getReviews(productId, page);
+    res.status(200).json(moreReviews);
+  }),
 };
 
 export default reviewController;
