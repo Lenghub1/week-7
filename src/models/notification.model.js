@@ -1,37 +1,46 @@
 const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-const notificationSchema = new mongoose.Schema({
-  type: {
-    type: String,
-    required: true,
-    enum: ['buyerPurchase', 'sellerUpdate', 'adminNotification'],
-  },
-  content: {
-    type: String,
-    required: true,
-  },
-  timestamp: {
-    type: Date,
-    default: Date.now,
-  },
-  isRead: {
-    type: Boolean,
-    default: false,
-  },
-  buyerId: {
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User',
-  },
-  sellerId: {
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User',
-  },
-  productId: {
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Product',
-  },
-});
+const NotificationSchema = new Schema({
+    To: { type: Schema.Types.ObjectId, ref: 'User' },
+    From: { type: Schema.Types.ObjectId, ref: 'User' },
+    notificationType: String,
+    opened: { type: Boolean, default: false },
+    entityId: Schema.Types.ObjectId
+}, { timestamps: true });
 
-const Notification = mongoose.model('Notification', notificationSchema);
-
+NotificationSchema.statics.insertNotification = async (To, From, notificationType, entityId) => {
+    let data = {
+        To: To,
+        From: From,
+        notificationType: notificationType,
+        entityId: entityId
+    };
+    await Notification.deleteOne(data).catch(error => console.log(error));
+    return Notification.create(data).catch(error => console.log(error));
+}
+let Notification = mongoose.model('Notification', NotificationSchema);
 module.exports = Notification;
+
+
+/* example:
+
+ const To = 'buyerUserId'; 
+ const From = 'sellerUserId'; 
+ const notificationType = 'purchase';
+ const entityId = 'productId';
+
+// Call the insertNotification method to create a notification
+
+ await Notification.insertNotification(userTo, userFrom, notificationType, entityId);
+
+ data will look like:
+ {
+    To: buyerUserId,     
+    From: sellerUserId,  
+    notificationType: 'purchase',
+    opened: false
+    entityId: productObjectId 
+}
+
+*/
