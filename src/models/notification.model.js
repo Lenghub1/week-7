@@ -19,7 +19,7 @@ NotificationSchema.statics.insertNotification = async (To, From, notificationTyp
     await Notification.deleteOne(data).catch(error => console.log(error));
     return Notification.create(data).catch(error => console.log(error));
 }
-let Notification = mongoose.model('Notification', NotificationSchema);
+const Notification = mongoose.model('Notification', NotificationSchema);
 module.exports = Notification;
 
 
@@ -32,7 +32,7 @@ module.exports = Notification;
 
 // Call the insertNotification method to create a notification
 
- await Notification.insertNotification(userTo, userFrom, notificationType, entityId);
+ await Notification.insertNotification(To, From, notificationType, entityId);
 
  data will look like:
  {
