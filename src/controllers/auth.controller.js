@@ -1,31 +1,32 @@
 import User from "../models/user.model.js";
 import catchAsync from "../utils/catchAsync.js";
-
 import APIError from "../utils/APIError.js";
 import authService from "../services/auth.service.js";
 
 // Signup
-// 1. Get the signup data
-// 2. Sign JWT for embed the data after click signup
-// 3. Send email with JWT
+// 1. Get user data from signup
+// 2. Sign new JWT
+// 3. Send email with a link include JWT to let user activate account
 const signup = catchAsync(async (req, res, next) => {
   const { email, firstName, lastName, password } = req.body;
-  const token = authService.signAccountActivateToken(
+
+  const token = authService.signTokenForActivateAccount(
     email,
-    password,
     firstName,
-    lastName
+    lastName,
+    password
   );
 
   authService.sendEmailActivateAccount(req, res, token, email);
 });
 
 // Activate Account
-// 1. Get the JWT send from client after click activate
-// 2. Check if token exist or not
-// 3. Verify the JWT
+// 1. Receive JWT from client
+// 2. Verify the JWT
+// 3. Activate account by adding data to database
 const account_activation = catchAsync(async (req, res, next) => {
   const { token } = req.body;
+
   if (!token) {
     return next(
       new APIError({
@@ -34,19 +35,18 @@ const account_activation = catchAsync(async (req, res, next) => {
       })
     );
   }
-  authService.verifyJWT(req, res, next, token);
+
+  authService.verifyJWTForActivateAccount(req, res, next, token);
 });
 
 // Login
-// 1. Get cookies and email and password from request
-// 2. Find user document with that email and password
-// 3. If found, assing JWT (access and refresh)
-const login = catchAsync(async (req, res, next) => {
-  const cookies = req.cookies;
+// 1. Get user data from login
+// 2. Verify user
+// 3. Move to next middleware
+const loginWithEmailPassword = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email }).select("+password");
 
-  // 1. Check if there is no user found in database or the password is incorrect
   if (!user || !(await user.verifyPassword(password))) {
     return next(
       new APIError({
@@ -56,60 +56,50 @@ const login = catchAsync(async (req, res, next) => {
     );
   }
 
-  // Sign access and refresh tokens
-  const accessToken = jwt.sign(
-    { _id: user.id },
-    process.env.ACCESS_TOKEN_SECRET,
-    {
-      expiresIn: process.env.ACCESS_TOKEN_EXPIRES,
-    }
-  );
-  const newRefreshToken = jwt.sign(
-    { _id: user.id },
-    process.env.REFRESH_TOKEN_SECRET,
-    {
-      expiresIn: process.env.REFRESH_TOKEN_EXPIRES,
-    }
-  );
-  // Create an array to store new refresh token
-  let newRefreshTokenArray = [];
-  if (cookies?.jwt)
-    newRefreshTokenArray = user.refreshToken.filter(
-      (rt) => rt !== cookies?.jwt
-    );
-  else if (!cookies?.jwt) newRefreshTokenArray = user.refreshToken;
-
-  // 4. Detect refresh token reuse
-  if (cookies?.jwt) {
-    const refreshToken = cookies.jwt;
-    const foundToken = await User.findOne({ refreshToken });
-
-    // Detected refresh token is really reuse
-    if (!foundToken) {
-      // clear all previos refresh tokens
-      newRefreshTokenArray = [];
-    }
-
-    // Not detected
-    res.clearCookie("jwt", { httpOnly: true, secure: true, sameSite: "None" });
-  }
-
-  // 5. Saving new refresh token
-  user.refreshToken = [...newRefreshTokenArray, newRefreshToken];
-  await user.save();
-
-  // 6. Create secure cookie with refresh token
-  res.cookie("jwt", newRefreshToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "None",
-    maxAge: process.env.COOKIES_EXPIRES * 24 * 60 * 60 * 1000,
-  });
-
-  res.json({
-    message: "login succeed.",
-    accessToken,
-  });
+  req.user = user;
+  next();
 });
 
-export const authController = { signup, account_activation, login };
+// Refresh Access Token
+// 1. Get cookie
+// 2. Clear cookie on client
+// 4. Verify JWT
+// 5. Sign new access and refresh tokens
+const refreshToken = catchAsync(async (req, res, next) => {
+  const cookies = req.cookies;
+  console.log(JSON.stringify(cookies));
+
+  if (!cookies?.jwt) {
+    return next(
+      new APIError({
+        status: 401,
+        message:
+          "Unauthorized: Access is denied due to invalid credentials. Please check your login details and try again.",
+      })
+    );
+  }
+
+  const refreshToken = cookies.jwt;
+
+  res.clearCookie("jwt", { httpOnly: true, sameSite: "None", secure: true });
+
+  const session = await session.findOne({ refreshToken });
+  console.log(session);
+  if (!session) {
+    return next(
+      new APIError({
+        status: 403,
+        message: "Forbidden",
+      })
+    );
+  }
+
+  authService.verifyRefreshToken(req, res, next, refreshToken, session);
+});
+
+export const authController = {
+  signup,
+  account_activation,
+  loginWithEmailPassword,
+  refreshToken,
+};

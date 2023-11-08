@@ -17,7 +17,7 @@ const sendEmailWithNodemailer = (req, res, emailData) => {
     .sendMail(emailData)
     .then((info) => {
       console.log(`Message sent: ${info.response}`);
-      return res.json({
+      return res.status(200).json({
         message: `Email has been send to your email. Follow the instruction to activate your account`,
       });
     })
