@@ -8,7 +8,6 @@ const productSchema = new mongoose.schema({
   title: {
     type: String,
     required: true,
-    unique: true,
     min: 3,
     trim: true,
   },
