@@ -23,7 +23,7 @@ function generateSeedProducts(n) {
     return randomProductUnit;
   }
 
-  function chooseRandomPrice(min, max) {
+  function chooseRandomInt(min, max) {
     const randomDecimal = Math.random();
     // Scale the random decimal to the range between min and max
     const randomInRange = randomDecimal * (max - min) + min;
@@ -34,11 +34,16 @@ function generateSeedProducts(n) {
   }
 
   for (let i = 0; i < n; i++) {
+    const title = faker.commerce.product();
+    const slug = title + faker.string.uuid();
     const product = new Product({
-      title: faker.animal.cow(),
-      description: faker.lorem.paragraphs(),
+      title,
+      slug,
+      description: faker.commerce.productDescription(),
       unit: chooseRandomUnit(),
-      unitPrice: chooseRandomPrice(1000, 1000000),
+      unitPrice: chooseRandomInt(1000, 1000000),
+      availableStock: chooseRandomInt(10, 100),
+      media: [faker.airline.aircraftType()],
     });
     products.push(product);
   }
@@ -48,11 +53,11 @@ function generateSeedProducts(n) {
 
 async function seedDB() {
   try {
-    const seedProducts = generateSeedProducts(10000);
+    const seedProducts = generateSeedProducts(1000);
     await Product.deleteMany();
     await Product.insertMany(seedProducts);
   } catch (error) {
-    console.log("Error:..... ", error);
+    console.log("Error:", error.message);
   }
 }
 
