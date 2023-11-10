@@ -15,10 +15,10 @@ const addressSchema = new mongoose.Schema({
       },
       coordinates: {
         type: [Number],
-        required: true
+        required: true,
       },
-    }
-  ]
+    },
+  ],
   addressLine: {
     type: String,
     required: true,

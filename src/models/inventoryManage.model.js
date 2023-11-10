@@ -1,35 +1,17 @@
 import mongoose from "mongoose";
+import Product from "./product.model";
 
-const productSchema = new mongoose.Schema({
+const orderManageSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
   },
-  productId: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true,
-  },
-  title: {
-    type: String,
-    required: true,
-    unique: true,
-    min: 3,
-    trim: true,
-  },
-  price: {
-    type: Number,
-    required: true,
-  },
-});
-
-const orderManageSchema = new mongoose.Schema({
   items: [
     {
-      product: productSchema,
-      price: {
-        type: Number,
-        required: true,
+      product: {
+        type: mongoose.Schema.ObjectId,
+        ref: "Product",
       },
       quantity: {
         type: Number,
@@ -39,26 +21,14 @@ const orderManageSchema = new mongoose.Schema({
   ],
 });
 
-orderManageSchema.post("save", async function (next) {
-  const order = this;
-
-  const update = order.items.map(async (item) => {
-    const product = await mongoose.model("Product").findById(item.productId);
-
-    if (!product) {
-      throw new Error("Product not found");
-    }
-
-    if (product.quantity < item.quantity) {
-      throw new Error("Not enough stock for product");
-    }
-
-    product.quantity -= item.quantity;
-    return product.save();
-  });
-
-  await Promise.all(update);
-
+orderManageSchema.pre("save", async function (next) {
+  this.items.map(async (item) => ({
+    product: {
+      productId: await Product.findById(item.product),
+    },
+    quantity: item.quantity,
+  })),
+    console.log(this.items);
   next();
 });
 
