@@ -6,6 +6,7 @@ import { faker } from "@faker-js/faker";
 import mongoose from "mongoose";
 import Product from "../../src/models/product.model.js";
 import dotenv from "dotenv";
+import { categories } from "../fixtures/sellerProduct.fixture.js";
 
 dotenv.config();
 
@@ -15,15 +16,11 @@ mongoose.connect(process.env.MONGO_URI_DEV).then(() => {
 
 function generateSeedProducts(n) {
   const productUnits = Product.schema.path("unit").enumValues;
+  const productStatuses = Product.schema.path("status").enumValues;
+
   let products = [];
 
-  function chooseRandomUnit() {
-    const randomIndex = Math.floor(Math.random() * productUnits.length);
-    const randomProductUnit = productUnits[randomIndex];
-    return randomProductUnit;
-  }
-
-  function chooseRandomInt(min, max) {
+  function chooseRandomPrice(min, max) {
     const randomDecimal = Math.random();
     // Scale the random decimal to the range between min and max
     const randomInRange = randomDecimal * (max - min) + min;
@@ -34,16 +31,21 @@ function generateSeedProducts(n) {
   }
 
   for (let i = 0; i < n; i++) {
-    const title = faker.commerce.product();
+    const title = faker.commerce.productName();
     const slug = title + faker.string.uuid();
     const product = new Product({
       title,
       slug,
       description: faker.commerce.productDescription(),
-      unit: chooseRandomUnit(),
-      unitPrice: chooseRandomInt(1000, 1000000),
-      availableStock: chooseRandomInt(10, 100),
+      unit: faker.helpers.arrayElement(productUnits),
+      unitPrice: chooseRandomPrice(1000, 1000000),
+      availableStock: faker.number.int(100),
       media: [faker.airline.aircraftType()],
+      categories: faker.helpers.arrayElements(categories, {
+        min: 1,
+        max: 3,
+      }),
+      status: faker.helpers.arrayElement(productStatuses),
     });
     products.push(product);
   }

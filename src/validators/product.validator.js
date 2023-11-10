@@ -43,12 +43,12 @@ export const sellerProductQueryValidator = [
     }),
   query("unitPrice.gte")
     .optional()
-    .isInt()
-    .withMessage("unitPrice must be an integer."),
+    .isInt({ min: 0 })
+    .withMessage("unitPrice must be a natural number."),
   query("unitPrice.lte")
     .optional()
-    .isInt()
-    .withMessage("unitPrice must be an integer."),
+    .isInt({ min: 0 })
+    .withMessage("unitPrice must be a natural number."),
 
   // availableStock filter check
   query("availableStock")

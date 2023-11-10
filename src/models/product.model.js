@@ -74,6 +74,11 @@ const productSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    status: {
+      type: String,
+      enum: ["public", "hidden"],
+      default: "public",
+    },
   },
   {
     timestamps: true,
@@ -81,6 +86,16 @@ const productSchema = new mongoose.Schema(
     toObject: { virtuals: true },
   }
 );
+
+productSchema.index({
+  status: 1,
+});
+productSchema.index({
+  sellerId: 1,
+});
+productSchema.index({
+  categories: 1,
+});
 
 productSchema.pre("save", function (next) {
   if (this.isModified("title")) {
