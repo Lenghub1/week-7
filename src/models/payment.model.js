@@ -13,12 +13,14 @@ const paymentSchema = new mongoose.Schema({
   },
   cardNumber: {
     type: String,
+    unique: true,
   },
   expirationDate: {
     type: Date,
   },
   cvv: {
     type: String,
+    unique: true,
   },
   nameOnCard: {
     type: String,
