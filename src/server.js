@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
 import dotenv from "dotenv";
 import app from "./app.js";
+import connectDB from "./config/db.js";
 
 dotenv.config();
 
@@ -9,18 +9,7 @@ const isProduction = process.env.NODE_ENV === "production";
 /**
  * MongoDB connection
  */
-const MONGO_URI = isProduction
-  ? process.env.MONGO_URI_PROD
-  : process.env.MONGO_URI_DEV;
-
-mongoose
-  .connect(MONGO_URI, {})
-  .then(() => {
-    console.log("Successfully connected to MongoDB...");
-  })
-  .catch((err) => {
-    console.error("Cannot connect to MongoDB", err);
-  });
+connectDB(isProduction);
 
 /**
  * Express server

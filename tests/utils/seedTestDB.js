@@ -6,6 +6,7 @@ import { faker } from "@faker-js/faker";
 import mongoose from "mongoose";
 import Product from "../../src/models/product.model.js";
 import dotenv from "dotenv";
+import { categories } from "../fixtures/sellerProduct.fixture.js";
 
 dotenv.config();
 
@@ -15,13 +16,9 @@ mongoose.connect(process.env.MONGO_URI_DEV).then(() => {
 
 function generateSeedProducts(n) {
   const productUnits = Product.schema.path("unit").enumValues;
-  let products = [];
+  const productStatuses = Product.schema.path("status").enumValues;
 
-  function chooseRandomUnit() {
-    const randomIndex = Math.floor(Math.random() * productUnits.length);
-    const randomProductUnit = productUnits[randomIndex];
-    return randomProductUnit;
-  }
+  let products = [];
 
   function chooseRandomPrice(min, max) {
     const randomDecimal = Math.random();
@@ -34,11 +31,21 @@ function generateSeedProducts(n) {
   }
 
   for (let i = 0; i < n; i++) {
+    const title = faker.commerce.productName();
+    const slug = title + faker.string.uuid();
     const product = new Product({
-      title: faker.animal.cow(),
-      description: faker.lorem.paragraphs(),
-      unit: chooseRandomUnit(),
+      title,
+      slug,
+      description: faker.commerce.productDescription(),
+      unit: faker.helpers.arrayElement(productUnits),
       unitPrice: chooseRandomPrice(1000, 1000000),
+      availableStock: faker.number.int(100),
+      media: [faker.airline.aircraftType()],
+      categories: faker.helpers.arrayElements(categories, {
+        min: 1,
+        max: 3,
+      }),
+      status: faker.helpers.arrayElement(productStatuses),
     });
     products.push(product);
   }
@@ -48,11 +55,11 @@ function generateSeedProducts(n) {
 
 async function seedDB() {
   try {
-    const seedProducts = generateSeedProducts(10000);
+    const seedProducts = generateSeedProducts(1000);
     await Product.deleteMany();
     await Product.insertMany(seedProducts);
   } catch (error) {
-    console.log("Error:..... ", error);
+    console.log("Error:", error.message);
   }
 }
 
