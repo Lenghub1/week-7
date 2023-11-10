@@ -1,46 +1,45 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+import mongoose from "mongoose";
+import { Schema } from "mongoose";
 
-const NotificationSchema = new Schema({
-    To: { type: Schema.Types.ObjectId, ref: 'User' },
-    From: { type: Schema.Types.ObjectId, ref: 'User' },
+const NotificationSchema = new Schema(
+  {
+    To: { type: Schema.Types.ObjectId, ref: "User" },
+    From: { type: Schema.Types.ObjectId, ref: "User" },
+    title: String,
+    content: String,
     notificationType: String,
     opened: { type: Boolean, default: false },
-    entityId: Schema.Types.ObjectId
-}, { timestamps: true });
+    entityId: Schema.Types.ObjectId,
+  },
+  { timestamps: true }
+);
 
-NotificationSchema.statics.insertNotification = async (To, From, notificationType, entityId) => {
+// Static method for creating or updating a notification
+NotificationSchema.statics.insertNotification = async (
+  To,
+  From,
+  title,
+  content,
+  notificationType,
+  entityId
+) => {
+  try {
     let data = {
-        To: To,
-        From: From,
-        notificationType: notificationType,
-        entityId: entityId
+      To: To,
+      From: From,
+      title: title,
+      content: content,
+      notificationType: notificationType,
+      entityId: entityId,
     };
-    await Notification.deleteOne(data).catch(error => console.log(error));
-    return Notification.create(data).catch(error => console.log(error));
-}
-const Notification = mongoose.model('Notification', NotificationSchema);
-module.exports = Notification;
 
+    await Notification.deleteOne(data);
+    return Notification.create(data);
+  } catch (error) {
+    console.error("Error processing notification:", error);
+  }
+};
 
-/* example:
+const Notification = mongoose.model("Notification", NotificationSchema);
 
- const To = 'buyerUserId'; 
- const From = 'sellerUserId'; 
- const notificationType = 'purchase';
- const entityId = 'productId';
-
-// Call the insertNotification method to create a notification
-
- await Notification.insertNotification(To, From, notificationType, entityId);
-
- data will look like:
- {
-    To: buyerUserId,     
-    From: sellerUserId,  
-    notificationType: 'purchase',
-    opened: false
-    entityId: productObjectId 
-}
-
-*/
+export default Notification;
