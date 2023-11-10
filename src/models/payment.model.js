@@ -29,8 +29,7 @@ const paymentSchema = new mongoose.Schema({
 
 paymentSchema.pre("validate", async function (next) {
   if (this.paymentMethod === "credit_card") {
-    let cardExists = await checkCardNumber(this.cardNumber);
-    if (!cardExists || !this.expirationDate || !this.cvv || !this.nameOnCard) {
+    if (!this.expirationDate || !this.cvv || !this.nameOnCard) {
       next(
         new Error(
           "For credit card payment method, cardNumber, expirationDate, cvv, and nameOnCard are required."
