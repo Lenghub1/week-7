@@ -6,7 +6,7 @@ const reviewController = {
     const { productId } = req.params;
     const reviewInput = req.body;
     const newReview = await reviewService.createReview(productId, reviewInput);
-    res.status(200).json(newReview);
+    res.status(201).json(newReview);
   }),
   deleteReview: catchAsync(async (req, res) => {
     const { productId } = req.params;
@@ -28,7 +28,6 @@ const reviewController = {
   getReviews: catchAsync(async (req, res) => {
     const { productId } = req.params;
     const { page } = req.query;
-    console.log(page);
     const moreReviews = await reviewService.getReviews(productId, page);
     res.status(200).json(moreReviews);
   }),

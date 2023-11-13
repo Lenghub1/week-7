@@ -178,8 +178,6 @@ const reviewService = {
     }
   },
   async getReviews(productId, page) {
-    // const lastCreatedAtDate = new Date(lastCreatedAt);
-    // console.log(lastCreatedAtDate);
     const limit = 10;
     const reviews = await Review.find(
       {

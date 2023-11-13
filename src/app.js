@@ -8,7 +8,7 @@ const app = express();
 
 // configure CORS option
 const corsOptions = {
-  origin: "*",
+  origin: process.env.URL_CLIENT,
   methods: "GET, POST, PUT, PATCH, DELETE, HEAD",
   credentials: true, // allow cookies to be sent
 };
