@@ -6,7 +6,8 @@ import User from "../models/user.model.js";
 
 const isAuth = catchAsync(async (req, res, next) => {
   const authHeader = req.headers.authorization || req.headers.Authorization;
-  if (!authHeader || !authHeader.startWith("Bearer ")) {
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return next(
       new APIError({
         status: 401,
@@ -19,22 +20,14 @@ const isAuth = catchAsync(async (req, res, next) => {
     token,
     process.env.ACCESS_TOKEN_SECRET
   );
-  console.log(decoded);
-  const currentUser = User.findById(decoded.userId);
-  if (!currentUser) {
-    return next(
-      new APIError({
-        status: 401,
-        message: "The user belonging to this tokenn does no longer exist.",
-      })
-    );
-  }
 
-  if (currentUser.changedPasswordAfter(decoded.iat)) {
+  const currentUser = await User.findById({ _id: decoded.userId });
+
+  if (!currentUser.active || !currentUser) {
     return next(
       new APIError({
         status: 401,
-        message: "User recently changed password! Please log in again.",
+        message: "The user belonging to this token does no longer exist.",
       })
     );
   }

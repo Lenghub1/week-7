@@ -1,19 +1,21 @@
 import User from "../models/user.model.js";
+import Session from "../models/session.model.js";
 import APIError from "../utils/APIError.js";
 import sendEmailWithNodemailer from "../utils/email.js";
 import jwt from "jsonwebtoken";
 
 const authService = {
-  signTokenForActivateAccount(email, firstName, lastName, password) {
-    return jwt
-      .sign(
-        { email, password, firstName, lastName },
-        process.env.ACCOUNT_ACTIVATION_TOKEN,
-        {
-          expiresIn: process.env.ACCOUNT_ACTICATION_TOKEN_EXPIRES,
-        }
-      )
-      .replaceAll(".", "RUKHAK2023");
+  signTokenForActivateAccount(data) {
+    const { email, password, firstName, lastName } = data;
+    console.log(email);
+    return jwt.sign(
+      { email, password, firstName, lastName },
+      process.env.ACCOUNT_ACTIVATION_TOKEN,
+      {
+        expiresIn: process.env.ACCOUNT_ACTICATION_TOKEN_EXPIRES,
+      }
+    );
+    // .replaceAll(".", "RUKHAK2023");
   },
 
   sendEmailActivateAccount(req, res, token, email) {
@@ -30,7 +32,16 @@ const authService = {
     sendEmailWithNodemailer(req, res, emailData);
   },
 
-  verifyJWTForActivateAccount(req, res, next, token) {
+  verifyJWTForActivateAccount(req, res, next, data) {
+    const { token } = data;
+    if (!token) {
+      return next(
+        new APIError({
+          status: 401,
+          message: "Token is not defined! Please signup again.",
+        })
+      );
+    }
     return jwt.verify(
       token,
       process.env.ACCOUNT_ACTIVATION_TOKEN,
@@ -68,11 +79,56 @@ const authService = {
         res.status(200).json({
           message: "Account activated. Please log in to continue.",
           data: {
-            user,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            role: user.role,
           },
         });
       }
     );
+  },
+
+  async verifyUser(data, next) {
+    const { email, password } = data;
+    const user = await User.findOne({ email }).select("+password");
+    if (!user || !(await user.verifyPassword(password))) {
+      return next(
+        new APIError({
+          status: 400,
+          message: "Email or password is incorrected.", // For more secure and prevent malicious from knowing which field they input wrong.
+        })
+      );
+    }
+
+    return user;
+  },
+
+  checkCookie(cookies, next) {
+    if (!cookies?.jwt) {
+      return next(
+        new APIError({
+          status: 401,
+          message:
+            "Unauthorized: Access is denied due to invalid credentials. Please login again.",
+        })
+      );
+    }
+
+    return (refreshToken = cookies.jwt);
+  },
+
+  async verifySession(refreshToken, next) {
+    const session = await Session.findOne({ refreshToken });
+    if (!session) {
+      return next(
+        new APIError({
+          status: 403,
+          message: "Forbidden",
+        })
+      );
+    }
+    return session;
   },
 
   signAccessToken(userId) {
@@ -110,17 +166,8 @@ const authService = {
         }
 
         const accessToken = this.signAccessToken(decoded.userId);
-        const refreshToken = this.signRefreshToken(decoded.userId);
-        session.refreshToken = refreshToken;
         session.accessToken = accessToken;
         await session.save();
-
-        res.cookie("jwt", refreshToken, {
-          httpOnly: true,
-          secure: true,
-          sameSite: "None",
-          maxAge: process.env.COOKIE_EXPIRES * 24 * 60 * 60 * 1000,
-        });
 
         res.json({ accessToken });
       }
