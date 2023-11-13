@@ -5,6 +5,8 @@
 
 import Product from "../models/product.model.js";
 import APIError from "../utils/APIError.js";
+import APIFeatures from "../utils/APIFeatures.js";
+import utils from "../utils/utils.js";
 
 /**
  * @typedef {Object} ProductInput
@@ -31,6 +33,36 @@ const productService = {
         message: "There is no document found.",
       });
     }
+    return products;
+  },
+
+  /**
+   * Get a list of all products of a seller.
+   * @param {ReqQueryObj} queryStr
+   * @returns {Promise} A promise that resolves with an object of products and pagination or rejects with an error if no products are found.
+   */
+
+  async getOwnProducts(queryStr) {
+    if (queryStr.categories)
+      queryStr.categories = queryStr.categories.split(",");
+    const features = new APIFeatures(Product, queryStr)
+      .search()
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
+
+    let products = await features.execute();
+    products = products[0];
+
+    if (!products)
+      throw new APIError({
+        status: 404,
+        message: "There is no document found.",
+      });
+
+    products.metadata = utils.getPaginateMetadata(products.metadata, queryStr);
+
     return products;
   },
 
@@ -74,7 +106,6 @@ const productService = {
    */
   async deleteProduct(productId) {
     const product = await Product.findByIdAndRemove(productId);
-    console.log(product);
     if (!product) {
       throw new APIError({
         status: 404,

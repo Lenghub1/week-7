@@ -15,7 +15,7 @@
     "class-methods-use-this": "off",
     "prefer-destructuring": ["error", { "object": true, "array": false }],
     "no-unused-vars": ["warn", { "argsIgnorePattern": "req|res|next|val" }],
-    "no-spread-elements": "ignore"
+    "node/no-unpublished-import": "off"
   },
   "parserOptions": {
     "sourceType": "module"

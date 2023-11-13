@@ -6,7 +6,7 @@ dotenv.config();
 export const setupTestDB = () => {
   beforeAll(async () => {
     try {
-      await mongoose.connect(process.env.MONGO_URI_DEV);
+      await mongoose.connect(process.env.MONGO_URI_TEST);
       console.log("============ Connected to test DB ============");
     } catch (error) {
       console.log("============ DB error: ", error);
@@ -24,5 +24,6 @@ export const setupTestDB = () => {
 
   afterAll(async () => {
     await mongoose.disconnect();
+    console.log("============ Disconnected from test DB ============");
   });
 };
