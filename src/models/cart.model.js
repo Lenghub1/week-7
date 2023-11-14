@@ -36,7 +36,7 @@ cartSchema.pre("save", async function (next) {
       }
       totalAmount += product.unitPrice * cart.items[i].quantity;
     }
-    cart.totalAmount = totalAmount;
+    cart.totalAmount = totalAmount.toFixed(2);
     next();
   } catch (error) {
     next(error);

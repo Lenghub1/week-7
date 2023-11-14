@@ -1,45 +1,34 @@
 import mongoose from "mongoose";
+import Cart from "./cart.model";
+import Payment from "./payment.model";
 
-const orderSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-  addressId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Address",
-    required: true,
-  },
-  items: [
-    {
-      productId: {
+const orderSchema = new mongoose.Schema(
+  {
+    cart: [
+      {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Product",
+        ref: "Cart",
         required: true,
       },
-      quantity: {
-        type: Number,
-        required: true,
-      },
-      totalAmount: {
-        type: Number,
-        required: true,
-      },
-    },
-  ],
-  status: {
-    type: String,
-    enum: [
-      "pending",
-      "approved",
-      "shipped",
-      "cancelled",
-      "delivered",
-      "refunded",
     ],
-    default: "pending",
+    payment: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Payment",
+      required: true,
+    },
+    shipping: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Shipping",
+      required: true,
+    },
   },
+  {
+    timestamps: true,
+  }
+);
+orderSchema.pre("save", async function (next) {
+  this.cart = await Cart.findById(this.cart);
+  next();
 });
 
 const Order = mongoose.model("Order", orderSchema);

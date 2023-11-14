@@ -6,7 +6,7 @@ const addressSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
-  pipPoint: [
+  pinPoint: [
     {
       type: {
         type: String,

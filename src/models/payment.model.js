@@ -16,7 +16,7 @@ const paymentSchema = new mongoose.Schema({
     unique: true,
   },
   expirationDate: {
-    type: Date,
+    type: String,
   },
   cvv: {
     type: String,

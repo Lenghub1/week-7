@@ -17,21 +17,21 @@ const cartService = {
     return product;
   },
 
-  async addToCart(itemBody) {
+  async addItem(itemBody) {
     const product = await Cart.create(itemBody);
     if (!product) {
       throw new Error({ status: 404, message: "No products in your cart." });
     }
     return product;
   },
-  async updateCart(itemId, itemBody) {
+  async updateItem(itemId, itemBody) {
     const product = await Cart.findByIdAndUpdate(itemId, itemBody);
     if (!product) {
       throw new Error({ status: 404, message: "No products in your cart." });
     }
     return product;
   },
-  async deleteCart(itemId, itemBody) {
+  async deleteItem(itemId, itemBody) {
     const product = await Cart.findByIdAndDelete(itemId, itemBody);
     if (!product) {
       throw new Error({ status: 404, message: "No products in your cart." });
@@ -39,3 +39,5 @@ const cartService = {
     return product;
   },
 };
+
+export default cartService;
