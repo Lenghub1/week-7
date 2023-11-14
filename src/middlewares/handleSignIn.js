@@ -12,7 +12,6 @@ const handleSingIn = catchAsync(async (req, res, next) => {
   const refreshToken = authService.signRefreshToken(req.user._id);
   await Session.create({ userId: req.user._id, accessToken, refreshToken });
   const expireationTime = process.env.COOKIES_EXPIRES * 24 * 60 * 60 * 1000;
-
   res.cookie("jwt", refreshToken, {
     httpOnly: true,
     secure: true,
@@ -23,6 +22,10 @@ const handleSingIn = catchAsync(async (req, res, next) => {
   res.status(200).json({
     message: "Login succeed.",
     data: {
+      role: req.user.role,
+      email: req.user.email,
+      firstName: req.user.firstName,
+      lastName: req.user.lastName,
       accessToken,
     },
   });

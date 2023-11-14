@@ -1,8 +1,10 @@
 import User from "../models/user.model.js";
 import Session from "../models/session.model.js";
+import Seller from "../models/seller.model.js";
 import APIError from "../utils/APIError.js";
 import sendEmailWithNodemailer from "../utils/email.js";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 
 const authService = {
   signTokenForActivateAccount(data) {
@@ -68,9 +70,11 @@ const authService = {
           );
         }
 
+        const hashedPassword = await bcrypt.hash(password, 12);
+
         const user = await User.create({
           email,
-          password,
+          password: hashedPassword,
           firstName,
           lastName,
         });
@@ -92,7 +96,7 @@ const authService = {
   async verifyUser(data, next) {
     const { email, password } = data;
     const user = await User.findOne({ email }).select("+password");
-    if (!user || !(await user.verifyPassword(password))) {
+    if (!(await user.verifyPassword(password))) {
       return next(
         new APIError({
           status: 400,
@@ -172,6 +176,72 @@ const authService = {
         res.json({ accessToken });
       }
     );
+  },
+
+  async verifyUserById(req, res, next) {
+    const user = await User.findById(req.user.id).select("+password");
+    if (!user) {
+      return next(
+        new APIError({
+          status: 404,
+          message: "User does not exist.",
+        })
+      );
+    }
+    return user;
+  },
+
+  async createSeller(req, res, sellerData, user) {
+    const { storeName, storeAddress, phoneNumber, storeLocation } = sellerData;
+    user.role = "seller";
+    const seller = new Seller({
+      _id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      password: user.password,
+      role: user.role,
+      storeName,
+      storeAddress,
+      phoneNumber,
+      storeLocation,
+    });
+    await User.findByIdAndRemove(user.id);
+    await seller.save();
+    res.status(200).json({
+      message: "Signup as seller succeed.",
+      data: {
+        firstName: seller.firstName,
+        lastName: seller.lastName,
+        email: seller.email,
+        role: seller.role,
+        storeName: seller.storeName,
+        storeAddress: seller.storeAddress,
+        storeLocation: seller.storeLocation,
+      },
+    });
+  },
+
+  checkJWT(req, res, next, cookies) {
+    if (!cookies?.jwt) return res.status(204); // No content
+    return cookies.jwt;
+  },
+
+  async clearCookieLogOut(req, res, next, refreshToken) {
+    const session = await Session.findOne({ refreshToken });
+    if (!session) {
+      res.clearCookie("jwt", { httOnly: true, samSite: "None", secure: true });
+      return next(
+        new APIError({
+          status: 204, // No content
+        })
+      );
+    }
+
+    await Session.findOneAndRemove({ refreshToken });
+
+    res.clearCookie("jwt", { httpOnly: true, sameSite: "None", secure: true });
+    res.status(204);
   },
 };
 

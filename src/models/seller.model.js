@@ -19,7 +19,7 @@ const sellerSchema = User.discriminator(
       enum: ["pending", "active", "inactive"],
       default: "pending",
     },
-    storeAddress: {
+    storeLocation: {
       type: {
         type: String,
         default: "Point",
@@ -28,6 +28,10 @@ const sellerSchema = User.discriminator(
       coordinates: [Number],
       address: String,
       description: String,
+    },
+    storeAddress: {
+      type: String,
+      required: true,
     },
   })
 );

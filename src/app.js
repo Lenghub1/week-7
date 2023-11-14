@@ -6,13 +6,13 @@ import { converter, notFound } from "./middlewares/error.js";
 
 const app = express();
 
-// configure CORS option
-const corsOptions = {
-  origin: process.env.CLIENT_URL,
-  methods: "GET, POST, PUT, PATCH, DELETE, HEAD",
-  credentials: true, // allow cookies to be sent
-};
-app.use(cors(corsOptions));
+// // configure CORS option
+// const corsOptions = {
+//   origin: process.env.CLIENT_URL,
+//   methods: "GET, POST, PUT, PATCH, DELETE, HEAD",
+//   credentials: true, // allow cookies to be sent
+// };
+app.use(cors());
 
 // req logger
 app.use(

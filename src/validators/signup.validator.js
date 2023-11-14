@@ -27,9 +27,4 @@ export const createSignupValidator = [
       minUppercase: 0,
     })
     .withMessage("Password must contain a minimum of 8 characters"),
-  // .custom((value) => {
-  //   if (value[0] == " " || value[value.length - 1] == " ") {
-  //     throw new Error("Password cannot start or end with space.");
-  //   }
-  // }),
 ];

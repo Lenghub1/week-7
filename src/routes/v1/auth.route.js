@@ -4,6 +4,7 @@ import { createLoginValidator } from "../../validators/login.validator.js";
 import { runValidation } from "../../validators/index.js";
 import controller from "../../controllers/auth.controller.js";
 import handleSingIn from "../../middlewares/handleSignIn.js";
+import isAuth from "../../middlewares/isAuth.js";
 const router = express.Router();
 
 router
@@ -22,4 +23,9 @@ router
     controller.loginWithEmailPassword,
     handleSingIn
   );
+
+router.route("/signup-seller").put(isAuth, controller.signupSeller);
+
+router.route("/logout").get(controller.logOut);
+
 export default router;

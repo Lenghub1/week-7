@@ -1,6 +1,4 @@
-import User from "../models/user.model.js";
 import catchAsync from "../utils/catchAsync.js";
-import APIError from "../utils/APIError.js";
 import authService from "../services/auth.service.js";
 
 const authController = {
@@ -35,7 +33,7 @@ const authController = {
     next();
   }),
 
-  // Refresh Access Token
+  // Refresh Token
   // 1. Get cookie
   // 2. Verify JWT
   // 3. Sign new access token
@@ -45,6 +43,32 @@ const authController = {
     const session = await authService.verifySession(refreshToken, next);
     authService.verifyRefreshToken(req, res, next, refreshToken, session);
   }),
-};
 
+  // Signup as Seller
+  // 1. Get sign up data
+  // 2. Find the user with the request
+  // 3. Replace user document with new document in db as seller
+  signupSeller: catchAsync(async (req, res, next) => {
+    const sellerData = req.body;
+    const user = await authService.verifyUserById(req, res, next);
+    await authService.createSeller(req, res, sellerData, user);
+  }),
+
+  // Logout
+  // 1. Get cookie
+  // 2. Check jwt in Cookie
+  // 3. Check Session in db
+  // 4. Delete Session contain refresh token in db
+  // 5. Clear cookie
+  logOut: catchAsync(async (req, res, next) => {
+    const cookies = req.cookie;
+    const refreshTokenLogOut = await authService.checkJWT(
+      req,
+      res,
+      next,
+      cookies
+    );
+    await authService.clearCookieLogOut(req, res, next, refreshTokenLogOut);
+  }),
+};
 export default authController;

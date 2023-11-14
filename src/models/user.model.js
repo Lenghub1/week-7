@@ -80,15 +80,6 @@ userSchema.pre("save", function (next) {
   next();
 });
 
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    return next();
-  }
-
-  this.password = await bcrypt.hash(this.password, 12);
-  next();
-});
-
 // Methods
 userSchema.methods.verifyPassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
