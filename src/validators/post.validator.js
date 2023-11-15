@@ -2,7 +2,7 @@ import { check } from "express-validator";
 
 const createPostValidator = [
   check("title").not().isEmpty().withMessage("The Post Title cannot be empty"),
-  check("description")
+  check("body")
     .not()
     .isEmail()
     .isLength({ min: 10 })
