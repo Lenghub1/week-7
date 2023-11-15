@@ -22,6 +22,7 @@ const handleSingIn = catchAsync(async (req, res, next) => {
   res.status(200).json({
     message: "Login succeed.",
     data: {
+      id: req.user.id,
       role: req.user.role,
       email: req.user.email,
       firstName: req.user.firstName,

@@ -1,6 +1,5 @@
 import APIError from "../utils/APIError.js";
-// Verify Seller status
-// 1.
+
 const verifySellerStatus = () => {
   return (req, res, next) => {
     if (req.user.sellerStatus === "pending") {
@@ -9,6 +8,13 @@ const verifySellerStatus = () => {
           status: 403,
           message:
             "Forbidden: Seller status is pending. You do not have permission as a seller yet.",
+        })
+      );
+    } else if (req.user.sellerStatus === "inactive") {
+      return next(
+        new APIError({
+          status: 401,
+          message: "Unauthorized: You have been rejected to be a seller.",
         })
       );
     } else if (!req.user.sellerStatus || req.user.sellerStatus !== "active") {
@@ -21,6 +27,7 @@ const verifySellerStatus = () => {
       );
     }
 
+    // Next means seller's status is active
     next();
   };
 };

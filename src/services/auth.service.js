@@ -9,7 +9,7 @@ import bcrypt from "bcryptjs";
 const authService = {
   signTokenForActivateAccount(data) {
     const { email, password, firstName, lastName } = data;
-    console.log(email);
+
     return jwt.sign(
       { email, password, firstName, lastName },
       process.env.ACCOUNT_ACTIVATION_TOKEN,
@@ -96,7 +96,7 @@ const authService = {
   async verifyUser(data, next) {
     const { email, password } = data;
     const user = await User.findOne({ email }).select("+password");
-    if (!(await user.verifyPassword(password))) {
+    if (!user || !(await user.verifyPassword(password))) {
       return next(
         new APIError({
           status: 400,
@@ -179,7 +179,7 @@ const authService = {
   },
 
   async verifyUserById(req, res, next) {
-    const user = await User.findById(req.user.id).select("+password");
+    const user = await User.findOne({ _id: req.user.id }).select("+password");
     if (!user) {
       return next(
         new APIError({
@@ -211,6 +211,7 @@ const authService = {
     res.status(200).json({
       message: "Signup as seller succeed.",
       data: {
+        id: seller._id,
         firstName: seller.firstName,
         lastName: seller.lastName,
         email: seller.email,
@@ -220,6 +221,47 @@ const authService = {
         storeLocation: seller.storeLocation,
       },
     });
+  },
+
+  async verifySeller(sellerId, action, next) {
+    const seller = await User.findOne({ _id: sellerId });
+    if (!seller) {
+      throw new APIError({
+        status: 404,
+        message: `Document Not Found: User id ${sellerId}, does not exist in data base.`,
+      });
+    } else if (!seller.active && action === "approve") {
+      return next(
+        new APIError({
+          status: 403,
+          message: `Forbidden: The user account is deactivated. Approval is not allowed.`,
+        })
+      );
+    }
+    return seller;
+  },
+
+  async updateSellerStatus(req, res, next, seller, action) {
+    if (action === "approve") {
+      seller.sellerStatus = "active";
+      await seller.save();
+      res.status(201).json({
+        message: "Seller status approved successfully.",
+        data: {
+          sellerStatus: seller.sellerStatus,
+        },
+      });
+    } else {
+      seller.sellerStatus = "inactive";
+      seller.role = "user";
+      await seller.save();
+      res.status(201).json({
+        message: "Seller status rejected!",
+        data: {
+          sellerStatus: seller.sellerStatus,
+        },
+      });
+    }
   },
 
   checkJWT(req, res, next, cookies) {

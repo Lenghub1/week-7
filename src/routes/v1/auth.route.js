@@ -5,6 +5,7 @@ import { runValidation } from "../../validators/index.js";
 import controller from "../../controllers/auth.controller.js";
 import handleSingIn from "../../middlewares/handleSignIn.js";
 import isAuth from "../../middlewares/isAuth.js";
+import verifyRoles from "../../middlewares/verifyRoles.js";
 const router = express.Router();
 
 router
@@ -24,7 +25,17 @@ router
     handleSingIn
   );
 
-router.route("/signup-seller").put(isAuth, controller.signupSeller);
+router
+  .route("/signup-seller")
+  .put(isAuth, verifyRoles("user"), controller.signupSeller);
+
+router
+  .route("/approved/:sellerId")
+  .patch(isAuth, verifyRoles("admin"), controller.approveSeller);
+
+router
+  .route("/rejected/:sellerId")
+  .patch(isAuth, verifyRoles("admin"), controller.rejectSeller);
 
 router.route("/logout").get(controller.logOut);
 

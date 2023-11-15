@@ -54,6 +54,24 @@ const authController = {
     await authService.createSeller(req, res, sellerData, user);
   }),
 
+  // Approve seller
+  // 1. Get seller id from params
+  // 2. Check for seller in database
+  // 3. Update seller status to active
+  approveSeller: catchAsync(async (req, res, next) => {
+    const sellerId = req.params.sellerId;
+    const action = "approve"; // For reuseable verifySeller and updateSellerStatus functions
+    const seller = await authService.verifySeller(sellerId, action, next);
+    await authService.updateSellerStatus(req, res, next, seller, action);
+  }),
+
+  rejectSeller: catchAsync(async (req, res, next) => {
+    const sellerId = req.params.sellerId;
+    const action = "reject";
+    const seller = await authService.verifySeller(sellerId, action, next);
+    await authService.updateSellerStatus(req, res, next, seller, action);
+  }),
+
   // Logout
   // 1. Get cookie
   // 2. Check jwt in Cookie
