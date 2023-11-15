@@ -6,7 +6,7 @@ const conversionRateSchema = new mongoose.Schema({
   conversionRate: Number,
 });
 
-const averageOrderValueRateSchema = new mongoose.Schema({
+const averageOrderValueSchema = new mongoose.Schema({
   totalOrders: Number,
   totalOrdersValue: Number,
   averageOrderValue: Number,
@@ -18,7 +18,7 @@ const metricSchema = new mongoose.Schema({
     required: true,
   },
   conversionRate: conversionRateSchema,
-  averageOrderValueRate: averageOrderValueRateSchema,
+  averageOrderValue: averageOrderValueSchema,
 });
 
 const Metric = mongoose.model("Metric", metricSchema);
