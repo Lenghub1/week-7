@@ -97,7 +97,7 @@ const factory = {
    */
   getAll(getAllDocsService) {
     return catchAsync(async (req, res, next) => {
-      const docs = await getAllDocsService();
+      const docs = await getAllDocsService(req.query);
 
       res.json({
         message: "Data Retrieved",
