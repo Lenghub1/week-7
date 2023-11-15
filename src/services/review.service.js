@@ -1,4 +1,4 @@
-import mongoose, { mongo } from "mongoose";
+import mongoose from "mongoose";
 import Review from "../models/review.model.js";
 import APIError from "../utils/APIError.js";
 import Product from "../models/product.model.js";
@@ -178,8 +178,6 @@ const reviewService = {
     }
   },
   async getReviews(productId, page) {
-    // const lastCreatedAtDate = new Date(lastCreatedAt);
-    // console.log(lastCreatedAtDate);
     const limit = 10;
     const reviews = await Review.find(
       {

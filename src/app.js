@@ -3,12 +3,14 @@ import morgan from "morgan";
 import cors from "cors";
 import v1Routes from "./routes/v1/index.js";
 import { converter, notFound } from "./middlewares/error.js";
+import { config } from "dotenv";
+config();
 
 const app = express();
 
 // configure CORS option
 const corsOptions = {
-  origin: "*",
+  origin: process.env.URL_CLIENT,
   methods: "GET, POST, PUT, PATCH, DELETE, HEAD",
   credentials: true, // allow cookies to be sent
 };
