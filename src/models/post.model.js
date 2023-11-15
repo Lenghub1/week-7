@@ -20,6 +20,10 @@ const postSchema = new mongoose.Schema(
       ref: "User",
       require: true,
     },
+    isUpdated: {
+      type: Boolean,
+      default: false,
+    },
     media: [
       {
         type: Buffer,
