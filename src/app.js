@@ -3,6 +3,8 @@ import morgan from "morgan";
 import cors from "cors";
 import v1Routes from "./routes/v1/index.js";
 import { converter, notFound } from "./middlewares/error.js";
+import { config } from "dotenv";
+config();
 
 const app = express();
 

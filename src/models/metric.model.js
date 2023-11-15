@@ -12,12 +12,6 @@ const averageOrderValueRateSchema = new mongoose.Schema({
   averageOrderValue: Number,
 });
 
-const cartAbandonmentRateSchema = new mongoose.Schema({
-  totalCarts: Number,
-  totalPurchases: Number,
-  cartAbandonmentRate: Number,
-});
-
 const metricSchema = new mongoose.Schema({
   date: {
     type: Date,
@@ -25,7 +19,6 @@ const metricSchema = new mongoose.Schema({
   },
   conversionRate: conversionRateSchema,
   averageOrderValueRate: averageOrderValueRateSchema,
-  cartAbandonmentRate: cartAbandonmentRateSchema,
 });
 
 const Metric = mongoose.model("Metric", metricSchema);
