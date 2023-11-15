@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import Post from "./post.model.js";
 
 const commentSchema = new mongoose.Schema(
   {
@@ -12,10 +13,18 @@ const commentSchema = new mongoose.Schema(
       ref: "Post",
       require: true,
     },
+    parent: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Comment",
+    },
     content: {
-      type: Object,
+      type: {},
       trim: true,
       require: true,
+    },
+    isUpdated: {
+      type: Boolean,
+      default: false,
     },
     upvote: {
       type: Number,
@@ -25,7 +34,6 @@ const commentSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    slug: String,
     excerpt: {
       type: String,
       max: 300,
@@ -39,4 +47,20 @@ const commentSchema = new mongoose.Schema(
 );
 
 const Comment = mongoose.model("Comment", commentSchema);
+const commentStream = Comment.watch();
+
+commentStream.on("change", async (change) => {
+  if (change.operationType === "insert") {
+    const post = await Post.findById(change.fullDocument.postId);
+
+    post.commentCount++;
+
+    await post.save();
+  } else if (change.operationType === "remove") {
+    const post = await Post.findById(change.fullDocument.postId);
+    post.commentCount--;
+
+    await post.save();
+  }
+});
 export default Comment;
