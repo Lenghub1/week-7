@@ -1,7 +1,7 @@
 import express from "express";
 import commentController from "../../controllers/comment.controller.js";
 
-const route = express.Router();
+const route = express.Router({ mergeParams: true });
 
 route
   .route("/")
