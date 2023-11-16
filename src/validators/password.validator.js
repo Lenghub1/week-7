@@ -1,7 +1,6 @@
 import { check } from "express-validator";
-
 export const createPasswordValidator = [
-  check("password")
+  check("newPassword")
     .not()
     .isEmpty()
     .withMessage("New password is required.")

@@ -8,7 +8,7 @@ const authController = {
   // 3. Send email with a link include JWT to let user activate account
   signup: catchAsync(async (req, res, next) => {
     const data = req.body;
-    const token = authService.signup.signTokenForActivateAccount(data);
+    const token = await authService.signup.signTokenForActivateAccount(data);
     const { email } = data;
     authService.signup.sendEmailActivateAccount(req, res, token, email);
   }),
@@ -92,6 +92,21 @@ const authController = {
       next
     );
     await authService.forgotPassword.createNewPassword(res, data, user);
+  }),
+
+  // Update Password
+  // 1. Get current password and new password
+  // 2. Find user in data base
+  // 3. Update new password
+  updatePassword: catchAsync(async (req, res, next) => {
+    const data = req.body;
+    const user = await authService.updatePassword.getCurrentUser(req);
+    await authService.updatePassword.verifyAndUpdatePassword(
+      res,
+      user,
+      data,
+      next
+    );
   }),
 
   // Signup as Seller

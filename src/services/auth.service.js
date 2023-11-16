@@ -32,18 +32,18 @@ const authService = {
   },
 
   signup: {
-    signTokenForActivateAccount(data) {
+    async signTokenForActivateAccount(data) {
       const { email, password, firstName, lastName } = data;
 
-      return jwt
-        .sign(
-          { email, password, firstName, lastName },
-          process.env.ACCOUNT_ACTIVATION_TOKEN,
-          {
-            expiresIn: process.env.ACCOUNT_ACTICATION_TOKEN_EXPIRES,
-          }
-        )
-        .replaceAll(".", "RUKHAK2023"); // Prevent page not found on client side.
+      const hashedPassword = await bcrypt.hash(password, 12);
+      return jwt.sign(
+        { email, password: hashedPassword, firstName, lastName },
+        process.env.ACCOUNT_ACTIVATION_TOKEN,
+        {
+          expiresIn: process.env.ACCOUNT_ACTICATION_TOKEN_EXPIRES,
+        }
+      );
+      // .replaceAll(".", "RUKHAK2023"); // Prevent page not found on client side.
     },
 
     sendEmailActivateAccount(req, res, token, email) {
@@ -96,11 +96,9 @@ const authService = {
             );
           }
 
-          const hashedPassword = await bcrypt.hash(password, 12);
-
           const user = await User.create({
             email,
-            password: hashedPassword,
+            password,
             firstName,
             lastName,
           });
@@ -115,7 +113,7 @@ const authService = {
   login: {
     async verifyUserByEmailAndPassword(data, next) {
       const { email, password } = data;
-      const user = await User.findOne({ email }).select("+password");
+      const user = await User.findOne({ email });
       if (!user || !(await user.verifyPassword(password))) {
         return next(
           new APIError({
@@ -183,7 +181,7 @@ const authService = {
 
   signupSeller: {
     async verifyUserById(req, res, next) {
-      const user = await User.findById(req.user.id).select("+password");
+      const user = await User.findById(req.user.id);
       if (!user) {
         return next(
           new APIError({
@@ -324,13 +322,38 @@ const authService = {
     },
 
     async createNewPassword(res, data, user) {
-      const { password } = data;
-      user.password = password;
+      const { newPassword } = data;
+      user.password = newPassword;
       user.forgotPasswordToken = undefined;
       user.forgotPasswordExpires = undefined;
       await user.save();
       res.status(201).json({
         message: "Password has been reseted.",
+      });
+    },
+  },
+
+  updatePassword: {
+    async getCurrentUser(req) {
+      const user = await User.findById(req.user._id);
+      return user;
+    },
+
+    async verifyAndUpdatePassword(res, user, data, next) {
+      const { currentPassword, newPassword } = data;
+      if (!(await user.verifyPassword(currentPassword))) {
+        return next(
+          new APIError({
+            status: 401,
+            message: "Your current password is incorrect.",
+          })
+        );
+      }
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
+      user.password = hashedPassword;
+      await user.save();
+      res.status(201).json({
+        message: "Password has been updated.",
       });
     },
   },

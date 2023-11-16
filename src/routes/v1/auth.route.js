@@ -35,7 +35,16 @@ router
 
 router
   .route("/reset-password")
-  .post(createPasswordValidator, runValidation, controller.resetPassword);
+  .patch(createPasswordValidator, runValidation, controller.resetPassword);
+
+router
+  .route("/update-password")
+  .patch(
+    createPasswordValidator,
+    runValidation,
+    isAuth,
+    controller.updatePassword
+  );
 
 router
   .route("/signup-seller")
