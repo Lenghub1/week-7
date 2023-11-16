@@ -8,9 +8,9 @@ const authController = {
   // 3. Send email with a link include JWT to let user activate account
   signup: catchAsync(async (req, res, next) => {
     const data = req.body;
-    const token = authService.signTokenForActivateAccount(data);
+    const token = authService.signup.signTokenForActivateAccount(data);
     const { email } = data;
-    authService.sendEmailActivateAccount(req, res, token, email);
+    authService.signup.sendEmailActivateAccount(req, res, token, email);
   }),
 
   // Activate Account
@@ -19,7 +19,7 @@ const authController = {
   // 3. Activate account by adding data to database
   accountActivation: catchAsync(async (req, res, next) => {
     const data = req.body;
-    authService.verifyJWTForActivateAccount(req, res, next, data);
+    authService.signup.verifyJWTForActivateAccount(req, res, next, data);
   }),
 
   // Login
@@ -28,7 +28,10 @@ const authController = {
   // 3. Move to next middleware for hanle assign access and refresh tokens
   loginWithEmailPassword: catchAsync(async (req, res, next) => {
     const data = req.body;
-    const user = await authService.verifyUser(data, next);
+    const user = await authService.login.verifyUserByEmailAndPassword(
+      data,
+      next
+    );
     req.user = user;
     next();
   }),
@@ -39,9 +42,56 @@ const authController = {
   // 3. Sign new access token
   refreshToken: catchAsync(async (req, res, next) => {
     const cookies = req.cookies;
-    const refreshToken = await authService.checkCookie(cookies, next);
-    const session = await authService.verifySession(refreshToken, next);
-    authService.verifyRefreshToken(req, res, next, refreshToken, session);
+    const refreshToken = await authService.refreshToken.checkCookie(
+      cookies,
+      next
+    );
+    const session = await authService.refreshToken.verifySession(
+      refreshToken,
+      next
+    );
+    authService.refreshToken.verifyRefreshToken(
+      req,
+      res,
+      next,
+      refreshToken,
+      session
+    );
+  }),
+
+  // Forgot Password
+  // 1. Get user's email
+  // 2. Verify user by email
+  // 3. Generate a random reset token
+  // 4. Send it to user's email
+  forgotPassword: catchAsync(async (req, res, next) => {
+    const { email } = req.body;
+    const user = await authService.forgotPassword.verifyUserByEmail(
+      email,
+      next
+    );
+    const resetToken = user.createPasswordResetToken();
+    await user.save({ validateBeforeSave: false });
+    authService.forgotPassword.sendEmailResetPassword(
+      req,
+      res,
+      resetToken,
+      email
+    );
+  }),
+
+  // Reset Password
+  // 1. Get reset token
+  // 2. Hash reset token and compare to user hashed token in db
+  // 3. Create new password
+  resetPassword: catchAsync(async (req, res, next) => {
+    const data = req.body;
+    const hashedToken = authService.forgotPassword.hashToken(data);
+    const user = await authService.forgotPassword.verifyUserByToken(
+      hashedToken,
+      next
+    );
+    await authService.forgotPassword.createNewPassword(res, data, user);
   }),
 
   // Signup as Seller
@@ -50,8 +100,8 @@ const authController = {
   // 3. Replace user document with new document in db as seller
   signupSeller: catchAsync(async (req, res, next) => {
     const sellerData = req.body;
-    const user = await authService.verifyUserById(req, res, next);
-    await authService.createSeller(req, res, sellerData, user);
+    const user = await authService.signupSeller.verifyUserById(req, res, next);
+    await authService.signupSeller.createSeller(req, res, sellerData, user);
   }),
 
   // Approve seller
@@ -60,16 +110,32 @@ const authController = {
   // 3. Update seller status to active
   approveSeller: catchAsync(async (req, res, next) => {
     const sellerId = req.params.sellerId;
-    const action = "approve"; // For reuseable verifySeller and updateSellerStatus functions
-    const seller = await authService.verifySeller(sellerId, action, next);
-    await authService.updateSellerStatus(req, res, next, seller, action);
+    const action = "approve"; // For reuseable updateSellerStatus function
+    const seller = await authService.signupSeller.verifySeller(sellerId, next);
+    await authService.signupSeller.updateSellerStatus(
+      req,
+      res,
+      next,
+      seller,
+      action
+    );
   }),
 
+  // Approve seller
+  // 1. Get seller id from params
+  // 2. Check for seller in database
+  // 3. Update seller status and role
   rejectSeller: catchAsync(async (req, res, next) => {
     const sellerId = req.params.sellerId;
     const action = "reject";
-    const seller = await authService.verifySeller(sellerId, action, next);
-    await authService.updateSellerStatus(req, res, next, seller, action);
+    const seller = await authService.signupSeller.verifySeller(sellerId, next);
+    await authService.signupSeller.updateSellerStatus(
+      req,
+      res,
+      next,
+      seller,
+      action
+    );
   }),
 
   // Logout

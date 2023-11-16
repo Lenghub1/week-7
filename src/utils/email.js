@@ -18,7 +18,7 @@ const sendEmailWithNodemailer = (req, res, emailData) => {
     .then((info) => {
       console.log(`Message sent: ${info.response}`);
       return res.status(200).json({
-        message: `Email has been send to your email. Follow the instruction to activate your account`,
+        message: `Link has been send to your email.`,
       });
     })
     .catch((err) => `Problem sending email: ${err}`);

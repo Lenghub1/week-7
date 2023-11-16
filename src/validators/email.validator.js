@@ -1,6 +1,6 @@
 import { check } from "express-validator";
 
-export const createLoginValidator = [
+export const createEmailValidator = [
   check("email")
     .not()
     .isEmpty()
@@ -8,8 +8,4 @@ export const createLoginValidator = [
     .isEmail()
     .withMessage("Email is invalid.")
     .trim(),
-  check("password")
-    .not()
-    .isEmpty()
-    .withMessage("Password is required to login."),
 ];

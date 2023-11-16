@@ -1,6 +1,8 @@
 import express from "express";
 import { createSignupValidator } from "../../validators/signup.validator.js";
 import { createLoginValidator } from "../../validators/login.validator.js";
+import { createEmailValidator } from "../../validators/email.validator.js";
+import { createPasswordValidator } from "../../validators/password.validator.js";
 import { runValidation } from "../../validators/index.js";
 import controller from "../../controllers/auth.controller.js";
 import handleSingIn from "../../middlewares/handleSignIn.js";
@@ -12,7 +14,9 @@ router
   .route("/signup")
   .post(createSignupValidator, runValidation, controller.signup);
 
-router.route("/account-activation").post(controller.accountActivation);
+router
+  .route("/account-activation")
+  .post(controller.accountActivation, handleSingIn);
 
 router.route("/refresh").get(controller.refreshToken);
 
@@ -24,6 +28,14 @@ router
     controller.loginWithEmailPassword,
     handleSingIn
   );
+
+router
+  .route("/forgot-password")
+  .post(createEmailValidator, runValidation, controller.forgotPassword);
+
+router
+  .route("/reset-password")
+  .post(createPasswordValidator, runValidation, controller.resetPassword);
 
 router
   .route("/signup-seller")

@@ -1,5 +1,6 @@
 import { check } from "express-validator";
 import User from "../models/user.model.js";
+import APIError from "../utils/APIError.js";
 
 export const createSignupValidator = [
   check("firstName").not().isEmpty().withMessage("First name cannot be empty."),
@@ -7,13 +8,14 @@ export const createSignupValidator = [
   check("email")
     .not()
     .isEmpty()
-    .trim()
     .withMessage("Email is required")
+    .trim()
     .isEmail()
     .withMessage("Please enter a valid email address.")
     .custom(async (value) => {
       const user = await User.findOne({ email: value });
       if (user) throw new Error("Email is already existed.");
+      return true;
     }),
   check("password")
     .not()
@@ -22,9 +24,16 @@ export const createSignupValidator = [
     .isStrongPassword({
       minLength: 8,
       minLowercase: 1,
-      minNumbers: 0,
+      minNumbers: 1,
       minSymbols: 0,
       minUppercase: 0,
     })
-    .withMessage("Password must contain a minimum of 8 characters"),
+    .withMessage("Password must contain a minimum of 8 characters")
+    .custom((value) => {
+      console.log(value.trim() !== value);
+      if (value.trim() !== value) {
+        throw new Error("Password can not be start or end with space.");
+      }
+      return true;
+    }),
 ];

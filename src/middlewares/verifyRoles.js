@@ -1,5 +1,8 @@
 import APIError from "../utils/APIError.js";
 
+// Verify user roles
+// 1. Get user's role
+// 2. Verify the role
 const verifyRoles = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {

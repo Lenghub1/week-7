@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import validator from "validator";
 import slugify from "slugify";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
 const userSchema = new mongoose.Schema(
   {
@@ -39,15 +40,11 @@ const userSchema = new mongoose.Schema(
             minSymbols: 0,
             minUppercase: 0,
             minLength: 8,
-            minNumbers: 0,
+            minNumbers: 1,
             minLowercase: 1,
           });
         },
-        validator(val) {
-          return val.trim() == val;
-        },
       },
-      select: false,
     },
     role: {
       type: String,
@@ -83,6 +80,16 @@ userSchema.pre("save", function (next) {
 // Methods
 userSchema.methods.verifyPassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
+};
+
+userSchema.methods.createPasswordResetToken = function () {
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  this.forgotPasswordToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+  this.forgotPasswordExpires = Date.now() + 10 * 60 * 1000;
+  return resetToken;
 };
 
 const User = mongoose.model("User", userSchema);
