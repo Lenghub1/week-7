@@ -36,14 +36,15 @@ const authService = {
       const { email, password, firstName, lastName } = data;
 
       const hashedPassword = await bcrypt.hash(password, 12);
-      return jwt.sign(
-        { email, password: hashedPassword, firstName, lastName },
-        process.env.ACCOUNT_ACTIVATION_TOKEN,
-        {
-          expiresIn: process.env.ACCOUNT_ACTICATION_TOKEN_EXPIRES,
-        }
-      );
-      // .replaceAll(".", "RUKHAK2023"); // Prevent page not found on client side.
+      return jwt
+        .sign(
+          { email, password: hashedPassword, firstName, lastName },
+          process.env.ACCOUNT_ACTIVATION_TOKEN,
+          {
+            expiresIn: process.env.ACCOUNT_ACTICATION_TOKEN_EXPIRES,
+          }
+        )
+        .replaceAll(".", "RUKHAK2023"); // Prevent page not found on client side.
     },
 
     sendEmailActivateAccount(req, res, token, email) {
@@ -219,6 +220,7 @@ const authService = {
           lastName: seller.lastName,
           email: seller.email,
           role: seller.role,
+          sellerStatus: seller.sellerStatus,
           storeName: seller.storeName,
           storeAddress: seller.storeAddress,
           storeLocation: seller.storeLocation,
@@ -373,7 +375,7 @@ const authService = {
       const session = await Session.findOne({ refreshToken });
       if (!session) {
         res.clearCookie("jwt", {
-          httOnly: true,
+          httpOnly: true,
           samSite: "None",
           secure: true,
         });

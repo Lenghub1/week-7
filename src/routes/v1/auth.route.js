@@ -58,6 +58,6 @@ router
   .route("/rejected/:sellerId")
   .patch(isAuth, verifyRoles("admin"), controller.rejectSeller);
 
-router.route("/logout").get(controller.logOut);
+router.route("/logout").post(isAuth, controller.logOut);
 
 export default router;

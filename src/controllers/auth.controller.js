@@ -136,7 +136,7 @@ const authController = {
     );
   }),
 
-  // Approve seller
+  // Reject seller
   // 1. Get seller id from params
   // 2. Check for seller in database
   // 3. Update seller status and role
@@ -161,13 +161,19 @@ const authController = {
   // 5. Clear cookie
   logOut: catchAsync(async (req, res, next) => {
     const cookies = req.cookie;
-    const refreshTokenLogOut = await authService.checkJWT(
+    const refreshTokenLogOut = await authService.logOut.checkJWT(
       req,
       res,
       next,
       cookies
     );
-    await authService.clearCookieLogOut(req, res, next, refreshTokenLogOut);
+    await authService.logOut.clearCookieLogOut(
+      req,
+      res,
+      next,
+      refreshTokenLogOut
+    );
   }),
 };
+
 export default authController;
