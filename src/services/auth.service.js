@@ -33,21 +33,46 @@ const authService = {
 
   signup: {
     async signTokenForActivateAccount(data) {
-      const { email, password, firstName, lastName } = data;
+      const { email } = data;
 
-      const hashedPassword = await bcrypt.hash(password, 12);
       return jwt
-        .sign(
-          { email, password: hashedPassword, firstName, lastName },
-          process.env.ACCOUNT_ACTIVATION_TOKEN,
-          {
-            expiresIn: process.env.ACCOUNT_ACTICATION_TOKEN_EXPIRES,
-          }
-        )
+        .sign({ email }, process.env.ACCOUNT_ACTIVATION_TOKEN, {
+          expiresIn: process.env.ACCOUNT_ACTICATION_TOKEN_EXPIRES,
+        })
         .replaceAll(".", "RUKHAK2023"); // Prevent page not found on client side.
     },
 
-    sendEmailActivateAccount(req, res, token, email) {
+    async createNewUser(res, next, resultSendEmail, data) {
+      const { email, password, firstName, lastName } = data;
+
+      if (!resultSendEmail) {
+        return next(
+          new APIError({
+            status: 500,
+            message: "Internal server error",
+          })
+        );
+      }
+      const user = await User.create({
+        email,
+        password,
+        firstName,
+        lastName,
+        active: false,
+      });
+      res.status(201).json({
+        message: "Please Check your email to activate your rukhak account.",
+        data: {
+          _id: user._id,
+          email: user.email,
+          firstName: user.password,
+          lastName: user.lastName,
+        },
+      });
+    },
+
+    createEmail(token, data) {
+      const { email } = data;
       const emailData = {
         to: email,
         subject: "Activate Account",
@@ -58,8 +83,21 @@ const authService = {
           <p>This email may contain sensitive information</p>
           <p>${authService.setURL()}</p>`,
       };
+      return emailData;
+    },
 
-      sendEmailWithNodemailer(req, res, emailData);
+    respondResendEmail(res, next, resultSendEmail) {
+      if (!resultSendEmail) {
+        return next(
+          new APIError({
+            status: 500,
+            message: "Internal server error.",
+          })
+        );
+      }
+      res.status(200).json({
+        message: "Email successfully resend.",
+      });
     },
 
     verifyJWTForActivateAccount(req, res, next, data) {
@@ -85,9 +123,9 @@ const authService = {
             );
           }
 
-          const { email, firstName, lastName, password } = decoded;
+          const { email } = decoded;
 
-          if (!email || !firstName || !lastName || !password) {
+          if (!email) {
             return next(
               new APIError({
                 status: 401,
@@ -97,12 +135,19 @@ const authService = {
             );
           }
 
-          const user = await User.create({
-            email,
-            password,
-            firstName,
-            lastName,
-          });
+          const user = await User.findOne({ email });
+
+          if (!user) {
+            return next(
+              new APIError({
+                status: 410,
+                message: "Account activation expired. Please sign up again.",
+              })
+            );
+          }
+
+          user.active = true;
+          await user.save();
 
           req.user = user;
           next();
@@ -266,7 +311,8 @@ const authService = {
   },
 
   forgotPassword: {
-    async verifyUserByEmail(email, next) {
+    async verifyUserByEmail(next, data) {
+      const { email } = data;
       const user = await User.findOne({ email });
       if (!user) {
         return next(
@@ -279,7 +325,8 @@ const authService = {
       return user;
     },
 
-    sendEmailResetPassword(req, res, resetToken, email) {
+    createEmail(data, resetToken) {
+      const { email } = data;
       const emailData = {
         to: email,
         subject: "Reset Password",
@@ -289,8 +336,21 @@ const authService = {
           <p>Please reject this email, if you not request to reset password.</p>
           <p>${authService.setURL()}</p>`,
       };
+      return emailData;
+    },
 
-      sendEmailWithNodemailer(req, res, emailData);
+    respondSendEmail(res, next, resultSendEmail) {
+      if (!resultSendEmail) {
+        return next(
+          new APIError({
+            status: 500,
+            message: "Internal server error. Unable to send email.",
+          })
+        );
+      }
+      res.status(200).json({
+        message: "Please check your email to reset your password.",
+      });
     },
 
     hashToken(data) {

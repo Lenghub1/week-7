@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
 
-const sendEmailWithNodemailer = (req, res, emailData) => {
+const sendEmailWithNodemailer = (emailData) => {
   const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 465,
@@ -17,11 +17,12 @@ const sendEmailWithNodemailer = (req, res, emailData) => {
     .sendMail(emailData)
     .then((info) => {
       console.log(`Message sent: ${info.response}`);
-      return res.status(200).json({
-        message: `Link has been send to your email.`,
-      });
+      return true;
     })
-    .catch((err) => `Problem sending email: ${err}`);
+    .catch((err) => {
+      console.log(`Problem sending email: ${err}`);
+      return false;
+    });
 };
 
 export default sendEmailWithNodemailer;

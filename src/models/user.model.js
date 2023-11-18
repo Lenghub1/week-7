@@ -66,6 +66,12 @@ const userSchema = new mongoose.Schema(
   }
 );
 
+// Auto delete document if user not activate their account for 10 minutes.
+userSchema.index(
+  { createdAt: 1 },
+  { expireAfterSeconds: 10 * 60, partialFilterExpression: { active: false } }
+);
+
 userSchema.pre("save", function (next) {
   if (this.isModified("firstName") || this.isModified("lastName")) {
     const fullName = `${this.firstName} ${this.lastName}`;
@@ -74,6 +80,13 @@ userSchema.pre("save", function (next) {
       strict: true,
     });
   }
+  next();
+});
+
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+
+  this.password = await bcrypt.hash(this.password, 12);
   next();
 });
 

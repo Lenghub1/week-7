@@ -1,25 +1,41 @@
 import catchAsync from "../utils/catchAsync.js";
 import authService from "../services/auth.service.js";
+import sendEmailWithNodemailer from "../utils/email.js";
 
 const authController = {
   // Signup
   // 1. Get user data from signup
-  // 2. Sign new JWT
-  // 3. Send email with a link include JWT to let user activate account
+  // 2. Sign token (JWT)
+  // 3. Create email data along with the token to client side
+  // 4. Create new user (Temporary)
   signup: catchAsync(async (req, res, next) => {
     const data = req.body;
     const token = await authService.signup.signTokenForActivateAccount(data);
-    const { email } = data;
-    authService.signup.sendEmailActivateAccount(req, res, token, email);
+    const emailData = authService.signup.createEmail(token, data);
+    const resultSendEmail = await sendEmailWithNodemailer(emailData);
+    await authService.signup.createNewUser(res, next, resultSendEmail, data);
+  }),
+
+  // Resend Email Sign up
+  // 1. Get user's data
+  // 2. Sign new token (JWT)
+  // 3. Create email data along with the token to client side
+  // 4. Send Email again
+  resendActivationEmail: catchAsync(async (req, res, next) => {
+    const data = req.user;
+    const token = await authService.signup.signTokenForActivateAccount(data);
+    const emailData = authService.signup.createEmail(token, data);
+    const resultSendEmail = await sendEmailWithNodemailer(emailData);
+    authService.signup.respondResendEmail(res, next, resultSendEmail);
   }),
 
   // Activate Account
   // 1. Receive JWT from client
   // 2. Verify the JWT
-  // 3. Activate account by adding data to database
+  // 3. Activate account by set active to true
   accountActivation: catchAsync(async (req, res, next) => {
     const data = req.body;
-    authService.signup.verifyJWTForActivateAccount(req, res, next, data);
+    await authService.signup.verifyJWTForActivateAccount(req, res, next, data);
   }),
 
   // Login
@@ -65,19 +81,27 @@ const authController = {
   // 3. Generate a random reset token
   // 4. Send it to user's email
   forgotPassword: catchAsync(async (req, res, next) => {
-    const { email } = req.body;
-    const user = await authService.forgotPassword.verifyUserByEmail(
-      email,
-      next
-    );
+    const data = req.body;
+    const user = await authService.forgotPassword.verifyUserByEmail(next, data);
     const resetToken = user.createPasswordResetToken();
     await user.save({ validateBeforeSave: false });
-    authService.forgotPassword.sendEmailResetPassword(
-      req,
-      res,
-      resetToken,
-      email
-    );
+    const emailData = authService.forgotPassword.createEmail(data, resetToken);
+    const resultSendEmail = sendEmailWithNodemailer(emailData);
+    authService.forgotPassword.respondSendEmail(res, next, resultSendEmail);
+  }),
+
+  // Resend Email Reset Password
+  // 1. Get user from middleware
+  // 2. Sign you token
+  // 3. Create new email data
+  // 4. Send email again
+  resendEmailResetPassword: catchAsync(async (req, res, next) => {
+    const user = req.user;
+    const resetToken = user.createPasswordResetToken();
+    await user.save({ validateBeforeSave: false });
+    const emailData = authService.forgotPassword.createEmail(user, resetToken);
+    const resultSendEmail = sendEmailWithNodemailer(emailData);
+    authService.forgotPassword.respondSendEmail(res, next, resultSendEmail);
   }),
 
   // Reset Password

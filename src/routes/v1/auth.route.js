@@ -8,6 +8,8 @@ import controller from "../../controllers/auth.controller.js";
 import handleSingIn from "../../middlewares/handleSignIn.js";
 import isAuth from "../../middlewares/isAuth.js";
 import verifyRoles from "../../middlewares/verifyRoles.js";
+import isRecentlySignup from "../../middlewares/isRecentlySignup.js";
+import isRecentlyForgotPwd from "../../middlewares/isRecentlyForgotPwd.js";
 const router = express.Router();
 
 router
@@ -15,10 +17,12 @@ router
   .post(createSignupValidator, runValidation, controller.signup);
 
 router
+  .route("/resend-email-activation")
+  .post(isRecentlySignup, controller.resendActivationEmail);
+
+router
   .route("/account-activation")
   .post(controller.accountActivation, handleSingIn);
-
-router.route("/refresh").get(controller.refreshToken);
 
 router
   .route("/login")
@@ -32,6 +36,10 @@ router
 router
   .route("/forgot-password")
   .post(createEmailValidator, runValidation, controller.forgotPassword);
+
+router
+  .route("/resend-email-reset-password")
+  .post(isRecentlyForgotPwd, controller.resendEmailResetPassword);
 
 router
   .route("/reset-password")
@@ -57,6 +65,8 @@ router
 router
   .route("/rejected/:sellerId")
   .patch(isAuth, verifyRoles("admin"), controller.rejectSeller);
+
+router.route("/refresh").get(controller.refreshToken);
 
 router.route("/logout").post(isAuth, controller.logOut);
 

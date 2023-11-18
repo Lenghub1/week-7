@@ -4,7 +4,7 @@ export const createEmailValidator = [
   check("email")
     .not()
     .isEmpty()
-    .withMessage("Email is required to login.")
+    .withMessage("Email is required.")
     .isEmail()
     .withMessage("Email is invalid.")
     .trim(),

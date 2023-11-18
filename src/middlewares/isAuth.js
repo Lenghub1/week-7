@@ -26,7 +26,7 @@ const isAuth = catchAsync(async (req, res, next) => {
     process.env.ACCESS_TOKEN_SECRET
   );
 
-  const currentUser = await User.findOne({ _id: decoded.userId });
+  const currentUser = await User.findById(decoded.userId);
 
   if (!currentUser || !currentUser.active) {
     return next(
@@ -38,7 +38,7 @@ const isAuth = catchAsync(async (req, res, next) => {
   }
 
   req.user = currentUser;
-  next();
+  return next();
 });
 
 export default isAuth;
