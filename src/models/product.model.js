@@ -20,11 +20,14 @@ const productSchema = new mongoose.Schema(
       minLength: 10,
       trim: true,
     },
-    unitPrice: {
+    basePrice: {
       type: Number,
-      integer: true,
       min: 0,
       required: true,
+    },
+    unitPrice: {
+      type: Number,
+      min: 0,
     },
     unit: {
       type: String,
@@ -40,11 +43,24 @@ const productSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    stockAlert: {
+      type: Number,
+      default: 3,
+    },
+    imgCover: {
+      type: String,
+      required: true,
+    },
     media: {
       type: [String],
       required: true,
     },
-    categories: [String],
+    categories: [
+      {
+        type: String,
+        required: true,
+      },
+    ],
     dimension: {
       type: Object,
     },
@@ -98,12 +114,17 @@ productSchema.index({
 });
 
 productSchema.pre("save", function (next) {
+  // Slugify
   if (this.isModified("title")) {
     this.slug = slugify(this.title + "-" + Date.now(), {
       lower: true,
       strict: true,
     });
   }
+
+  // Set unitPrice (add +10%)
+  const unitPrice = (this.basePrice * 110) / 100;
+  this.unitPrice = Math.round(unitPrice * 100) / 100;
   next();
 });
 

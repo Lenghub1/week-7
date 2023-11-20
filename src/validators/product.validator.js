@@ -1,7 +1,14 @@
 import { check, query } from "express-validator";
 
 export const createProductValidator = [
-  check("title").not().isEmpty().withMessage("Product title cannot be empty."),
+  check("title")
+    .not()
+    .isEmpty()
+    .isLength({ min: 3 })
+    .withMessage(
+      "Product title cannot be empty and must have at least 3 characters long."
+    ),
+
   check("description")
     .not()
     .isEmpty()
@@ -9,19 +16,31 @@ export const createProductValidator = [
     .withMessage(
       "Description field cannot be empty and must have at least 10 characters long."
     ),
-  check("unitPrice")
+
+  check("basePrice")
     .not()
     .isEmpty()
-    .isInt({
+    .isFloat({
       min: 0,
     })
-    .withMessage("The product price must be a positive number."),
+    .withMessage("The product base price must be a positive number."),
+
   check("availableStock")
     .not()
     .isEmpty()
-    .isNumeric()
-    .withMessage("Please enter the available stock."),
-  check("media").not().isEmpty().withMessage("Please upload images!"),
+    .isInt({ min: 1 })
+    .withMessage("Available stock must be minimum 1."),
+
+  check("categories")
+    .not()
+    .isEmpty()
+    .withMessage("Categories cannot be empty")
+    .escape()
+    .customSanitizer((value, { req }) => {
+      const categories = value.split(",");
+
+      return (req.body.categories = categories);
+    }),
 ];
 
 export const sellerProductQueryValidator = [
