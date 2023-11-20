@@ -100,13 +100,13 @@ const authService = {
       });
     },
 
-    verifyJWTForActivateAccount(req, res, next, data) {
+    activateAccount(next, data) {
       const { token } = data;
       if (!token) {
         return next(
           new APIError({
             status: 401,
-            message: "Token is not defined! Please signup again.",
+            message: "Token is undefined! Please signup again.",
           })
         );
       }
@@ -114,6 +114,7 @@ const authService = {
         token,
         process.env.ACCOUNT_ACTIVATION_TOKEN,
         async (err, decoded) => {
+          console.log(err);
           if (err) {
             return next(
               new APIError({
@@ -149,8 +150,7 @@ const authService = {
           user.active = true;
           await user.save();
 
-          req.user = user;
-          next();
+          return user;
         }
       );
     },
@@ -201,7 +201,7 @@ const authService = {
       return session;
     },
 
-    verifyRefreshToken(req, res, next, refreshToken, session) {
+    verifyRefreshToken(res, next, refreshToken, session) {
       return jwt.verify(
         refreshToken,
         process.env.REFRESH_TOKEN_SECRET,

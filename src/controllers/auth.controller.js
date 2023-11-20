@@ -33,15 +33,18 @@ const authController = {
   // 1. Receive JWT from client
   // 2. Verify the JWT
   // 3. Activate account by set active to true
+  // 4. Move to next middleware for hanle generate access and refresh tokens
   accountActivation: catchAsync(async (req, res, next) => {
     const data = req.body;
-    await authService.signup.verifyJWTForActivateAccount(req, res, next, data);
+    const user = await authService.signup.activateAccount(next, data);
+    req.user = user;
+    next();
   }),
 
   // Login
   // 1. Get user data from login
   // 2. Verify user
-  // 3. Move to next middleware for hanle assign access and refresh tokens
+  // 3. Move to next middleware for hanle generate access and refresh tokens
   loginWithEmailPassword: catchAsync(async (req, res, next) => {
     const data = req.body;
     const user = await authService.login.verifyUserByEmailAndPassword(
@@ -54,8 +57,9 @@ const authController = {
 
   // Refresh Token
   // 1. Get cookie
-  // 2. Verify JWT
-  // 3. Sign new access token
+  // 2. Verify Session
+  // 3. Verify JWT
+  // 4. Sign new access token
   refreshToken: catchAsync(async (req, res, next) => {
     const cookies = req.cookies;
     const refreshToken = await authService.refreshToken.checkCookie(
@@ -67,7 +71,6 @@ const authController = {
       next
     );
     authService.refreshToken.verifyRefreshToken(
-      req,
       res,
       next,
       refreshToken,
