@@ -45,7 +45,10 @@ const sessionSchema = mongoose.Schema(
 );
 
 // Each document will remove from db after 30 days
-userSchema.index({ createdAt: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 });
+sessionSchema.index(
+  { createdAt: 1 },
+  { expireAfterSeconds: 30 * 24 * 60 * 60 }
+);
 
 const Session = mongoose.model("Session", sessionSchema);
 export default Session;

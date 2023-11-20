@@ -33,11 +33,10 @@ const authService = {
     async signTokenForActivateAccount(data) {
       const { email } = data;
 
-      return jwt
-        .sign({ email }, process.env.ACCOUNT_ACTIVATION_TOKEN, {
-          expiresIn: process.env.ACCOUNT_ACTICATION_TOKEN_EXPIRES,
-        })
-        .replaceAll(".", "RUKHAK2023"); // Prevent page not found on client side.
+      return jwt.sign({ email }, process.env.ACCOUNT_ACTIVATION_TOKEN, {
+        expiresIn: process.env.ACCOUNT_ACTICATION_TOKEN_EXPIRES,
+      });
+      // .replaceAll(".", "RUKHAK2023"); // Prevent page not found on client side.
     },
 
     async createNewUser(res, next, resultSendEmail, data) {
@@ -112,7 +111,6 @@ const authService = {
         token,
         process.env.ACCOUNT_ACTIVATION_TOKEN,
         async (err, decoded) => {
-          console.log(err);
           if (err) {
             return next(
               new APIError({
