@@ -13,16 +13,13 @@ export const createSignupValidator = [
     .withMessage("Please enter a valid email address.")
     .custom(async (value) => {
       const user = await User.findOne({ email: value });
-
       if (user && user.active) {
         throw new Error("Email is already in use.");
-      } else if (user && !user.active) {
+      } else if (user && user.active === false) {
         throw new Error(
           "Email recently signed up. Please wait 10 minutes before signing up again or check your email to activate your account."
         );
       }
-
-      return true;
     }),
   check("password")
     .not()

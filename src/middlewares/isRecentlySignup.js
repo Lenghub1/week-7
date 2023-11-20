@@ -12,7 +12,7 @@ const isRecentlySignup = catchAsync(async (req, res, next) => {
         message: "Please Sign up first!",
       })
     );
-  } else if (user.active) {
+  } else if (user.active === true) {
     return next(
       new APIError({
         status: 400,
@@ -21,6 +21,9 @@ const isRecentlySignup = catchAsync(async (req, res, next) => {
       })
     );
   }
+  // set updatedAt field to current date to delay expiration time of activate account
+  user.updatedAt = Date.now();
+  user.save();
 
   req.user = user;
   return next();

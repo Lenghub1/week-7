@@ -124,7 +124,7 @@ const authController = {
   // Update Password
   // 1. Get current password and new password
   // 2. Find user in data base
-  // 3. Update new password
+  // 3. Verify current password and Update new password
   updatePassword: catchAsync(async (req, res, next) => {
     const data = req.body;
     const user = await authService.updatePassword.getCurrentUser(req);

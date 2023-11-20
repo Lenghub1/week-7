@@ -2,9 +2,7 @@ import User from "../models/user.model.js";
 import Session from "../models/session.model.js";
 import Seller from "../models/seller.model.js";
 import APIError from "../utils/APIError.js";
-import sendEmailWithNodemailer from "../utils/email.js";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
 import crypto from "crypto";
 
@@ -65,7 +63,7 @@ const authService = {
         data: {
           _id: user._id,
           email: user.email,
-          firstName: user.password,
+          firstName: user.firstName,
           lastName: user.lastName,
         },
       });
@@ -411,8 +409,7 @@ const authService = {
           })
         );
       }
-      const hashedPassword = await bcrypt.hash(newPassword, 12);
-      user.password = hashedPassword;
+      user.password = newPassword;
       await user.save();
       res.status(201).json({
         message: "Password has been updated.",

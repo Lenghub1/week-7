@@ -68,7 +68,7 @@ const userSchema = new mongoose.Schema(
 
 // Auto delete document if user not activate their account for 10 minutes.
 userSchema.index(
-  { createdAt: 1 },
+  { updatedAt: 1 },
   { expireAfterSeconds: 10 * 60, partialFilterExpression: { active: false } }
 );
 

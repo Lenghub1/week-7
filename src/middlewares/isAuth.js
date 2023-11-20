@@ -28,7 +28,7 @@ const isAuth = catchAsync(async (req, res, next) => {
 
   const currentUser = await User.findById(decoded.userId);
 
-  if (!currentUser || !currentUser.active) {
+  if (!currentUser || currentUser.active === false) {
     return next(
       new APIError({
         status: 401,
