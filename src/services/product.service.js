@@ -25,8 +25,17 @@ const productService = {
    * Get a list of all products.
    * @returns {Promise} A promise that resolves with an array of products or rejects with an error if no products are found.
    */
-  async getAllProducts() {
-    const products = await Product.find();
+  async getAllProducts(queryStr) {
+    const features = new APIFeatures(Product, queryStr)
+      .search()
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
+
+    let products = await features.execute();
+    products = products[0];
+
     if (products.length === 0) {
       throw new APIError({
         status: 404,
