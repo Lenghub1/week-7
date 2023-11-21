@@ -154,6 +154,18 @@ const productService = {
     });
     return products;
   },
+
+  async getTopProducts() {
+    const topProducts = await Product.find({
+      $or: [
+        // Filter products with rating greater or equal 4
+        { averageRating: { $gte: 4 } },
+        // Filter products with sold greater or equal 100
+        { soldAmount: { $gte: 100 } },
+      ],
+    });
+    return topProducts;
+  },
 };
 
 export default productService;
