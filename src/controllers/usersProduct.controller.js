@@ -1,8 +1,9 @@
-import productService from "../services/product.service.js";
+import service from "../services/product.service.js";
 import factory from "./factory.js";
 
 const usersProductController = {
-  getAllProducts: factory.getAll(productService.getAllProducts),
+  getAllProducts: factory.getAll(service.getAllProducts),
+  getNewProducts: factory.getAll(service.getNewProducts),
 };
 
 export default usersProductController;

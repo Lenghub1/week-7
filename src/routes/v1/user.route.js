@@ -5,4 +5,6 @@ const router = express.Router();
 
 router.route("/products").get(usersProductController.getAllProducts);
 
+router.route("/new").get(usersProductController.getNewProducts);
+
 export default router;

@@ -143,6 +143,17 @@ const productService = {
     }
     return product;
   },
+
+  async getNewProducts() {
+    const tenDaysAgo = new Date();
+    tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
+
+    // Find products created in the last 10 days
+    const products = await Product.find({
+      createdAt: { $gte: tenDaysAgo }, // Filter products created in the last 10 days
+    });
+    return products;
+  },
 };
 
 export default productService;
