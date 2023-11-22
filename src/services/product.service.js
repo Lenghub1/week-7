@@ -166,6 +166,29 @@ const productService = {
     });
     return topProducts;
   },
+
+  async getProductsByCategories(queryStr) {
+    if (queryStr.categories)
+      queryStr.categories = queryStr.categories.split(",");
+
+    const features = new APIFeatures(Product, queryStr)
+      .search()
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
+
+    let products = await features.execute();
+    products = products[0];
+
+    if (!products)
+      throw new APIError({
+        status: 404,
+        message: "There is no document found.",
+      });
+
+    return products;
+  },
 };
 
 export default productService;

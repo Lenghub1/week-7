@@ -57,8 +57,9 @@ class APIFeatures {
           queryObj[eachKey][key] = Number(queryObj[eachKey][key]);
 
       // Convert to $elemMatch to match each element regardless of order
-      if (Array.isArray(queryObj[eachKey]))
-        queryObj[eachKey] = { $elemMatch: { $in: [...queryObj[eachKey]] } };
+      if (Array.isArray(queryObj[eachKey])) {
+        queryObj[eachKey] = { $in: queryObj[eachKey] };
+      }
     });
 
     this.aggPipe.push({ $match: queryObj });
