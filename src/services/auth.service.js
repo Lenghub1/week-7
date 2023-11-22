@@ -74,11 +74,11 @@ const authService = {
         to: email,
         subject: "Activate Account",
         html: `<h1>Please use the following link to activate your account</h1>
-        <p>Please reject this email, if you not request</p>
-          <p>${authService.setURL()}/auth/activate/${token}</p>
-          <hr />
-          <p>This email may contain sensitive information</p>
-          <p>${authService.setURL()}</p>`,
+                <p>Please reject this email, if you not request</p>
+                <p>${authService.setURL()}/auth/activate/${token}</p>
+                <hr />
+                <p>This email may contain sensitive information</p>
+                <p>${authService.setURL()}</p>`,
       };
       return emailData;
     },
@@ -327,10 +327,10 @@ const authService = {
         to: email,
         subject: "Reset Password",
         html: `<h1>Please use the following link to reset your password.</h1>
-          <p>${authService.setURL()}/auth/reset-password/${resetToken}</p>
-          <hr />
-          <p>Please reject this email, if you not request to reset password.</p>
-          <p>${authService.setURL()}</p>`,
+                <p>${authService.setURL()}/auth/reset-password/${resetToken}</p>
+                <hr />
+                <p>Please reject this email, if you not request to reset password.</p>
+                <p>${authService.setURL()}</p>`,
       };
       return emailData;
     },
@@ -415,8 +415,68 @@ const authService = {
     },
   },
 
+  enable2FA: {
+    async verifyUserEnable2FA(req, next) {
+      const user = await User.findById(req.user._id);
+      if (!user) {
+        return next(
+          new APIError({
+            status: 404,
+            message: "User not found.",
+          })
+        );
+      } else if (user && user.enable2FA) {
+        return next(
+          new APIError({
+            status: 400,
+            message: "User already enabled 2FA.",
+          })
+        );
+      }
+      return user;
+    },
+
+    async enable(res, user) {
+      user.enable2FA = true;
+      await user.save();
+      res.status(200).json({
+        message: "2FA successfully enabled!",
+      });
+    },
+  },
+
+  disable2FA: {
+    async verifyUserDisable2FA(req, next) {
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        return next(
+          new APIError({
+            status: 404,
+            message: "User not found.",
+          })
+        );
+      } else if (user && !user.enable2FA) {
+        return next(
+          new APIError({
+            status: 400,
+            message: "2FA already disable",
+          })
+        );
+      }
+      return user;
+    },
+
+    async disable(res, user) {
+      user.enable2FA = false;
+      await user.save();
+      res.status(200).json({
+        message: "2FA successfully disabled!",
+      });
+    },
+  },
+
   logOut: {
-    checkJWT(req, res, next, cookies) {
+    checkJWT(next, cookies) {
       if (!cookies?.jwt)
         return next(
           new APIError({

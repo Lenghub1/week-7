@@ -9,6 +9,10 @@ const sellerSchema = User.discriminator(
       required: true,
       trim: true,
     },
+    dateOfBirth: {
+      type: Date,
+      required: true,
+    },
     storeName: {
       type: String,
       required: true,

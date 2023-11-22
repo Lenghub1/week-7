@@ -37,8 +37,8 @@ const userSchema = new mongoose.Schema(
       validate: {
         validator(val) {
           return validator.isStrongPassword(val, {
-            minSymbols: 0,
-            minUppercase: 0,
+            minSymbols: 1,
+            minUppercase: 1,
             minLength: 8,
             minNumbers: 1,
             minLowercase: 1,
@@ -56,8 +56,14 @@ const userSchema = new mongoose.Schema(
     passwordChangeAt: Date,
     active: {
       type: Boolean,
-      default: true,
+      default: true, // user not yet activate account
     },
+    enable2FA: {
+      type: Boolean,
+      default: false,
+    },
+    OTP: String,
+    OTPExpires: Date,
   },
   {
     timestamps: true,

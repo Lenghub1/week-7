@@ -29,10 +29,10 @@ export const createSignupValidator = [
       minLength: 8,
       minLowercase: 1,
       minNumbers: 1,
-      minSymbols: 0,
-      minUppercase: 0,
+      minSymbols: 1,
+      minUppercase: 1,
     })
-    .withMessage("Password must contain a minimum of 8 characters")
+    .withMessage("Please follow the convention.")
     .custom((value) => {
       console.log(value.trim() !== value);
       if (value.trim() !== value) {
