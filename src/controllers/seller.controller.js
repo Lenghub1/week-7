@@ -1,4 +1,4 @@
-import service from "../services/product.service.js";
+import service from "../services/seller.service.js";
 import APIError from "../utils/APIError.js";
 import catchAsync from "../utils/catchAsync.js";
 
@@ -31,8 +31,8 @@ const sellerController = {
     });
   }),
 
-  getProduct: catchAsync(async (req, res, next) => {
-    const product = await service.getProductDetail(req.params.id);
+  getOwnProductDetail: catchAsync(async (req, res, next) => {
+    const product = await service.getOwnProductDetail(req.params.id);
 
     return res.json({
       message: "Data Retrieved",

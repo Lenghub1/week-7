@@ -36,5 +36,5 @@ export const insertManyProducts = async (n) => {
       }),
     });
   }
-  await Product.insertMany(products);
+  return await Product.insertMany(products);
 };

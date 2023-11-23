@@ -19,6 +19,6 @@ router
   )
   .get(sellerProductQueryValidator, runValidation, controller.getOwnProducts);
 
-router.route("/products/:id").get(controller.getProduct);
+router.route("/products/:id").get(controller.getOwnProductDetail);
 
 export default router;

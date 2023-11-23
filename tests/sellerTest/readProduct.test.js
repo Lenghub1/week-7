@@ -14,7 +14,7 @@ setupTestDB();
 
 const baseAPI = "/api/v1/seller/products";
 
-describe("Get own products (GET /products/own)", () => {
+describe("Get own products (GET /seller/products)", () => {
   describe("Given not found endpoints", () => {
     it("must return 404", async () => {
       const res = await request(app).get("/api/v1/seller/productss");
@@ -220,6 +220,30 @@ describe("Get own products (GET /products/own)", () => {
           expect(res.body.data.data[i].title).toBe(products[i].title);
         }
       });
+    });
+  });
+});
+
+describe("Get own product detail", () => {
+  describe("Given not available product ID", () => {
+    it("must show 404 not found", async () => {
+      const res = await request(app).get(`${baseAPI}/655f1035c84f800a020137cf`);
+      expect(res.status).toBe(404);
+      expect(res.body.message).toBe("There is no document found with this ID.");
+    });
+  });
+
+  describe("Given a valid product ID", () => {
+    it("must return result with signed URL", async () => {
+      const dummyProduct = await insertManyProducts(1);
+
+      const res = await request(app).get(`${baseAPI}/${dummyProduct[0].id}`);
+      const { imgCover } = res.body.data;
+      const mediaUrl = res.body.data.media[0];
+
+      expect(res.status).toBe(200);
+      expect(imgCover.includes("X-Amz-Signature=")).toBe(true);
+      expect(mediaUrl.includes("X-Amz-Signature=")).toBe(true);
     });
   });
 });
