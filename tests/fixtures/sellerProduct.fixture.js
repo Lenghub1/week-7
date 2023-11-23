@@ -8,8 +8,9 @@ function _chooseRandomPrice(min, max) {
   const randomDecimal = Math.random();
   // Scale the random decimal to the range between min and max
   const randomInRange = randomDecimal * (max - min) + min;
+
   // Round the result to avoid floating-point precision issues
-  const randomPrice = Math.round(randomInRange / 100) * 100;
+  const randomPrice = randomInRange.toFixed(2);
 
   return randomPrice;
 }
@@ -17,13 +18,17 @@ function _chooseRandomPrice(min, max) {
 export const insertManyProducts = async (n) => {
   const products = [];
   for (let i = 0; i < n; i++) {
+    const basePrice = _chooseRandomPrice(1, 100);
+    const unitPrice = (basePrice * 110) / 100;
     products.push({
       title: faker.commerce.productName(),
       slug: faker.string.uuid(),
       description: faker.commerce.productDescription(),
-      unitPrice: _chooseRandomPrice(10000, 100000),
+      basePrice,
+      unitPrice,
       unit: faker.helpers.arrayElement(productUnits),
       availableStock: faker.number.int(100),
+      imgCover: faker.airline.aircraftType(),
       media: [faker.airline.aircraftType()],
       categories: faker.helpers.arrayElements(categories, {
         min: 1,
@@ -31,5 +36,5 @@ export const insertManyProducts = async (n) => {
       }),
     });
   }
-  await Product.insertMany(products);
+  return await Product.insertMany(products);
 };

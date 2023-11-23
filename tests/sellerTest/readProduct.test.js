@@ -1,22 +1,23 @@
-import { setupTestDB } from "./utils/setupTestDB.js";
+import { setupTestDB } from "../utils/setupTestDB.js";
 import request from "supertest";
-import app from "../src/app.js";
-import { faker } from "@faker-js/faker";
+import app from "../../src/app.js";
 import {
   categories,
   insertManyProducts,
-} from "./fixtures/sellerProduct.fixture.js";
+} from "../fixtures/sellerProduct.fixture.js";
 import dotenv from "dotenv";
-import Product from "../src/models/product.model.js";
+import Product from "../../src/models/product.model.js";
 
 dotenv.config();
 
 setupTestDB();
 
-describe("Get own products (GET /products/own)", () => {
+const baseAPI = "/api/v1/seller/products";
+
+describe("Get own products (GET /seller/products)", () => {
   describe("Given not found endpoints", () => {
     it("must return 404", async () => {
-      const res = await request(app).get("/api/v1/productss");
+      const res = await request(app).get("/api/v1/seller/productss");
       expect(res.status).toBe(404);
       expect(res.body.message).toBe("Not found");
     });
@@ -28,8 +29,9 @@ describe("Get own products (GET /products/own)", () => {
     it(`must limit to ${process.env.PAGE_LIMIT_DEFAULT}`, async () => {
       await insertManyProducts(NUM_PRODUCTS);
 
-      const res = await request(app).get("/api/v1/products/own");
+      const res = await request(app).get(baseAPI);
 
+      // console.log("res.body:::", res.body);
       expect(res.status).toBe(200);
       expect(res.body.data.metadata).toEqual({
         totalResults: NUM_PRODUCTS,
@@ -44,28 +46,28 @@ describe("Get own products (GET /products/own)", () => {
   });
 
   describe("Given unitPrice query", () => {
-    describe("Given unitPrice from 40000 to 100000", () => {
-      it("must show result from 40000 to 100000", async () => {
+    describe("Given unitPrice from 4 to 7", () => {
+      it("must show result from 4 to 7", async () => {
         await insertManyProducts(100);
 
         const res = await request(app).get(
-          "/api/v1/products/own?unitPrice[gte]=40000&unitPrice[lte]=100000"
+          `${baseAPI}?unitPrice[gte]=4&unitPrice[lte]=7`
         );
 
         expect(res.status).toBe(200);
         res.body.data.data.forEach((each) => {
-          expect(each.unitPrice >= 40000).toBe(true);
-          expect(each.unitPrice <= 100000).toBe(true);
+          expect(each.unitPrice >= 4).toBe(true);
+          expect(each.unitPrice <= 7).toBe(true);
         });
       });
     });
 
-    describe("Given unitPrice[gte] is not integer", () => {
+    describe("Given unitPrice[gte] is negative number", () => {
       it("must respond 400 bad request", async () => {
         await insertManyProducts(100);
 
         const res = await request(app).get(
-          "/api/v1/products/own?unitPrice[gte]=-4000&unitPrice[lte]=-9000"
+          `${baseAPI}?unitPrice[gte]=-4000&unitPrice[lte]=-9000`
         );
 
         expect(res.status).toBe(400);
@@ -81,7 +83,7 @@ describe("Get own products (GET /products/own)", () => {
         await insertManyProducts(300);
 
         const res = await request(app).get(
-          "/api/v1/products/own?availableStock[gte]=0&availableStock[lte]=12"
+          `${baseAPI}?availableStock[gte]=0&availableStock[lte]=12`
         );
 
         expect(res.status).toBe(200);
@@ -97,7 +99,7 @@ describe("Get own products (GET /products/own)", () => {
         await insertManyProducts(10);
 
         const res = await request(app).get(
-          "/api/v1/products/own?availableStock[gte]=tothemoon&availableStock[lte]=12"
+          `${baseAPI}?availableStock[gte]=tothemoon&availableStock[lte]=12`
         );
 
         expect(res.status).toBe(400);
@@ -112,7 +114,7 @@ describe("Get own products (GET /products/own)", () => {
         await insertManyProducts(150);
 
         const res = await request(app).get(
-          `/api/v1/products/own?categories=${categories[0]}`
+          `${baseAPI}?categories=${categories[0]}`
         );
 
         expect(res.status).toBe(200);
@@ -127,7 +129,7 @@ describe("Get own products (GET /products/own)", () => {
         await insertManyProducts(150);
 
         const res = await request(app).get(
-          `/api/v1/products/own?categories=${categories[0]},${categories[2]}`
+          `${baseAPI}?categories=${categories[0]},${categories[2]}`
         );
 
         expect(res.status).toBe(200);
@@ -147,7 +149,7 @@ describe("Get own products (GET /products/own)", () => {
         await insertManyProducts(150);
 
         const res = await request(app).get(
-          `/api/v1/products/own?fields=title,description`
+          `${baseAPI}?fields=title,description`
         );
 
         expect(res.status).toBe(200);
@@ -163,7 +165,7 @@ describe("Get own products (GET /products/own)", () => {
       it("must show only 10 results", async () => {
         await insertManyProducts(90);
 
-        const res = await request(app).get(`/api/v1/products/own?limit=10`);
+        const res = await request(app).get(`${baseAPI}?limit=10`);
 
         expect(res.status).toBe(200);
         expect(res.body.data.data.length).toBe(10);
@@ -210,7 +212,7 @@ describe("Get own products (GET /products/own)", () => {
         ]).exec();
 
         const res = await request(app).get(
-          `/api/v1/products/own?q=${searchTerm}&limit=5&fields=title`
+          `${baseAPI}?q=${searchTerm}&limit=5&fields=title`
         );
 
         expect(res.status).toBe(200);
@@ -222,29 +224,26 @@ describe("Get own products (GET /products/own)", () => {
   });
 });
 
-describe("Create one product", () => {
-  let newProduct;
-  beforeEach(() => {
-    newProduct = {
-      description: faker.lorem.paragraph(),
-      unitPrice: 1200,
-      unit: "item",
-    };
-  });
-
-  describe("Given no title", () => {
-    it("must show 400 bad request", async () => {
-      const res = await request(app).post("/api/v1/products").send(newProduct);
-      expect(res.status).toBe(400);
-      expect(res.body.errors[0].path).toBe("title");
+describe("Get own product detail", () => {
+  describe("Given not available product ID", () => {
+    it("must show 404 not found", async () => {
+      const res = await request(app).get(`${baseAPI}/655f1035c84f800a020137cf`);
+      expect(res.status).toBe(404);
+      expect(res.body.message).toBe("There is no document found with this ID.");
     });
   });
 
-  describe("Given full product detail", () => {
-    it("must show 201 created", async () => {
-      newProduct.title = faker.animal.cow();
+  describe("Given a valid product ID", () => {
+    it("must return result with signed URL", async () => {
+      const dummyProduct = await insertManyProducts(1);
 
-      const res = await request(app).post("/api/v1/products").send(newProduct);
+      const res = await request(app).get(`${baseAPI}/${dummyProduct[0].id}`);
+      const { imgCover } = res.body.data;
+      const mediaUrl = res.body.data.media[0];
+
+      expect(res.status).toBe(200);
+      expect(imgCover.includes("X-Amz-Signature=")).toBe(true);
+      expect(mediaUrl.includes("X-Amz-Signature=")).toBe(true);
     });
   });
 });
