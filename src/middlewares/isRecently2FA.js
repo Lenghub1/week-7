@@ -3,21 +3,21 @@ import APIError from "../utils/APIError.js";
 import catchAsync from "../utils/catchAsync.js";
 
 // Prevent someone accidentally request to resend email
-const isRecentlyForgotPwd = catchAsync(async (req, res, next) => {
+const isRecently2FA = catchAsync(async (req, res, next) => {
   const { email } = req.body;
   const user = await User.findOne({ email });
   if (!user) {
     return next(
       new APIError({
-        status: 404,
-        message: "Email is required to reset password.",
+        status: 401,
+        message: "You not found.",
       })
     );
-  } else if (!user.forgotPasswordExpires) {
+  } else if (!user.enable2FA) {
     return next(
       new APIError({
         status: 400,
-        message: "You did not request to reset password.",
+        message: "Please enable 2 step verification.",
       })
     );
   }
@@ -25,4 +25,4 @@ const isRecentlyForgotPwd = catchAsync(async (req, res, next) => {
   return next();
 });
 
-export default isRecentlyForgotPwd;
+export default isRecently2FA;

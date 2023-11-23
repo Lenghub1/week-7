@@ -2,8 +2,6 @@ import catchAsync from "../utils/catchAsync.js";
 import authService from "../services/auth.service.js";
 import sendEmailWithNodemailer from "../utils/email.js";
 import { OAuth2Client } from "google-auth-library";
-import User from "../models/user.model.js";
-import APIError from "../utils/APIError.js";
 
 const authController = {
   // Signup
@@ -16,20 +14,21 @@ const authController = {
     const token = await authService.signup.signTokenForActivateAccount(data);
     const emailData = authService.signup.createEmail(token, data);
     const resultSendEmail = await sendEmailWithNodemailer(emailData);
-    await authService.signup.createNewUser(res, next, resultSendEmail, data);
-  }),
-
-  // Resend Email Activate Account
-  // 1. Get user's data
-  // 2. Sign new token (JWT)
-  // 3. Create email data along with the token to client side
-  // 4. Send Email again
-  resendActivationEmail: catchAsync(async (req, res, next) => {
-    const data = req.user;
-    const token = await authService.signup.signTokenForActivateAccount(data);
-    const emailData = authService.signup.createEmail(token, data);
-    const resultSendEmail = await sendEmailWithNodemailer(emailData);
-    authService.signup.respondResendEmail(res, next, resultSendEmail);
+    const user = await authService.signup.createNewUser(
+      res,
+      next,
+      resultSendEmail,
+      data
+    );
+    return res.status(201).json({
+      message: "Please Check your email to activate your rukhak account.",
+      data: {
+        _id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
+    });
   }),
 
   // Activate Account
@@ -59,47 +58,19 @@ const authController = {
   }),
 
   // Log in with google
-
+  // 1. Initializing an OAuth2.0 client use OAuth2Client from library
+  // 2. Verify idToken from client
+  // 3. If new user, return to handlesignIn, else create new user to database and handleSignIn
   googleSignIn: catchAsync(async (req, res, next) => {
     const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-    const { idToken } = req.body;
-    client
-      .verifyIdToken({ idToken, audience: process.env.GOOGLE_CLIENT_ID })
-      .then(async (response) => {
-        console.log("GOOGLE Login response", response.payload);
-        const { email_verified, given_name, family_name, email, picture } =
-          response.payload;
-        if (email_verified) {
-          const user = await User.findOne({ email });
-          if (user) {
-            req.user = user;
-            return next();
-          }
-          // If there is no user, create new user
-          const password = email + process.env.ACCESS_TOKEN_SECRET; // create password for new user
-          console.log(password);
-          const newUser = new User({
-            firstName: given_name,
-            lastName: family_name,
-            profilePicture: picture,
-            password,
-            email,
-            active: true,
-          });
-          console.log(newUser);
-          await newUser.save({ validateBeforeSave: false });
-
-          req.user = user;
-          return next();
-        }
-        return next(
-          new APIError({
-            status: 400,
-            message:
-              "Google login failed. Please try again later or choose another method.",
-          })
-        );
-      });
+    const data = req.body;
+    const user = await authService.googleSignIn.verifyIdToken(
+      next,
+      client,
+      data
+    );
+    req.user = user;
+    return next();
   }),
 
   // Refresh Token
@@ -117,12 +88,12 @@ const authController = {
       refreshToken,
       next
     );
-    authService.refreshToken.verifyRefreshToken(
-      res,
+    const accessToken = await authService.refreshToken.verifyRefreshToken(
       next,
       refreshToken,
       session
     );
+    return res.status(201).json({ accessToken });
   }),
 
   // Forgot Password
@@ -137,21 +108,10 @@ const authController = {
     await user.save({ validateBeforeSave: false });
     const emailData = authService.forgotPassword.createEmail(data, resetToken);
     const resultSendEmail = sendEmailWithNodemailer(emailData);
-    authService.forgotPassword.respondSendEmail(res, next, resultSendEmail);
-  }),
-
-  // Resend Email Reset Password
-  // 1. Get user from middleware
-  // 2. Sign new token
-  // 3. Create new email data
-  // 4. Send email again
-  resendEmailResetPassword: catchAsync(async (req, res, next) => {
-    const user = req.user;
-    const resetToken = user.createPasswordResetToken();
-    await user.save({ validateBeforeSave: false });
-    const emailData = authService.forgotPassword.createEmail(user, resetToken);
-    const resultSendEmail = sendEmailWithNodemailer(emailData);
-    authService.forgotPassword.respondSendEmail(res, next, resultSendEmail);
+    authService.forgotPassword.respondSendEmail(next, resultSendEmail);
+    return res.status(200).json({
+      message: "Please check your email to reset your password.",
+    });
   }),
 
   // Reset Password
@@ -165,7 +125,10 @@ const authController = {
       hashedToken,
       next
     );
-    await authService.forgotPassword.createNewPassword(res, data, user);
+    await authService.forgotPassword.createNewPassword(data, user);
+    return res.status(201).json({
+      message: "Password has been reseted.",
+    });
   }),
 
   // Update Password
@@ -181,6 +144,9 @@ const authController = {
       data,
       next
     );
+    return res.status(201).json({
+      message: "Password has been updated.",
+    });
   }),
 
   // Signup as Seller
@@ -189,8 +155,25 @@ const authController = {
   // 3. Replace user document with new document in db as seller
   signupSeller: catchAsync(async (req, res, next) => {
     const sellerData = req.body;
-    const user = await authService.signupSeller.verifyUserById(req, res, next);
-    await authService.signupSeller.createSeller(req, res, sellerData, user);
+    const user = await authService.signupSeller.verifyUserById(req, next);
+    const seller = await authService.signupSeller.createSeller(
+      sellerData,
+      user
+    );
+    return res.status(200).json({
+      message: "Signup as seller succeed.",
+      data: {
+        id: seller._id,
+        firstName: seller.firstName,
+        lastName: seller.lastName,
+        email: seller.email,
+        role: seller.role,
+        sellerStatus: seller.sellerStatus,
+        storeName: seller.storeName,
+        storeAddress: seller.storeAddress,
+        storeLocation: seller.storeLocation,
+      },
+    });
   }),
 
   // Approve seller
@@ -201,13 +184,13 @@ const authController = {
     const sellerId = req.params.sellerId;
     const action = "approve"; // For reuseable updateSellerStatus function
     const seller = await authService.signupSeller.verifySeller(sellerId, next);
-    await authService.signupSeller.updateSellerStatus(
-      req,
-      res,
-      next,
-      seller,
-      action
-    );
+    await authService.signupSeller.updateSellerStatus(seller, action);
+    return res.status(201).json({
+      message: "Seller status approved.",
+      data: {
+        sellerStatus: seller.sellerStatus,
+      },
+    });
   }),
 
   // Reject seller
@@ -218,13 +201,13 @@ const authController = {
     const sellerId = req.params.sellerId;
     const action = "reject";
     const seller = await authService.signupSeller.verifySeller(sellerId, next);
-    await authService.signupSeller.updateSellerStatus(
-      req,
-      res,
-      next,
-      seller,
-      action
-    );
+    await authService.signupSeller.updateSellerStatus(seller, action);
+    return res.status(201).json({
+      message: "Seller status rejected!",
+      data: {
+        sellerStatus: seller.sellerStatus,
+      },
+    });
   }),
 
   // Enable 2FA
@@ -232,7 +215,10 @@ const authController = {
   // 2. Enable 2FA
   enable2FA: catchAsync(async (req, res, next) => {
     const user = await authService.enable2FA.verifyUserEnable2FA(req, next);
-    await authService.enable2FA.enable(res, user);
+    await authService.enable2FA.enable(user);
+    return res.status(200).json({
+      message: "2FA successfully enabled!",
+    });
   }),
 
   // Disable 2FA
@@ -241,6 +227,9 @@ const authController = {
   disable2FA: catchAsync(async (req, res, next) => {
     const user = await authService.disable2FA.verifyUserDisable2FA(req, next);
     await authService.disable2FA.disable(res, user);
+    return res.status(200).json({
+      message: "2FA successfully disabled!",
+    });
   }),
 
   // Logout
@@ -253,6 +242,58 @@ const authController = {
     const cookies = req.cookie;
     const refreshTokenLogOut = await authService.logOut.checkJWT(next, cookies);
     await authService.logOut.clearCookieLogOut(res, next, refreshTokenLogOut);
+    return res.status(204);
+  }),
+
+  // Resend Email Activate Account
+  // 1. Get user's data
+  // 2. Sign new token (JWT)
+  // 3. Create email data along with the token to client side
+  // 4. Send Email again
+  resendActivationEmail: catchAsync(async (req, res, next) => {
+    const data = req.user;
+    const token = await authService.signup.signTokenForActivateAccount(data);
+    const emailData = authService.signup.createEmail(token, data);
+    const resultSendEmail = await sendEmailWithNodemailer(emailData);
+    authService.signup.verifyResult(next, resultSendEmail);
+    return res.status(200).json({
+      message: "Email successfully resend.",
+    });
+  }),
+
+  // Redend Email for OTP
+  // 1. Get user from middleware.
+  // 2. Sign new OTP.
+  // 3. Save to OTP token to database.
+  // 4. Create new email.
+  // 5. Send email to user again.
+  resendEmailOTP: catchAsync(async (req, res, next) => {
+    const user = req.user;
+    const OTP = await user.createOTPToken();
+    await user.save({ validateBeforeSave: false });
+    const emailData = authService.twoFA.createEmail(user.email, OTP);
+    const resultSendEmail = await sendEmailWithNodemailer(emailData);
+    authService.twoFA.verifyResult(next, resultSendEmail);
+    res.status(200).json({
+      message: "Please check your email to confirm OTP code.",
+    });
+  }),
+
+  // Resend Email Reset Password
+  // 1. Get user from middleware
+  // 2. Sign new token
+  // 3. Create new email data
+  // 4. Send email again
+  resendEmailResetPassword: catchAsync(async (req, res, next) => {
+    const user = req.user;
+    const resetToken = user.createPasswordResetToken();
+    await user.save({ validateBeforeSave: false });
+    const emailData = authService.forgotPassword.createEmail(user, resetToken);
+    const resultSendEmail = sendEmailWithNodemailer(emailData);
+    authService.forgotPassword.verifyResult(next, resultSendEmail);
+    return res.status(200).json({
+      message: "Email successfully resend.",
+    });
   }),
 };
 

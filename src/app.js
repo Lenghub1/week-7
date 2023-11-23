@@ -9,12 +9,12 @@ dotenv.config();
 
 const app = express();
 
-// configure CORS option
 const corsOptions = {
-  origin: "*",
+  origin: process.env.CLIENT_URL,
   methods: "GET, POST, PUT, PATCH, DELETE, HEAD",
   credentials: true, // allow cookies to be sent
 };
+
 app.use(cors(corsOptions));
 
 // req logger

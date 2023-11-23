@@ -2,6 +2,7 @@ import User from "../models/user.model.js";
 import APIError from "../utils/APIError.js";
 import catchAsync from "../utils/catchAsync.js";
 
+// Prevent user or someone accidentally request to resend email
 const isRecentlySignup = catchAsync(async (req, res, next) => {
   const { email } = req.body;
   const user = await User.findOne({ email });

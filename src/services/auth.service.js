@@ -10,33 +10,28 @@ dotenv.config();
 
 const authService = {
   localHost: process.env.CLIENT_URL,
-
   productionURL: process.env.PRODUCTION_URL,
-
   setURL() {
     return (this.URL = this.productionURL || this.localHost);
   },
-
   signAccessToken(userId) {
     return jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET, {
       expiresIn: process.env.ACCESS_TOKEN_EXPIRES,
     });
   },
-
   signRefreshToken(userId) {
     return jwt.sign({ userId }, process.env.REFRESH_TOKEN_SECRET, {
       expiresIn: process.env.REFRESH_TOKEN_EXPIRES,
     });
   },
-
   signup: {
     async signTokenForActivateAccount(data) {
       const { email } = data;
-
-      return jwt.sign({ email }, process.env.ACCOUNT_ACTIVATION_TOKEN, {
-        expiresIn: process.env.ACCOUNT_ACTICATION_TOKEN_EXPIRES,
-      });
-      // .replaceAll(".", "RUKHAK2023"); // Prevent page not found on client side.
+      return jwt
+        .sign({ email }, process.env.ACCOUNT_ACTIVATION_TOKEN, {
+          expiresIn: process.env.ACCOUNT_ACTICATION_TOKEN_EXPIRES,
+        })
+        .replaceAll(".", "RUKHAK2023"); // Prevent page not found on client side.
     },
 
     async createNewUser(res, next, resultSendEmail, data) {
@@ -57,20 +52,14 @@ const authService = {
         lastName,
         active: false,
       });
-      res.status(201).json({
-        message: "Please Check your email to activate your rukhak account.",
-        data: {
-          _id: user._id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-        },
-      });
+
+      return user;
     },
 
     createEmail(token, data) {
       const { email } = data;
       const emailData = {
+        from: "RUKHAK TEAM <example@gmail.com>",
         to: email,
         subject: "Activate Account",
         html: `<h1>Please use the following link to activate your account</h1>
@@ -83,7 +72,7 @@ const authService = {
       return emailData;
     },
 
-    respondResendEmail(res, next, resultSendEmail) {
+    verifyResult(next, resultSendEmail) {
       if (!resultSendEmail) {
         return next(
           new APIError({
@@ -92,9 +81,6 @@ const authService = {
           })
         );
       }
-      res.status(200).json({
-        message: "Email successfully resend.",
-      });
     },
 
     activateAccount(next, data) {
@@ -151,11 +137,19 @@ const authService = {
       );
     },
   },
-
   login: {
     async verifyUserByEmailAndPassword(data, next) {
       const { email, password } = data;
       const user = await User.findOne({ email });
+      if (user && user.active === false) {
+        return next(
+          APIError({
+            status: 401,
+            message: "Please sign up first!",
+          })
+        );
+      }
+
       if (!user || !(await user.verifyPassword(password))) {
         return next(
           new APIError({
@@ -168,7 +162,44 @@ const authService = {
       return user;
     },
   },
+  googleSignIn: {
+    verifyIdToken(next, client, data) {
+      const { idToken } = data;
+      return client
+        .verifyIdToken({ idToken, audience: process.env.GOOGLE_CLIENT_ID })
+        .then(async (response) => {
+          const { email_verified, given_name, family_name, email, picture } =
+            response.payload;
+          if (email_verified) {
+            const user = await User.findOne({ email });
+            if (user) {
+              return user;
+            }
+            // If there is no user, create new user
+            const password = email + process.env.ACCESS_TOKEN_SECRET; // create password for new user
 
+            const newUser = new User({
+              firstName: given_name,
+              lastName: family_name,
+              profilePicture: picture,
+              password,
+              email,
+              active: true,
+            });
+            await newUser.save({ validateBeforeSave: false });
+
+            return newUser;
+          }
+          return next(
+            new APIError({
+              status: 400,
+              message:
+                "Google login failed. Please try again later or choose another method.",
+            })
+          );
+        });
+    },
+  },
   refreshToken: {
     checkCookie(cookies, next) {
       if (!cookies?.jwt) {
@@ -197,7 +228,7 @@ const authService = {
       return session;
     },
 
-    verifyRefreshToken(res, next, refreshToken, session) {
+    verifyRefreshToken(next, refreshToken, session) {
       return jwt.verify(
         refreshToken,
         process.env.REFRESH_TOKEN_SECRET,
@@ -214,15 +245,13 @@ const authService = {
           const accessToken = authService.signAccessToken(decoded.userId);
           session.accessToken = accessToken;
           await session.save();
-
-          res.json({ accessToken });
+          return accessToken;
         }
       );
     },
   },
-
   signupSeller: {
-    async verifyUserById(req, res, next) {
+    async verifyUserById(req, next) {
       const user = await User.findById(req.user.id);
       if (!user) {
         return next(
@@ -235,9 +264,14 @@ const authService = {
       return user;
     },
 
-    async createSeller(req, res, sellerData, user) {
-      const { storeName, storeAddress, phoneNumber, storeLocation } =
-        sellerData;
+    async createSeller(sellerData, user) {
+      const {
+        storeName,
+        storeAddress,
+        phoneNumber,
+        storeLocation,
+        dateOfBirth,
+      } = sellerData;
       user.role = "seller";
       const seller = new Seller({
         _id: user.id,
@@ -250,23 +284,12 @@ const authService = {
         storeAddress,
         phoneNumber,
         storeLocation,
+        dateOfBirth,
       });
       await User.findByIdAndRemove(user.id);
       await seller.save();
-      res.status(200).json({
-        message: "Signup as seller succeed.",
-        data: {
-          id: seller._id,
-          firstName: seller.firstName,
-          lastName: seller.lastName,
-          email: seller.email,
-          role: seller.role,
-          sellerStatus: seller.sellerStatus,
-          storeName: seller.storeName,
-          storeAddress: seller.storeAddress,
-          storeLocation: seller.storeLocation,
-        },
-      });
+
+      return seller;
     },
 
     async verifySeller(sellerId, next) {
@@ -282,30 +305,17 @@ const authService = {
       return seller;
     },
 
-    async updateSellerStatus(req, res, next, seller, action) {
+    async updateSellerStatus(seller, action) {
       if (action === "approve") {
         seller.sellerStatus = "active";
         await seller.save();
-        res.status(201).json({
-          message: "Seller status approved successfully.",
-          data: {
-            sellerStatus: seller.sellerStatus,
-          },
-        });
       } else {
         seller.sellerStatus = "inactive";
         seller.role = "user";
         await seller.save();
-        res.status(201).json({
-          message: "Seller status rejected!",
-          data: {
-            sellerStatus: seller.sellerStatus,
-          },
-        });
       }
     },
   },
-
   forgotPassword: {
     async verifyUserByEmail(next, data) {
       const { email } = data;
@@ -324,6 +334,7 @@ const authService = {
     createEmail(data, resetToken) {
       const { email } = data;
       const emailData = {
+        from: "RUKHAK TEAM <example@gmail.com>",
         to: email,
         subject: "Reset Password",
         html: `<h1>Please use the following link to reset your password.</h1>
@@ -335,7 +346,7 @@ const authService = {
       return emailData;
     },
 
-    respondSendEmail(res, next, resultSendEmail) {
+    verifyResult(next, resultSendEmail) {
       if (!resultSendEmail) {
         return next(
           new APIError({
@@ -344,9 +355,6 @@ const authService = {
           })
         );
       }
-      res.status(200).json({
-        message: "Please check your email to reset your password.",
-      });
     },
 
     hashToken(data) {
@@ -379,18 +387,14 @@ const authService = {
       return user;
     },
 
-    async createNewPassword(res, data, user) {
+    async createNewPassword(data, user) {
       const { newPassword } = data;
       user.password = newPassword;
       user.forgotPasswordToken = undefined;
       user.forgotPasswordExpires = undefined;
       await user.save();
-      res.status(201).json({
-        message: "Password has been reseted.",
-      });
     },
   },
-
   updatePassword: {
     async getCurrentUser(req) {
       const user = await User.findById(req.user._id);
@@ -409,12 +413,8 @@ const authService = {
       }
       user.password = newPassword;
       await user.save();
-      res.status(201).json({
-        message: "Password has been updated.",
-      });
     },
   },
-
   enable2FA: {
     async verifyUserEnable2FA(req, next) {
       const user = await User.findById(req.user._id);
@@ -436,15 +436,11 @@ const authService = {
       return user;
     },
 
-    async enable(res, user) {
+    async enable(user) {
       user.enable2FA = true;
       await user.save();
-      res.status(200).json({
-        message: "2FA successfully enabled!",
-      });
     },
   },
-
   disable2FA: {
     async verifyUserDisable2FA(req, next) {
       const user = await User.findById(req.user.id);
@@ -466,15 +462,34 @@ const authService = {
       return user;
     },
 
-    async disable(res, user) {
+    async disable(user) {
       user.enable2FA = false;
       await user.save();
-      res.status(200).json({
-        message: "2FA successfully disabled!",
-      });
     },
   },
+  twoFA: {
+    createEmail(email, OTP) {
+      const emailData = {
+        from: "RUKHAK TEAM <example@gmail.com>",
+        to: email,
+        subject: "2 Step Verification",
+        html: `<h1>Please use numbers below to continue to the app:</h1>
+                <p>${OTP}</p>`,
+      };
+      return emailData;
+    },
 
+    verifyResult(next, resultSendEmail) {
+      if (!resultSendEmail) {
+        return next(
+          new APIError({
+            status: 500,
+            message: "Internal server error.",
+          })
+        );
+      }
+    },
+  },
   logOut: {
     checkJWT(next, cookies) {
       if (!cookies?.jwt)
@@ -486,7 +501,7 @@ const authService = {
       return cookies.jwt;
     },
 
-    async clearCookieLogOut(req, res, next, refreshToken) {
+    async clearCookieLogOut(res, next, refreshToken) {
       const session = await Session.findOne({ refreshToken });
       if (!session) {
         res.clearCookie("jwt", {
@@ -501,14 +516,13 @@ const authService = {
         );
       }
 
-      await Session.findOneAndRemove({ refreshToken });
+      await session.remove();
 
       res.clearCookie("jwt", {
         httpOnly: true,
         sameSite: "None",
         secure: true,
       });
-      res.status(204);
     },
   },
 };

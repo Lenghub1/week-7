@@ -7,18 +7,18 @@ const sessionSchema = mongoose.Schema(
       ref: "User",
       required: true,
     },
-    // deviceName: {
-    //   type: String,
-    //   required: true,
-    // },
-    // deviceType: {
-    //   type: String,
-    //   required: true,
-    // },
-    // loginAt: {
-    //   type: Date,
-    //   required: true,
-    // },
+    deviceName: {
+      type: String,
+      required: true,
+    },
+    deviceType: {
+      type: String,
+      required: true,
+    },
+    loginAt: {
+      type: Date,
+      required: true,
+    },
     refreshToken: {
       type: String,
       required: true,
@@ -27,26 +27,26 @@ const sessionSchema = mongoose.Schema(
       type: String,
       required: true,
     },
-    // deviceLocation: {
-    //   type: {
-    //     type: String,
-    //     enum: ["Point"],
-    //     required: true,
-    //   },
-    //   coordinates: {
-    //     type: [Number],
-    //     required: true,
-    //   },
-    // },
+    deviceLocation: {
+      type: {
+        type: String,
+        enum: ["Point"],
+        required: true,
+      },
+      coordinates: {
+        type: [Number],
+        required: true,
+      },
+    },
   },
   {
     timestamps: true,
   }
 );
 
-// Each document will remove from db after 30 days
+// Each document will remove from db after 30 days if not refresh the token
 sessionSchema.index(
-  { createdAt: 1 },
+  { updatedAt: 1 },
   { expireAfterSeconds: 30 * 24 * 60 * 60 }
 );
 

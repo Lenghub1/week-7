@@ -5,13 +5,14 @@ import { createEmailValidator } from "../../validators/email.validator.js";
 import { createPasswordValidator } from "../../validators/password.validator.js";
 import { runValidation } from "../../validators/index.js";
 import controller from "../../controllers/auth.controller.js";
-import handleSingIn from "../../middlewares/handleSignIn.js";
+import handleSignIn from "../../middlewares/handleSignIn.js";
 import isAuth from "../../middlewares/isAuth.js";
 import verifyRoles from "../../middlewares/verifyRoles.js";
 import isRecentlySignup from "../../middlewares/isRecentlySignup.js";
 import isRecentlyForgotPwd from "../../middlewares/isRecentlyForgotPwd.js";
 import is2FA from "../../middlewares/is2FA.js";
 import verify2FACode from "../../middlewares/verify2FACode.js";
+import isRecently2FA from "../../middlewares/isRecently2FA.js";
 
 const router = express.Router();
 
@@ -20,15 +21,10 @@ router
   .route("/signup")
   .post(createSignupValidator, runValidation, controller.signup);
 
-// Resend Email to activate account
-router
-  .route("/resend-email-activation")
-  .post(isRecentlySignup, controller.resendActivationEmail);
-
 // Activate account
 router
   .route("/account-activation")
-  .post(controller.accountActivation, handleSingIn);
+  .post(controller.accountActivation, handleSignIn);
 
 // Login with email and password
 router
@@ -38,28 +34,26 @@ router
     runValidation,
     controller.loginWithEmailPassword,
     is2FA,
-    handleSingIn
+    handleSignIn
   );
 
 // Login with Google
-router.route("/login-google").post(controller.googleSignIn);
+router.route("/login-google").post(controller.googleSignIn, handleSignIn);
 
 // Verify OTP code
-router.route("/verify2FA").post(verify2FACode, handleSingIn);
+router.route("/verify2FA").post(verify2FACode, handleSignIn);
 
-// Forgot Password
+// Forgot password
 router
   .route("/forgot-password")
   .post(createEmailValidator, runValidation, controller.forgotPassword);
 
-router
-  .route("/resend-email-reset-password")
-  .post(isRecentlyForgotPwd, controller.resendEmailResetPassword);
-
+// Reset password
 router
   .route("/reset-password")
   .patch(createPasswordValidator, runValidation, controller.resetPassword);
 
+// Update password
 router
   .route("/update-password")
   .patch(
@@ -69,24 +63,46 @@ router
     controller.updatePassword
   );
 
+// Sign up as seller
 router
   .route("/signup-seller")
   .put(isAuth, verifyRoles("user"), controller.signupSeller);
 
+// Approve seller
 router
   .route("/approved/:sellerId")
   .patch(isAuth, verifyRoles("admin"), controller.approveSeller);
 
+// Reject seller
 router
   .route("/rejected/:sellerId")
   .patch(isAuth, verifyRoles("admin"), controller.rejectSeller);
 
+// Resend email to activate account
+router
+  .route("/resend-email-activation")
+  .post(isRecentlySignup, controller.resendActivationEmail);
+
+// Resend email to reset password
+router
+  .route("/resend-email-reset-password")
+  .post(isRecentlyForgotPwd, controller.resendEmailResetPassword);
+
+// Resend email for OTP code
+router
+  .route("/resend-email-otp")
+  .post(isRecently2FA, controller.resendEmailOTP);
+
+// Enable 2 step verification
 router.route("/enable2FA").patch(isAuth, controller.enable2FA);
 
+// Disable 2 step verification
 router.route("/disable2FA").patch(isAuth, controller.disable2FA);
 
+// Refresh access token
 router.route("/refresh").get(controller.refreshToken);
 
-router.route("/logout").post(isAuth, controller.logOut);
+// Logout
+router.route("/logout").post(controller.logOut);
 
 export default router;

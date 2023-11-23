@@ -8,7 +8,6 @@ import authService from "../services/auth.service.js";
 // 3. Create secure cookie with refresh token
 // 4. Send authorization access token to client
 const handleSignIn = catchAsync(async (req, res, next) => {
-  console.log(req.user);
   const accessToken = authService.signAccessToken(req.user._id);
   const refreshToken = authService.signRefreshToken(req.user._id);
   await Session.create({ userId: req.user._id, accessToken, refreshToken });

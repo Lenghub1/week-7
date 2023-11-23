@@ -3,6 +3,7 @@ import validator from "validator";
 import slugify from "slugify";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import otpGenerator from "otp-generator";
 
 const userSchema = new mongoose.Schema(
   {
@@ -109,6 +110,19 @@ userSchema.methods.createPasswordResetToken = function () {
     .digest("hex");
   this.forgotPasswordExpires = Date.now() + 10 * 60 * 1000;
   return resetToken;
+};
+
+userSchema.methods.createOTPToken = async function () {
+  const OTP = otpGenerator.generate(6, {
+    digits: true,
+    lowerCaseAlphabets: false,
+    upperCaseAlphabets: false,
+    specialChars: false,
+  });
+  const salt = await bcrypt.genSalt(10);
+  this.OTP = await bcrypt.hash(OTP, salt);
+  this.OTPExpires = Date.now() + 10 * 60 * 1000;
+  return OTP;
 };
 
 const User = mongoose.model("User", userSchema);

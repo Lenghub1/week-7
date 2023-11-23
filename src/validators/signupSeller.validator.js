@@ -24,4 +24,5 @@ export const createSignupValidator = [
       }
       return true;
     }),
+  check("dateOfBirth").not.isEmpty().withMessage("Birthday is required."),
 ];
