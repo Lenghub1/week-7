@@ -26,13 +26,25 @@ const adminController = {
   }),
 
   getProducts: catchAsync(async (req, res, next) => {
-    console.log("Hi");
     const products = await adminService.getProducts(req.query);
 
     return res.json({
       message: "Data Retrieved",
       data: products,
     });
+  }),
+
+  getProductById: catchAsync(async (req, res, next) => {
+    const product = await adminService.getProductById(req.params.id);
+    return res.status(200).json({
+      message: "Data retrieved",
+      product: product,
+    });
+  }),
+
+  searchSeller: catchAsync(async (req, res, next) => {
+    const sellers = await adminService.searchSeller(req.query.q);
+    return res.status(200).json(sellers);
   }),
 };
 

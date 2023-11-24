@@ -1,8 +1,9 @@
 import Product from "../models/product.model.js";
 import APIError from "../utils/APIError.js";
 import utils from "../utils/utils.js";
-import { uploadFile, deleteFile } from "../config/s3.js";
+import { uploadFile, deleteFile, getFileSignedUrl } from "../config/s3.js";
 import APIFeatures from "../utils/APIFeatures.js";
+import Seller from "./../models/seller.model.js";
 
 const adminService = {
   async createProduct(imgCover, media, productInput) {
@@ -71,7 +72,6 @@ const adminService = {
   },
 
   async getProducts(queryStr) {
-    console.log("Hi");
     if (queryStr.categories)
       queryStr.categories = queryStr.categories.split(",");
     const features = new APIFeatures(Product, queryStr)
@@ -84,8 +84,6 @@ const adminService = {
     let products = await features.execute();
     products = products[0];
 
-    console.log(products);
-
     if (!products) {
       throw new APIError({
         status: 404,
@@ -96,6 +94,58 @@ const adminService = {
     products.metadata = utils.getPaginateMetadata(products.metadata, queryStr);
 
     return products;
+  },
+
+  async getProductById(productId) {
+    try {
+      const product = await Product.findById(productId);
+      if (!product) {
+        return new APIError({
+          status: 400,
+          message: `Cannot find product with this ID ${productId}`,
+        });
+      }
+      const allFileUrls = [];
+      allFileUrls.push(product.imgCover);
+      product.media.map((each) => allFileUrls.push(each));
+
+      const urls = await Promise.all(
+        allFileUrls.map(async (each) => await getFileSignedUrl(each))
+      );
+
+      product.imgCover = urls[0];
+      product.media = urls.slice(1);
+      return product;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  async searchSeller(query) {
+    try {
+      const pipeLine = [
+        {
+          $match: { active: true },
+        },
+        {
+          $match: {
+            $or: [
+              { firstName: new RegExp(query, "i") },
+              { lastName: new RegExp(query, "i") },
+              { storeName: new RegExp(query, "i") },
+            ],
+          },
+        },
+      ];
+      const sellers = await Seller.aggregate(pipeLine);
+      return sellers;
+    } catch (error) {
+      console.log("error");
+      throw APIError({
+        status: 500,
+        message: "Internal server error",
+      });
+    }
   },
 };
 

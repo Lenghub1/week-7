@@ -19,4 +19,8 @@ router
   )
   .get(sellerProductQueryValidator, runValidation, adminController.getProducts);
 
+router.route("/products/:id").get(adminController.getProductById);
+
+router.route("/sellers").get(adminController.searchSeller);
+
 export default router;

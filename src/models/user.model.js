@@ -41,15 +41,6 @@ const userSchema = new mongoose.Schema(
         },
       },
     },
-    passwordConfirm: {
-      type: String,
-      required: true,
-      validate: {
-        validator(val) {
-          return val === this.password;
-        },
-      },
-    },
     role: {
       type: String,
       enum: ["user", "seller", "admin"],
