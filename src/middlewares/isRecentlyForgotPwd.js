@@ -10,14 +10,14 @@ const isRecentlyForgotPwd = catchAsync(async (req, res, next) => {
     return next(
       new APIError({
         status: 404,
-        message: "Email is required to reset password.",
+        message: "User not found!",
       })
     );
-  } else if (!user.forgotPasswordExpires) {
+  } else if (user && !user.forgotPasswordExpires) {
     return next(
       new APIError({
         status: 400,
-        message: "You did not request to reset password.",
+        message: "Email was not requested to reset password.",
       })
     );
   }

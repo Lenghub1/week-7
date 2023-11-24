@@ -52,12 +52,17 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "seller", "admin"],
       default: "user",
     },
+    signupMethod: {
+      type: String,
+      enum: ["email", "google", "facebook"],
+      default: "email",
+    },
     forgotPasswordToken: String,
     forgotPasswordExpires: Date,
     passwordChangeAt: Date,
     active: {
       type: Boolean,
-      default: true, // user not yet activate account
+      default: false, // user not yet activate account
     },
     enable2FA: {
       type: Boolean,

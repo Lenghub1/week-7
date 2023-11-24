@@ -100,7 +100,7 @@ router.route("/enable2FA").patch(isAuth, controller.enable2FA);
 router.route("/disable2FA").patch(isAuth, controller.disable2FA);
 
 // Refresh access token
-router.route("/refresh").get(controller.refreshToken);
+router.route("/refresh").get(isAuth, controller.refreshToken);
 
 // Logout
 router.route("/logout").post(controller.logOut);

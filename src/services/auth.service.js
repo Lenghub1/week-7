@@ -416,7 +416,8 @@ const authService = {
     },
   },
   enable2FA: {
-    async verifyUserEnable2FA(req, next) {
+    async verifyUserEnable2FA(req, next, data) {
+      const { password } = data;
       const user = await User.findById(req.user._id);
       if (!user) {
         return next(
@@ -432,7 +433,15 @@ const authService = {
             message: "User already enabled 2FA.",
           })
         );
+      } else if (user && !(await user.verifyPassword(password))) {
+        return next(
+          new APIError({
+            status: 401,
+            message: "Please double check your password and try again.",
+          })
+        );
       }
+
       return user;
     },
 
@@ -442,7 +451,8 @@ const authService = {
     },
   },
   disable2FA: {
-    async verifyUserDisable2FA(req, next) {
+    async verifyUserDisable2FA(req, next, data) {
+      const { password } = data;
       const user = await User.findById(req.user.id);
       if (!user) {
         return next(
@@ -455,10 +465,18 @@ const authService = {
         return next(
           new APIError({
             status: 400,
-            message: "2FA already disable",
+            message: "2FA already disable.",
+          })
+        );
+      } else if (user && !(await user.verifyPassword(password))) {
+        return next(
+          new APIError({
+            status: 401,
+            message: "Please double check your password and try again.",
           })
         );
       }
+
       return user;
     },
 

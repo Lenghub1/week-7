@@ -212,9 +212,15 @@ const authController = {
 
   // Enable 2FA
   // 1. Find User in database
-  // 2. Enable 2FA
+  // 2. Compare password
+  // 3. Enable 2FA
   enable2FA: catchAsync(async (req, res, next) => {
-    const user = await authService.enable2FA.verifyUserEnable2FA(req, next);
+    const data = req.body;
+    const user = await authService.enable2FA.verifyUserEnable2FA(
+      req,
+      next,
+      data
+    );
     await authService.enable2FA.enable(user);
     return res.status(200).json({
       message: "2FA successfully enabled!",
@@ -225,7 +231,12 @@ const authController = {
   // 1. Find User in database
   // 2. Disable 2FA
   disable2FA: catchAsync(async (req, res, next) => {
-    const user = await authService.disable2FA.verifyUserDisable2FA(req, next);
+    const data = req.body;
+    const user = await authService.disable2FA.verifyUserDisable2FA(
+      req,
+      next,
+      data
+    );
     await authService.disable2FA.disable(res, user);
     return res.status(200).json({
       message: "2FA successfully disabled!",
