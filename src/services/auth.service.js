@@ -34,7 +34,7 @@ const authService = {
         .replaceAll(".", "RUKHAK2023"); // Prevent page not found on client side.
     },
 
-    async createNewUser(res, next, resultSendEmail, data) {
+    async createNewUser(next, resultSendEmail, data) {
       const { email, password, firstName, lastName } = data;
 
       if (!resultSendEmail) {
@@ -50,7 +50,7 @@ const authService = {
         password,
         firstName,
         lastName,
-        active: false,
+        active: false, // Account not yet activate
       });
 
       return user;
@@ -164,27 +164,26 @@ const authService = {
   },
   googleSignIn: {
     verifyIdToken(next, client, data) {
-      const { idToken } = data;
+      const { credential } = data;
       return client
-        .verifyIdToken({ idToken, audience: process.env.GOOGLE_CLIENT_ID })
+        .verifyIdToken({
+          idToken: credential,
+          audience: process.env.GOOGLE_CLIENT_ID,
+        })
         .then(async (response) => {
-          const { email_verified, given_name, family_name, email, picture } =
+          const { email_verified, given_name, family_name, email } =
             response.payload;
           if (email_verified) {
             const user = await User.findOne({ email });
             if (user) {
               return user;
             }
-            // If there is no user, create new user
-            const password = email + process.env.ACCESS_TOKEN_SECRET; // create password for new user
-
             const newUser = new User({
               firstName: given_name,
               lastName: family_name,
-              profilePicture: picture,
-              password,
               email,
               active: true,
+              signupMethod: "google",
             });
             await newUser.save({ validateBeforeSave: false });
 
@@ -212,18 +211,16 @@ const authService = {
         );
       }
 
-      return (refreshToken = cookies.jwt);
+      const refreshToken = cookies?.jwt;
+      return refreshToken;
     },
 
     async verifySession(refreshToken, next) {
       const session = await Session.findOne({ refreshToken });
       if (!session) {
-        return next(
-          new APIError({
-            status: 403,
-            message: "Forbidden",
-          })
-        );
+        return next({
+          status: 403, // Forbidden
+        });
       }
       return session;
     },
@@ -232,19 +229,11 @@ const authService = {
       return jwt.verify(
         refreshToken,
         process.env.REFRESH_TOKEN_SECRET,
-        async (err, decoded) => {
-          if (err || session.userId !== decoded.userId) {
-            return next(
-              new APIError({
-                status: 403,
-                message: "Forbidden",
-              })
-            );
-          }
-
-          const accessToken = authService.signAccessToken(decoded.userId);
-          session.accessToken = accessToken;
-          await session.save();
+        (err, decoded) => {
+          if (err || session.userId.toString() !== decoded.userId)
+            return next(new APIError({ status: 403 }));
+          const userId = decoded.userId;
+          const accessToken = authService.signAccessToken(userId);
           return accessToken;
         }
       );
@@ -401,7 +390,7 @@ const authService = {
       return user;
     },
 
-    async verifyAndUpdatePassword(res, user, data, next) {
+    async verifyAndUpdatePassword(user, data, next) {
       const { currentPassword, newPassword } = data;
       if (!(await user.verifyPassword(currentPassword))) {
         return next(
@@ -413,6 +402,10 @@ const authService = {
       }
       user.password = newPassword;
       await user.save();
+    },
+
+    async removeSession(user) {
+      await Session.deleteMany({ userId: user._id });
     },
   },
   enable2FA: {
@@ -513,34 +506,19 @@ const authService = {
       if (!cookies?.jwt)
         return next(
           new APIError({
-            status: 204, // No content
+            status: 401,
           })
         );
       return cookies.jwt;
     },
 
     async clearCookieLogOut(res, next, refreshToken) {
-      const session = await Session.findOne({ refreshToken });
-      if (!session) {
-        res.clearCookie("jwt", {
-          httpOnly: true,
-          samSite: "None",
-          secure: true,
-        });
-        return next(
-          new APIError({
-            status: 204, // No content
-          })
-        );
+      const session = await Session.findOneAndDelete({ refreshToken });
+      if (session) {
+        console.log(session);
+        console.log("JKKKKKKK");
+        res.clearCookie("jwt");
       }
-
-      await session.remove();
-
-      res.clearCookie("jwt", {
-        httpOnly: true,
-        sameSite: "None",
-        secure: true,
-      });
     },
   },
 };

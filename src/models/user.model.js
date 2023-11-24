@@ -62,7 +62,7 @@ const userSchema = new mongoose.Schema(
     passwordChangeAt: Date,
     active: {
       type: Boolean,
-      default: false, // user not yet activate account
+      default: true,
     },
     enable2FA: {
       type: Boolean,
@@ -77,6 +77,9 @@ const userSchema = new mongoose.Schema(
     toObject: { virtuals: true },
   }
 );
+
+// Create an index for email field for fast searching.
+userSchema.index({ email: 1 });
 
 // Auto delete document if user not activate their account for 10 minutes.
 userSchema.index(

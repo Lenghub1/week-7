@@ -1,7 +1,7 @@
 import catchAsync from "../utils/catchAsync.js";
 import authService from "../services/auth.service.js";
 import sendEmailWithNodemailer from "../utils/email.js";
-import { OAuth2Client } from "google-auth-library";
+import { OAuth2Client } from "google-auth-library"; // Follow Google's documentation
 
 const authController = {
   // Signup
@@ -15,7 +15,6 @@ const authController = {
     const emailData = authService.signup.createEmail(token, data);
     const resultSendEmail = await sendEmailWithNodemailer(emailData);
     const user = await authService.signup.createNewUser(
-      res,
       next,
       resultSendEmail,
       data
@@ -93,7 +92,7 @@ const authController = {
       refreshToken,
       session
     );
-    return res.status(201).json({ accessToken });
+    res.status(201).json({ accessToken });
   }),
 
   // Forgot Password
@@ -135,18 +134,14 @@ const authController = {
   // 1. Get current password and new password
   // 2. Find user in data base
   // 3. Verify current password and Update new password
+  // 4. Delete session and reauthenticate
   updatePassword: catchAsync(async (req, res, next) => {
     const data = req.body;
     const user = await authService.updatePassword.getCurrentUser(req);
-    await authService.updatePassword.verifyAndUpdatePassword(
-      res,
-      user,
-      data,
-      next
-    );
-    return res.status(201).json({
-      message: "Password has been updated.",
-    });
+    await authService.updatePassword.verifyAndUpdatePassword(user, data, next);
+    await authService.updatePassword.removeSession(user);
+    req.user = user;
+    return next();
   }),
 
   // Signup as Seller
@@ -186,7 +181,7 @@ const authController = {
     const seller = await authService.signupSeller.verifySeller(sellerId, next);
     await authService.signupSeller.updateSellerStatus(seller, action);
     return res.status(201).json({
-      message: "Seller status approved.",
+      message: "Seller has been approved.",
       data: {
         sellerStatus: seller.sellerStatus,
       },
@@ -203,7 +198,7 @@ const authController = {
     const seller = await authService.signupSeller.verifySeller(sellerId, next);
     await authService.signupSeller.updateSellerStatus(seller, action);
     return res.status(201).json({
-      message: "Seller status rejected!",
+      message: "Seller has been rejected!",
       data: {
         sellerStatus: seller.sellerStatus,
       },
@@ -223,7 +218,7 @@ const authController = {
     );
     await authService.enable2FA.enable(user);
     return res.status(200).json({
-      message: "2FA successfully enabled!",
+      message: "2-Step-Verification successfully enabled!",
     });
   }),
 
@@ -237,9 +232,9 @@ const authController = {
       next,
       data
     );
-    await authService.disable2FA.disable(res, user);
+    await authService.disable2FA.disable(user);
     return res.status(200).json({
-      message: "2FA successfully disabled!",
+      message: "2-Step-Verification successfully disabled!",
     });
   }),
 
@@ -250,10 +245,12 @@ const authController = {
   // 4. Delete Session contain refresh token in db
   // 5. Clear cookie
   logOut: catchAsync(async (req, res, next) => {
-    const cookies = req.cookie;
+    const cookies = req.cookies;
+    console.log(cookies);
     const refreshTokenLogOut = await authService.logOut.checkJWT(next, cookies);
+    console.log(refreshTokenLogOut);
     await authService.logOut.clearCookieLogOut(res, next, refreshTokenLogOut);
-    return res.status(204);
+    res.status(204).send();
   }),
 
   // Resend Email Activate Account

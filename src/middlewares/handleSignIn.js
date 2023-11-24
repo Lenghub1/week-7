@@ -10,7 +10,12 @@ import authService from "../services/auth.service.js";
 const handleSignIn = catchAsync(async (req, res, next) => {
   const accessToken = authService.signAccessToken(req.user._id);
   const refreshToken = authService.signRefreshToken(req.user._id);
-  await Session.create({ userId: req.user._id, accessToken, refreshToken });
+  await Session.create({
+    userId: req.user._id,
+    accessToken,
+    refreshToken,
+    loginAt: Date.now(),
+  });
   const expireationTime = process.env.COOKIES_EXPIRES * 24 * 60 * 60 * 1000;
   res.cookie("jwt", refreshToken, {
     httpOnly: true,
@@ -27,6 +32,7 @@ const handleSignIn = catchAsync(async (req, res, next) => {
       email: req.user.email,
       firstName: req.user.firstName,
       lastName: req.user.lastName,
+      signupMethod: req.user.signupMethod,
       accessToken,
     },
   });

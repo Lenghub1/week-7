@@ -44,6 +44,9 @@ const sessionSchema = mongoose.Schema(
   }
 );
 
+sessionSchema.index({ accessToken: 1 });
+sessionSchema.index({ refreshToken: 1 });
+
 // Each document will remove from db after 30 days if not refresh the token
 sessionSchema.index(
   { updatedAt: 1 },

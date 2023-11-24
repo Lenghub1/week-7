@@ -4,6 +4,7 @@ import cors from "cors";
 import v1Routes from "./routes/v1/index.js";
 import { converter, notFound } from "./middlewares/error.js";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 
@@ -14,6 +15,8 @@ const corsOptions = {
   methods: "GET, POST, PUT, PATCH, DELETE, HEAD",
   credentials: true, // allow cookies to be sent
 };
+
+app.use(cookieParser());
 
 app.use(cors(corsOptions));
 
