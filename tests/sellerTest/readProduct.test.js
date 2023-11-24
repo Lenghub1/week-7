@@ -222,6 +222,25 @@ describe("Get own products (GET /seller/products)", () => {
       });
     });
   });
+
+  describe("Given imgCover field", () => {
+    it("must generate signed url for it", async () => {
+      await insertManyProducts(10);
+
+      const res = await request(app).get(
+        `${baseAPI}?fields=title,imgCover,media&limit=4`
+      );
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.data.length).toBe(4);
+      res.body.data.data.forEach((item) => {
+        expect(item.imgCover.includes("X-Amz-Signature=")).toBe(true);
+        item.media.forEach((eachMedia) =>
+          expect(eachMedia.includes("X-Amz-Signature=")).toBe(false)
+        );
+      });
+    });
+  });
 });
 
 describe("Get own product detail", () => {

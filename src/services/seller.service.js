@@ -45,6 +45,15 @@ const sellerService = {
         message: "There is no document found.",
       });
 
+    // get signed URL if imgCover is availble
+    await Promise.all(
+      products.data.map(async (each) => {
+        if (each.imgCover)
+          each.imgCover = await getFileSignedUrl(each.imgCover);
+      })
+    );
+
+    // get more metadata for pagination
     products.metadata = utils.getPaginateMetadata(products.metadata, queryStr);
 
     return products;
