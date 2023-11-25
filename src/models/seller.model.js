@@ -14,6 +14,9 @@ const sellerSchema = User.discriminator(
       required: true,
       trim: true,
     },
+    storeAndSellerName: {
+      type: String,
+    },
     sellerStatus: {
       type: String,
       enum: ["pending", "active", "inactive"],
@@ -31,6 +34,11 @@ const sellerSchema = User.discriminator(
     },
   })
 );
+
+// sellerSchema.pre("save", function (next) {
+//   this.storeAndSellerName = `${this.storeName} ${this.firstName} ${this.lastName}`;
+//   next();
+// });
 
 const Seller = mongoose.model("Seller", sellerSchema.scheme);
 export default Seller;

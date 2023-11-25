@@ -123,25 +123,25 @@ const adminService = {
 
   async searchSeller(query) {
     try {
+      const searchQuery = query;
+      const searchTerms = searchQuery.split(/\s+/).filter(Boolean);
+      const regexPatterns = searchTerms.map((term) => new RegExp(term, "i"));
+
       const pipeLine = [
         {
-          $match: { active: true },
-        },
-        {
           $match: {
-            $or: [
-              { firstName: new RegExp(query, "i") },
-              { lastName: new RegExp(query, "i") },
-              { storeName: new RegExp(query, "i") },
-            ],
+            active: true,
+            $and: regexPatterns.map((pattern) => ({
+              storeAndSellerName: { $regex: pattern },
+            })),
           },
         },
       ];
       const sellers = await Seller.aggregate(pipeLine);
       return sellers;
     } catch (error) {
-      console.log("error");
-      throw APIError({
+      console.log(error);
+      throw new APIError({
         status: 500,
         message: "Internal server error",
       });

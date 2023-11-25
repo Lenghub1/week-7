@@ -20,19 +20,24 @@ function generateSeedSellers(n) {
   let sellers = [];
   for (let i = 0; i < n; i++) {
     const email = faker.person.firstName() + faker.string.nanoid() + "@gg.com";
+    const firstName = faker.person.firstName();
+    const lastName = faker.person.firstName();
+    const storeName = faker.company.name();
     const seller = new Seller({
-      firstName: faker.person.firstName(),
-      lastName: faker.person.firstName(),
+      firstName,
+      lastName,
       email,
       password: faker.string.alphanumeric(8) + faker.string.nanoid(),
       role: "seller",
       phoneNumber: faker.phone.number(),
-      storeName: faker.company.name(),
+      storeName,
+      storeAndSellerName: storeName + " " + firstName + " " + lastName,
       sellerStatus: faker.helpers.arrayElement([
         "pending",
         "active",
         "inactive",
       ]),
+      slug: faker.string.uuid(),
     });
     sellers.push(seller);
   }
@@ -96,7 +101,7 @@ function generateSeedProducts(n) {
 
 async function seedDB() {
   try {
-    const seedSellers = generateSeedSellers(10);
+    const seedSellers = generateSeedSellers(50);
     await Seller.deleteMany();
     await Seller.insertMany(seedSellers);
 
