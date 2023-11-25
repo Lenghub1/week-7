@@ -1,7 +1,7 @@
 import express from "express";
 import sellerProductRoute from "./sellerProduct.route.js";
 import reviewRoute from "./review.route.js";
-import product from "./product.route.js";
+import productRoute from "./product.route.js";
 
 const router = express.Router();
 
@@ -16,7 +16,7 @@ const defaultRoutes = [
   },
   {
     path: "/products",
-    route: product,
+    route: productRoute,
   },
 ];
 
