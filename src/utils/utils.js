@@ -35,6 +35,17 @@ const utils = {
       "hex"
     )}_${cleanName}.${ext}`;
   },
+
+  /**
+   * @param {Number} basePrice
+   * @returns {Number} unitPrice after adding 10%
+   */
+  calculateUnitPrice(basePrice) {
+    // Set unitPrice (add +10%)
+    let unitPrice = (basePrice * 110) / 100;
+    unitPrice = Math.round(unitPrice * 100) / 100;
+    return unitPrice;
+  },
 };
 
 export default utils;

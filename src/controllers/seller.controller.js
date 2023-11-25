@@ -23,7 +23,6 @@ const sellerController = {
   }),
 
   updateProduct: catchAsync(async (req, res, next) => {
-    console.log("req files", req.files);
     const updatedProduct = await service.updateProduct(
       req.params.id,
       "sellerID",

@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import slugify from "slugify";
+import utils from "../utils/utils.js";
 
 const productSchema = new mongoose.Schema(
   {
@@ -123,8 +124,12 @@ productSchema.pre("save", function (next) {
   }
 
   // Set unitPrice (add +10%)
-  const unitPrice = (this.basePrice * 110) / 100;
-  this.unitPrice = Math.round(unitPrice * 100) / 100;
+  this.unitPrice = utils.calculateUnitPrice(this.basePrice);
+  next();
+});
+
+productSchema.pre("findOneAndUpdate", function (next) {
+  this._update.unitPrice = utils.calculateUnitPrice(this._update.basePrice);
   next();
 });
 
