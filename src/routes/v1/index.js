@@ -1,22 +1,22 @@
 import express from "express";
-import productRoute from "./product.route.js";
+import sellerProductRoute from "./sellerProduct.route.js";
 import reviewRoute from "./review.route.js";
-import userRoute from "./user.route.js";
+import product from "./product.route.js";
 
 const router = express.Router();
 
 const defaultRoutes = [
   {
-    path: "/products",
-    route: productRoute,
+    path: "/seller/products",
+    route: sellerProductRoute,
   },
   {
     path: "/reviews",
     route: reviewRoute,
   },
   {
-    path: "/user/products",
-    route: userRoute,
+    path: "/products",
+    route: product,
   },
 ];
 
