@@ -92,7 +92,7 @@ const productSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["public", "hidden"],
+      enum: ["public", "hidden", "deleted"],
       default: "public",
     },
   },

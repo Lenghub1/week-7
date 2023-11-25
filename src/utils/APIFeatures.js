@@ -66,6 +66,13 @@ class APIFeatures {
     return this;
   }
 
+  filterDeleteStatus(seeDeleted = false) {
+    if (!seeDeleted)
+      this.aggPipe.push({ $match: { status: { $ne: "deleted" } } });
+
+    return this;
+  }
+
   sort() {
     if (this.queryStr.sort) {
       const sortBy = this.queryStr.sort.split(",");

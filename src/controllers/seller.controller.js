@@ -22,6 +22,21 @@ const sellerController = {
     });
   }),
 
+  updateProduct: catchAsync(async (req, res, next) => {
+    console.log("req files", req.files);
+    const updatedProduct = await service.updateProduct(
+      req.params.id,
+      "sellerID",
+      req.files?.imgCover,
+      req.files?.media,
+      req.body
+    );
+    return res.status(200).json({
+      message: "Product Updated",
+      data: updatedProduct,
+    });
+  }),
+
   getOwnProducts: catchAsync(async (req, res, next) => {
     const products = await service.getOwnProducts(req.query);
 
@@ -37,6 +52,13 @@ const sellerController = {
     return res.json({
       message: "Data Retrieved",
       data: product,
+    });
+  }),
+
+  deleteProduct: catchAsync(async (req, res, next) => {
+    await service.deleteProduct(req.params.id, "sellerID");
+    return res.status(204).json({
+      message: "Data deleted",
     });
   }),
 };

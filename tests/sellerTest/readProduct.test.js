@@ -257,11 +257,11 @@ describe("Get own product detail", () => {
       const dummyProduct = await insertManyProducts(1);
 
       const res = await request(app).get(`${baseAPI}/${dummyProduct[0].id}`);
-      const { imgCover } = res.body.data;
-      const mediaUrl = res.body.data.media[0];
+      const { signedImgCover } = res.body.data;
+      const mediaUrl = res.body.data.signedMedia[0];
 
       expect(res.status).toBe(200);
-      expect(imgCover.includes("X-Amz-Signature=")).toBe(true);
+      expect(signedImgCover.includes("X-Amz-Signature=")).toBe(true);
       expect(mediaUrl.includes("X-Amz-Signature=")).toBe(true);
     });
   });
