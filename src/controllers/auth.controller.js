@@ -2,8 +2,28 @@ import catchAsync from "../utils/catchAsync.js";
 import authService from "../services/auth.service.js";
 import sendEmailWithNodemailer from "../utils/email.js";
 import { OAuth2Client } from "google-auth-library"; // Follow Google's documentation
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const authController = {
+  signCookie(res, refreshToken) {
+    res.cookie("jwt", refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+      maxAge: process.env.COOKIES_EXPIRES * 24 * 60 * 60 * 1000,
+    });
+  },
+
+  clearCookie(res) {
+    res.clearCookie("jwt", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+    });
+  },
+
   // Signup
   // 1. Get user data from signup
   // 2. Sign token (JWT)
@@ -76,23 +96,26 @@ const authController = {
   // 1. Get cookie
   // 2. Verify Session
   // 3. Verify JWT
-  // 4. Sign new access token
+  // 4. Sign new access and refresh tokens
   refreshToken: catchAsync(async (req, res, next) => {
     const cookies = req.cookies;
-    const refreshToken = await authService.refreshToken.checkCookie(
+    const cookieRefreshToken = await authService.refreshToken.checkCookie(
       cookies,
       next
     );
+    authController.clearCookie(res);
     const session = await authService.refreshToken.verifySession(
-      refreshToken,
-      next
-    );
-    const accessToken = await authService.refreshToken.verifyRefreshToken(
       next,
-      refreshToken,
+      cookieRefreshToken
+    );
+    const data = await authService.refreshToken.verifyRefreshToken(
+      next,
+      cookieRefreshToken,
       session
     );
-    res.status(201).json({ accessToken });
+    const { accessToken, refreshToken } = data;
+    authController.signCookie(res, refreshToken);
+    res.json({ accessToken });
   }),
 
   // Forgot Password
@@ -107,7 +130,7 @@ const authController = {
     await user.save({ validateBeforeSave: false });
     const emailData = authService.forgotPassword.createEmail(data, resetToken);
     const resultSendEmail = sendEmailWithNodemailer(emailData);
-    authService.forgotPassword.respondSendEmail(next, resultSendEmail);
+    authService.forgotPassword.verifyResult(next, resultSendEmail);
     return res.status(200).json({
       message: "Please check your email to reset your password.",
     });
@@ -128,20 +151,6 @@ const authController = {
     return res.status(201).json({
       message: "Password has been reseted.",
     });
-  }),
-
-  // Update Password
-  // 1. Get current password and new password
-  // 2. Find user in data base
-  // 3. Verify current password and Update new password
-  // 4. Delete session and reauthenticate
-  updatePassword: catchAsync(async (req, res, next) => {
-    const data = req.body;
-    const user = await authService.updatePassword.getCurrentUser(req);
-    await authService.updatePassword.verifyAndUpdatePassword(user, data, next);
-    await authService.updatePassword.removeSession(user);
-    req.user = user;
-    return next();
   }),
 
   // Signup as Seller
@@ -205,39 +214,6 @@ const authController = {
     });
   }),
 
-  // Enable 2FA
-  // 1. Find User in database
-  // 2. Compare password
-  // 3. Enable 2FA
-  enable2FA: catchAsync(async (req, res, next) => {
-    const data = req.body;
-    const user = await authService.enable2FA.verifyUserEnable2FA(
-      req,
-      next,
-      data
-    );
-    await authService.enable2FA.enable(user);
-    return res.status(200).json({
-      message: "2-Step-Verification successfully enabled!",
-    });
-  }),
-
-  // Disable 2FA
-  // 1. Find User in database
-  // 2. Disable 2FA
-  disable2FA: catchAsync(async (req, res, next) => {
-    const data = req.body;
-    const user = await authService.disable2FA.verifyUserDisable2FA(
-      req,
-      next,
-      data
-    );
-    await authService.disable2FA.disable(user);
-    return res.status(200).json({
-      message: "2-Step-Verification successfully disabled!",
-    });
-  }),
-
   // Logout
   // 1. Get cookie
   // 2. Check jwt in Cookie
@@ -246,11 +222,10 @@ const authController = {
   // 5. Clear cookie
   logOut: catchAsync(async (req, res, next) => {
     const cookies = req.cookies;
-    console.log(cookies);
-    const refreshTokenLogOut = await authService.logOut.checkJWT(next, cookies);
-    console.log(refreshTokenLogOut);
-    await authService.logOut.clearCookieLogOut(res, next, refreshTokenLogOut);
-    res.status(204).send();
+    const refreshToken = await authService.logOut.checkJWT(res, cookies);
+    await authService.logOut.verifySession(res, refreshToken);
+    authController.clearCookie(res);
+    return res.status(204).send();
   }),
 
   // Resend Email Activate Account

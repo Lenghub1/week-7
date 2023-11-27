@@ -1,6 +1,11 @@
 import catchAsync from "../utils/catchAsync.js";
 import Session from "../models/session.model.js";
 import authService from "../services/auth.service.js";
+import axios from "axios";
+import dotenv from "dotenv";
+import authController from "../controllers/auth.controller.js";
+
+dotenv.config();
 
 // Handle sign in
 // 1. Sign access and refresh tokens
@@ -8,22 +13,57 @@ import authService from "../services/auth.service.js";
 // 3. Create secure cookie with refresh token
 // 4. Send authorization access token to client
 const handleSignIn = catchAsync(async (req, res, next) => {
+  const cookies = req.cookies;
+  const { deviceType, deviceName } = req.body;
+
+  const clientIp =
+    req.headers["cf-connecting-ip"] ||
+    req.headers["x-real-ip"] ||
+    req.headers["x-forwarded-for"] ||
+    req.socket.remoteAddress ||
+    req.connection.remoteAddress ||
+    "";
+  let address;
+  let coordinates;
+  const response = await axios.get(
+    `https://ipinfo.io/${clientIp}/json?token=${process.env.IPINFO_TOKEN}`
+  );
+  const location = response.data;
+  if (location.region && location.country && location.loc) {
+    address = `${location.region}, ${location.country}`;
+    coordinates = location.loc.split(",").map((element) => Number(element));
+  } else {
+    address = "Unlocated";
+    coordinates = [0, 0];
+  }
+
   const accessToken = authService.signAccessToken(req.user._id);
-  const refreshToken = authService.signRefreshToken(req.user._id);
+  const newRefreshToken = authService.signRefreshToken(req.user._id);
+  if (cookies?.jwt) {
+    const refreshToken = cookies.jwt;
+    const session = await Session.findOne({ refreshToken });
+
+    // Detected refresh token reuse!
+    if (!session) {
+      // clear out ALL previous refresh tokens
+      await Session.deleteMany({ userId: req.user._id });
+    }
+
+    res.clearCookie("jwt", { httpOnly: true, sameSite: "None", secure: true });
+  }
   await Session.create({
     userId: req.user._id,
     accessToken,
-    refreshToken,
+    refreshToken: newRefreshToken,
     loginAt: Date.now(),
+    deviceName,
+    deviceType,
+    deviceLocation: {
+      coordinates,
+      address,
+    },
   });
-  const expireationTime = process.env.COOKIES_EXPIRES * 24 * 60 * 60 * 1000;
-  res.cookie("jwt", refreshToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "None",
-    maxAge: expireationTime,
-  });
-
+  authController.signCookie(res, newRefreshToken);
   res.status(200).json({
     message: "Login succeed.",
     data: {

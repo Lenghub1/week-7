@@ -13,7 +13,6 @@ export const createPasswordValidator = [
     })
     .withMessage("Please follow password convention.")
     .custom((value) => {
-      console.log(value.trim() !== value);
       if (value.trim() !== value) {
         throw new Error("Password can not be start or end with space.");
       }

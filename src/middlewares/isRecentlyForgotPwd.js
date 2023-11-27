@@ -17,7 +17,7 @@ const isRecentlyForgotPwd = catchAsync(async (req, res, next) => {
     return next(
       new APIError({
         status: 400,
-        message: "Email was not requested to reset password.",
+        message: "User with this email was not requested to reset password.",
       })
     );
   }

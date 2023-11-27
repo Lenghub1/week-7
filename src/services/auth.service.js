@@ -58,17 +58,94 @@ const authService = {
 
     createEmail(token, data) {
       const { email } = data;
+      const activationLink = `${authService.setURL()}/auth/activate/${token}`;
       const emailData = {
         from: "RUKHAK TEAM <example@gmail.com>",
         to: email,
-        subject: "Activate Account",
-        html: `<h1>Please use the following link to activate your account</h1>
-                <p>Please reject this email, if you not request</p>
-                <p>${authService.setURL()}/auth/activate/${token}</p>
-                <hr />
-                <p>This email may contain sensitive information</p>
-                <p>${authService.setURL()}</p>`,
+        subject: "Activate Your Account",
+        html: `
+          <html>
+            <head>
+              <style>
+                body {
+                  font-family: 'Arial', sans-serif;
+                  background-color: #f9f9f9;
+                  color: #333;
+                  margin: 0;
+                  padding: 0;
+                }
+    
+                .container {
+                  max-width: 600px;
+                  margin: 20px auto;
+                  background-color: #fff;
+                  padding: 20px;
+                  border-radius: 5px;
+                  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                }
+    
+                h1 {
+                  color: #3498db;
+                }
+    
+                p {
+                  font-size: 16px;
+                  line-height: 1.5;
+                  color: #555;
+                }
+    
+                .activation-link {
+                  margin-top: 20px;
+                  background-color: #3498db;
+                  color: #fff;
+                  padding: 10px;
+                  border-radius: 5px;
+                  text-align: center;
+                  font-size: 18px;
+                }
+    
+                .note {
+                  margin-top: 20px;
+                  font-size: 14px;
+                  color: #777;
+                }
+    
+                .footer {
+                  margin-top: 20px;
+                  text-align: center;
+                  color: #777;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <h1>Activate Your Account</h1>
+    
+                <p>Hello</p>
+    
+                <p>Welcome to RUKHAK TEAM! To get started, please click <strong>Continue</strong> to activate your account:</p>
+    
+                <div class="activation-link">
+                  <a href="${activationLink}" style="color: #fff; text-decoration: none;">Continue</a>
+                </div>
+    
+                <p>If you didn't make this request, you can ignore this email.</p>
+    
+                <div class="note">
+                  <p><strong>Note:</strong> This link will expire in 10 minutes for security reasons.</p>
+                </div>
+    
+                <p>Thank You,<br>RUKHAK TEAM</p>
+    
+                <div class="footer">
+                  <p>&copy; ${new Date().getFullYear()} RUKHAK TEAM. All rights reserved.</p>
+                </div>
+              </div>
+            </body>
+          </html>
+        `,
       };
+
       return emailData;
     },
 
@@ -141,20 +218,18 @@ const authService = {
     async verifyUserByEmailAndPassword(data, next) {
       const { email, password } = data;
       const user = await User.findOne({ email });
-      if (user && user.active === false) {
-        return next(
-          APIError({
-            status: 401,
-            message: "Please sign up first!",
-          })
-        );
-      }
-
       if (!user || !(await user.verifyPassword(password))) {
         return next(
           new APIError({
             status: 400,
             message: "Email or password is incorrected.", // For more secure and prevent malicious from knowing which field they input wrong.
+          })
+        );
+      } else if (user && user.active === false) {
+        return next(
+          APIError({
+            status: 401,
+            message: "Please sign up first!",
           })
         );
       }
@@ -210,31 +285,49 @@ const authService = {
           })
         );
       }
-
-      const refreshToken = cookies?.jwt;
-      return refreshToken;
+      return cookies?.jwt;
     },
 
-    async verifySession(refreshToken, next) {
-      const session = await Session.findOne({ refreshToken });
+    async verifySession(next, cookieRefreshToken) {
+      const session = await Session.findOne({
+        refreshToken: cookieRefreshToken,
+      });
+
+      // Detected refresh token reuse! (Found the JWT from cookie but not found the session in db)
       if (!session) {
-        return next({
-          status: 403, // Forbidden
-        });
+        return jwt.verify(
+          cookieRefreshToken,
+          process.env.REFRESH_TOKEN_SECRET,
+          async (err, decoded) => {
+            if (err) return next(new APIError({ status: 403 })); // Forbidden
+            // Required all devices with cuurent user's id to log in again!
+            await Session.deleteMany({ userId: decoded.userId });
+            return next(new APIError({ status: 403 }));
+          }
+        );
       }
       return session;
     },
 
-    verifyRefreshToken(next, refreshToken, session) {
+    verifyRefreshToken(next, cookieRefreshToken, session) {
       return jwt.verify(
-        refreshToken,
+        cookieRefreshToken,
         process.env.REFRESH_TOKEN_SECRET,
-        (err, decoded) => {
-          if (err || session.userId.toString() !== decoded.userId)
+        async (err, decoded) => {
+          // error means refresh token may expired (required to log in again )
+          if (err || session.userId.toString() !== decoded.userId) {
+            await session.remove();
             return next(new APIError({ status: 403 }));
+          }
+
           const userId = decoded.userId;
           const accessToken = authService.signAccessToken(userId);
-          return accessToken;
+          const refreshToken = authService.signRefreshToken(userId);
+          session.accessToken = accessToken;
+          session.refreshToken = refreshToken;
+          await session.save();
+          const data = { accessToken, refreshToken };
+          return data;
         }
       );
     },
@@ -322,16 +415,94 @@ const authService = {
 
     createEmail(data, resetToken) {
       const { email } = data;
+      const resetLink = `${authService.setURL()}/auth/reset-password/${resetToken}`;
       const emailData = {
         from: "RUKHAK TEAM <example@gmail.com>",
         to: email,
-        subject: "Reset Password",
-        html: `<h1>Please use the following link to reset your password.</h1>
-                <p>${authService.setURL()}/auth/reset-password/${resetToken}</p>
-                <hr />
-                <p>Please reject this email, if you not request to reset password.</p>
-                <p>${authService.setURL()}</p>`,
+        subject: "Password Reset Request",
+        html: `
+          <html>
+            <head>
+              <style>
+                body {
+                  font-family: 'Arial', sans-serif;
+                  background-color: #f9f9f9;
+                  color: #333;
+                  margin: 0;
+                  padding: 0;
+                }
+    
+                .container {
+                  max-width: 600px;
+                  margin: 20px auto;
+                  background-color: #fff;
+                  padding: 20px;
+                  border-radius: 5px;
+                  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                }
+    
+                h1 {
+                  color: #3498db;
+                }
+    
+                p {
+                  font-size: 16px;
+                  line-height: 1.5;
+                  color: #555;
+                }
+    
+                .reset-link {
+                  margin-top: 20px;
+                  background-color: #3498db;
+                  color: #fff;
+                  padding: 10px;
+                  border-radius: 5px;
+                  text-align: center;
+                  font-size: 18px;
+                }
+    
+                .note {
+                  margin-top: 20px;
+                  font-size: 14px;
+                  color: #777;
+                }
+    
+                .footer {
+                  margin-top: 20px;
+                  text-align: center;
+                  color: #777;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <h1>Password Reset Request</h1>
+    
+                <p>Hello</p>
+    
+                <p>We received a request to reset your password. If you made this request, please use the link below to reset your password:</p>
+    
+                <div class="reset-link">
+                  <a href="${resetLink}" style="color: #fff; text-decoration: none;">Reset Password</a>
+                </div>
+    
+                <p>If you didn't make this request, you can ignore this email.</p>
+    
+                <div class="note">
+                  <p><strong>Note:</strong> This link will expire in 10 minutes for security reasons.</p>
+                </div>
+    
+                <p>Thank You,<br>RUKHAK TEAM</p>
+    
+                <div class="footer">
+                  <p>&copy; ${new Date().getFullYear()} RUKHAK TEAM. All rights reserved.</p>
+                </div>
+              </div>
+            </body>
+          </html>
+        `,
       };
+
       return emailData;
     },
 
@@ -384,109 +555,96 @@ const authService = {
       await user.save();
     },
   },
-  updatePassword: {
-    async getCurrentUser(req) {
-      const user = await User.findById(req.user._id);
-      return user;
-    },
-
-    async verifyAndUpdatePassword(user, data, next) {
-      const { currentPassword, newPassword } = data;
-      if (!(await user.verifyPassword(currentPassword))) {
-        return next(
-          new APIError({
-            status: 401,
-            message: "Your current password is incorrect.",
-          })
-        );
-      }
-      user.password = newPassword;
-      await user.save();
-    },
-
-    async removeSession(user) {
-      await Session.deleteMany({ userId: user._id });
-    },
-  },
-  enable2FA: {
-    async verifyUserEnable2FA(req, next, data) {
-      const { password } = data;
-      const user = await User.findById(req.user._id);
-      if (!user) {
-        return next(
-          new APIError({
-            status: 404,
-            message: "User not found.",
-          })
-        );
-      } else if (user && user.enable2FA) {
-        return next(
-          new APIError({
-            status: 400,
-            message: "User already enabled 2FA.",
-          })
-        );
-      } else if (user && !(await user.verifyPassword(password))) {
-        return next(
-          new APIError({
-            status: 401,
-            message: "Please double check your password and try again.",
-          })
-        );
-      }
-
-      return user;
-    },
-
-    async enable(user) {
-      user.enable2FA = true;
-      await user.save();
-    },
-  },
-  disable2FA: {
-    async verifyUserDisable2FA(req, next, data) {
-      const { password } = data;
-      const user = await User.findById(req.user.id);
-      if (!user) {
-        return next(
-          new APIError({
-            status: 404,
-            message: "User not found.",
-          })
-        );
-      } else if (user && !user.enable2FA) {
-        return next(
-          new APIError({
-            status: 400,
-            message: "2FA already disable.",
-          })
-        );
-      } else if (user && !(await user.verifyPassword(password))) {
-        return next(
-          new APIError({
-            status: 401,
-            message: "Please double check your password and try again.",
-          })
-        );
-      }
-
-      return user;
-    },
-
-    async disable(user) {
-      user.enable2FA = false;
-      await user.save();
-    },
-  },
   twoFA: {
     createEmail(email, OTP) {
       const emailData = {
-        from: "RUKHAK TEAM <example@gmail.com>",
+        from: "Rukhak Team <noreply@rukhak.com>",
         to: email,
-        subject: "2 Step Verification",
-        html: `<h1>Please use numbers below to continue to the app:</h1>
-                <p>${OTP}</p>`,
+        subject: "Rukhak 2-Step Verification Code",
+        html: `
+          <html>
+            <head>
+              <style>
+                body {
+                  font-family: 'Arial', sans-serif;
+                  background-color: #f9f9f9;
+                  color: #333;
+                  margin: 0;
+                  padding: 0;
+                }
+    
+                .container {
+                  max-width: 600px;
+                  margin: 20px auto;
+                  background-color: #fff;
+                  padding: 20px;
+                  border-radius: 5px;
+                  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                }
+    
+                h1 {
+                  color: #3498db;
+                }
+    
+                p {
+                  font-size: 16px;
+                  line-height: 1.5;
+                  color: #555;
+                }
+    
+                .otp-container {
+                  margin-top: 20px;
+                  padding: 10px;
+                  font-weight: 800;
+                  text-align: center;
+                  font-size: 20px;
+                }
+    
+                .important-note {
+                  margin-top: 20px;
+                  color: #fff;
+                  padding: 10px;
+                  border-radius: 5px;
+                }
+    
+                .footer {
+                  margin-top: 20px;
+                  text-align: center;
+                  color: #777;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <h1>Rukhak 2-Step Verification Code</h1>
+    
+                <p>Hello</p>
+    
+                <p><strong>${OTP}</strong> is your Rukahk 2-Step Verification code.</p>
+    
+                <p>Enter the above code into the 2-Step Verification screen to finish logging in. This code will expire in 10 minutes.</p>
+    
+                <div class="otp-container">
+                  ${OTP}
+                </div>
+    
+                <div class="important-note">
+                  <p><strong>IMPORTANT:</strong> Don't share your security codes with anyone. Rukhak will never ask you for your codes. This can include things like texting your code, screensharing, etc. By sharing your security codes with someone else, you are putting your account and its content at high risk.</p>
+                </div>
+    
+                <p>Thank You,<br>The Rukhak Team</p>
+    
+                <p><strong>Do not reply to this email directly.</strong> You are receiving this email because there was a Rukhak login attempt from a new browser or device. If you did not make this request, you are strongly advised to change your password.</p>
+    
+                <div class="footer">
+                  <p>&copy; ${new Date().getFullYear()} Rukhak Corporation. All rights reserved.</p>
+                </div>
+              </div>
+            </body>
+          </html>
+        `,
       };
+
       return emailData;
     },
 
@@ -502,22 +660,19 @@ const authService = {
     },
   },
   logOut: {
-    checkJWT(next, cookies) {
-      if (!cookies?.jwt)
-        return next(
-          new APIError({
-            status: 401,
-          })
-        );
+    checkJWT(res, cookies) {
+      if (!cookies?.jwt) return res.status(204); // No Content
       return cookies.jwt;
     },
 
-    async clearCookieLogOut(res, next, refreshToken) {
+    async verifySession(res, refreshToken) {
       const session = await Session.findOneAndDelete({ refreshToken });
-      if (session) {
-        console.log(session);
-        console.log("JKKKKKKK");
-        res.clearCookie("jwt");
+      if (!session) {
+        res.clearCookie("jwt", {
+          httpOnly: true,
+          sameSite: "None",
+          secure: true,
+        });
       }
     },
   },

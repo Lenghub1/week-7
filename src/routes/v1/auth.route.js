@@ -53,17 +53,6 @@ router
   .route("/reset-password")
   .patch(createPasswordValidator, runValidation, controller.resetPassword);
 
-// Update password
-router
-  .route("/update-password")
-  .patch(
-    createPasswordValidator,
-    runValidation,
-    isAuth,
-    controller.updatePassword,
-    handleSignIn
-  );
-
 // Sign up as seller
 router
   .route("/signup-seller")
@@ -93,12 +82,6 @@ router
 router
   .route("/resend-email-otp")
   .post(isRecently2FA, controller.resendEmailOTP);
-
-// Enable 2 step verification
-router.route("/enable2FA").patch(isAuth, controller.enable2FA);
-
-// Disable 2 step verification
-router.route("/disable2FA").patch(isAuth, controller.disable2FA);
 
 // Refresh access token
 router.route("/refresh").get(controller.refreshToken);
