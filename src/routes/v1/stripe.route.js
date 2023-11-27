@@ -3,6 +3,9 @@ import stripeController from "../../controllers/stripe.controller.js";
 
 const router = express.Router();
 
-router.route("/").post(stripeController.createStripe);
+router
+    .route("/")
+    .get(stripeController.getAllStripe)
+    .post(stripeController.createStripe);
 
 export default router;

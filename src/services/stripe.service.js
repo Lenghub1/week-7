@@ -4,6 +4,19 @@ import Product from "../models/product.model.js";
 dotenv.config();
 
 const stripService = {
+  async getAllStripeProducts() {
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: `2023-10-16`,
+    });
+    const products = await stripe.products
+      .list({ limit: 100 })
+      .autoPagingEach({ limit: 10000 });
+    if (!products) {
+      throw new Error({ status: 404, message: "No stripe product found" });
+    }
+    return products;
+  },
+
   async createCheckoutSession(cartItems) {
     const lineItems = [];
 
