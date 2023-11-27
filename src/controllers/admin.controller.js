@@ -46,6 +46,21 @@ const adminController = {
     const sellers = await adminService.searchSeller(req.query.q);
     return res.status(200).json(sellers);
   }),
+
+  updateProduct: catchAsync(async (req, res, next) => {
+    // console.log("new img cover", req.files.imgCover);
+    // console.log("new media", req.files.newMedia);
+    // console.log("body", req.body);
+
+    // console.log("media", req.body.media);
+    const product = await adminService.updateProduct({
+      productInput: req.body,
+      newImgCover: req.files.imgCover,
+      newMedia: req.files.newMedia,
+      productId: req.params.id,
+    });
+    res.status(200).send(product);
+  }),
 };
 
 export default adminController;

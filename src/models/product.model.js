@@ -92,8 +92,15 @@ const productSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["public", "hidden"],
-      default: "public",
+      enum: ["Public", "Hidden"],
+      default: "Public",
+    },
+    signedImgCover: {
+      type: String,
+      default: "",
+    },
+    signedMedia: {
+      type: [String],
     },
   },
   {
