@@ -32,7 +32,8 @@ const authController = {
   signup: catchAsync(async (req, res, next) => {
     const data = req.body;
     const token = await authService.signup.signTokenForActivateAccount(data);
-    const emailData = authService.signup.createEmail(token, data);
+    const emailData = await authService.signup.createEmail(token, data);
+    console.log(emailData);
     const resultSendEmail = await sendEmailWithNodemailer(emailData);
     const user = await authService.signup.createNewUser(
       next,
@@ -128,7 +129,10 @@ const authController = {
     const user = await authService.forgotPassword.verifyUserByEmail(next, data);
     const resetToken = user.createPasswordResetToken();
     await user.save({ validateBeforeSave: false });
-    const emailData = authService.forgotPassword.createEmail(data, resetToken);
+    const emailData = await authService.forgotPassword.createEmail(
+      data,
+      resetToken
+    );
     const resultSendEmail = sendEmailWithNodemailer(emailData);
     authService.forgotPassword.verifyResult(next, resultSendEmail);
     return res.status(200).json({
@@ -184,7 +188,7 @@ const authController = {
   // 1. Get seller id from params
   // 2. Check for seller in database
   // 3. Update seller status to active
-  approveSeller: catchAsync(async (req, res, next) => {
+  handleSeller: catchAsync(async (req, res, next) => {
     const sellerId = req.params.sellerId;
     const action = "approve"; // For reuseable updateSellerStatus function
     const seller = await authService.signupSeller.verifySeller(sellerId, next);
@@ -254,7 +258,7 @@ const authController = {
     const user = req.user;
     const OTP = await user.createOTPToken();
     await user.save({ validateBeforeSave: false });
-    const emailData = authService.twoFA.createEmail(user.email, OTP);
+    const emailData = await authService.twoFA.createEmail(user.email, OTP);
     const resultSendEmail = await sendEmailWithNodemailer(emailData);
     authService.twoFA.verifyResult(next, resultSendEmail);
     res.status(200).json({
@@ -271,7 +275,10 @@ const authController = {
     const user = req.user;
     const resetToken = user.createPasswordResetToken();
     await user.save({ validateBeforeSave: false });
-    const emailData = authService.forgotPassword.createEmail(user, resetToken);
+    const emailData = await authService.forgotPassword.createEmail(
+      user,
+      resetToken
+    );
     const resultSendEmail = sendEmailWithNodemailer(emailData);
     authService.forgotPassword.verifyResult(next, resultSendEmail);
     return res.status(200).json({

@@ -58,15 +58,10 @@ router
   .route("/signup-seller")
   .put(isAuth, verifyRoles("user"), controller.signupSeller);
 
-// Approve seller
+// Handle approve or reject seller
 router
-  .route("/approved/:sellerId")
-  .patch(isAuth, verifyRoles("admin"), controller.approveSeller);
-
-// Reject seller
-router
-  .route("/rejected/:sellerId")
-  .patch(isAuth, verifyRoles("admin"), controller.rejectSeller);
+  .route("/:sellerId/:action")
+  .patch(isAuth, verifyRoles("admin"), controller.handleSeller);
 
 // Resend email to activate account
 router
