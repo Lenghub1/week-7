@@ -8,10 +8,15 @@ import authController from "../controllers/auth.controller.js";
 dotenv.config();
 
 // Handle sign in
-// 1. Sign access and refresh tokens
-// 2. Save to database
-// 3. Create secure cookie with refresh token
-// 4. Send authorization access token to client
+// 1. Get cookie
+// 2. Get devices data
+// 3. Get IP address from request
+// 4. Search for location, coordinates base on IP address
+// 5. Sign access and refresh tokens
+// 6. Clear cookie if it exist
+// 7. Save new session to database
+// 8. Create secure cookie with refresh token
+// 9. Send authorization access token to client
 const handleSignIn = catchAsync(async (req, res, next) => {
   const cookies = req.cookies;
   const { deviceType, deviceName } = req.body;
@@ -45,7 +50,7 @@ const handleSignIn = catchAsync(async (req, res, next) => {
 
     // Detected refresh token reuse!
     if (!session) {
-      // clear out ALL previous refresh tokens
+      // clear out ALL sessions
       await Session.deleteMany({ userId: req.user._id });
     }
 
