@@ -316,7 +316,7 @@ const authService = {
         async (err, decoded) => {
           // error means refresh token may expired (required to log in again )
           if (err || session.userId.toString() !== decoded.userId) {
-            await session.remove();
+            await session.deleteOne();
             return next(new APIError({ status: 403 }));
           }
 
