@@ -8,6 +8,9 @@ import notificationRoute from "./notification.route.js";
 import adminRoute from "./admin.route.js";
 import postRoute from "./post.route.js";
 import commentRoute from "./comment.route.js";
+import addressRoute from "./address.route.js";
+import orderRoute from "./order.route.js";
+import checkoutRoute from "./checkout.route.js";
 
 const router = express.Router();
 
@@ -47,6 +50,18 @@ const defaultRoutes = [
   {
     path: "/admin",
     route: adminRoute,
+  },
+  {
+    path: "/addresses",
+    route: addressRoute,
+  },
+  {
+    path: "/orders",
+    route: orderRoute,
+  },
+  {
+    path: "/checkout",
+    route: checkoutRoute,
   },
 ];
 
