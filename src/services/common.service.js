@@ -20,7 +20,8 @@ const createService = (Model) => {
      */
     async getAll(queryString) {
       // Create and apply filters, sorting, field limiting, and pagination to the query.
-      const features = new APIFeatures(Model.find(), queryString)
+      const features = new APIFeatures(Model, queryString)
+        .search()
         .filter()
         .sort()
         .limitFields()
