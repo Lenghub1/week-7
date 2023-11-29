@@ -121,7 +121,10 @@ const adminService = {
       product.signedMedia = urls.slice(1);
       return product;
     } catch (error) {
-      throw error;
+      throw new APIError({
+        message: "Something went wrong while fetching the product.",
+        status: 500,
+      });
     }
   },
 
@@ -144,7 +147,6 @@ const adminService = {
       const sellers = await Seller.aggregate(pipeLine);
       return sellers;
     } catch (error) {
-      console.log(error);
       throw new APIError({
         status: 500,
         message: "Internal server error",
@@ -158,6 +160,13 @@ const adminService = {
 
     try {
       const product = await Product.findById(productId);
+
+      if (!product) {
+        throw new APIError({
+          message: `Cannot find product with this ID: ${productId}`,
+          status: 400,
+        });
+      }
 
       // Exclude media and imgCover from the fields to update
       const fieldsToUpdate = Object.keys(productInput).filter(
@@ -280,8 +289,9 @@ const adminService = {
       return product;
     } catch (error) {
       await session.abortTransaction();
-      console.log(error);
-      throw error;
+      throw new APIError({
+        message: "Something went wrong! Cannot update the product.",
+      });
     } finally {
       session.endSession();
     }
