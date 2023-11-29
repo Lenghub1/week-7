@@ -78,7 +78,7 @@ const adminService = {
   async getProducts(queryStr) {
     if (queryStr.categories)
       queryStr.categories = queryStr.categories.split(",");
-    const features = new APIFeatures(Product, queryStr)
+    const features = new APIFeatures(Product, queryStr, true)
       .search()
       .filter()
       .sort()
@@ -172,7 +172,10 @@ const adminService = {
       const { media } = productInput;
 
       let deletedMedia;
-      if (media.length !== product.media.length) {
+      if (
+        typeof media !== "undefined" &&
+        media.length !== product.media.length
+      ) {
         const filteredMedia = product.media.filter((item) =>
           media.includes(item)
         );
@@ -194,7 +197,7 @@ const adminService = {
           newImgCover[0].originalname,
           newImgCover[0].mimetype
         );
-        // previousImgCover = product.imgCover;
+        previousImgCover = product.imgCover;
         product.imgCover = imgCoverName;
       }
 
@@ -226,7 +229,6 @@ const adminService = {
           imgCoverParams.name,
           imgCoverParams.mimetype
         );
-        // await deleteFile(previousImgCover);
       }
 
       if (newMedia) {
@@ -248,16 +250,14 @@ const adminService = {
               )
           )
         );
-
-        // mediaParams.map((each) => uploadFile(each));
-        // deletedMedia.map(async (item) => await deleteFile(item));
       }
       await session.commitTransaction();
 
       // Delete files only if the transaction is successfully committed
       if (newImgCover) {
+        // If delete operations fail, we can, later, manually delete the deleted files
         try {
-          await deleteFile(deletedImgCover);
+          await deleteFile(previousImgCover);
         } catch (deleteError) {
           console.error(`Error deleting imgCover: ${deleteError.message}`);
         }
