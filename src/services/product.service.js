@@ -144,28 +144,43 @@ const productService = {
     return product;
   },
 
-  async getHotProducts() {
-    let tenDaysAgo = new Date();
-    tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
-
-    // Find products created in the last 10 days
-    const hotProducts = await Product.find({
-      createdAt: { $gte: tenDaysAgo }, // Filter products created in the last 10 days
-    });
-
-    return hotProducts;
+  async getUserProducts() {
+    const products = await Product.aggregate([{ $sample: { size: 10 } }]);
+    return products;
   },
 
-  async getTopProducts() {
-    const topProducts = await Product.find({
-      $or: [
-        // Filter products with rating greater or equal 4
-        { averageRating: { $gte: 4 } },
-        // Filter products with sold greater or equal 100
-        { soldAmount: { $gte: 100 } },
-      ],
-    });
-    return topProducts;
+  async getHotProducts(queryStr) {
+    const features = new APIFeatures(Product, queryStr)
+      .search()
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
+
+    let products = await features.execute();
+    products = products[0];
+
+    return products;
+  },
+
+  async getTopProducts(queryStr) {
+    const topProductsQuery = {
+      ...queryStr,
+      averageRating: { gte: "4.5" },
+      soldAmount: { gte: "100" },
+    };
+
+    const features = new APIFeatures(Product, topProductsQuery)
+      .search()
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
+
+    let products = await features.execute();
+    products = products[0];
+
+    return products;
   },
 
   async getProductsByCategories(queryStr) {
