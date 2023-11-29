@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import Product from "./product.model.js";
 
 const orderSchema = mongoose.Schema(
   {
@@ -94,5 +95,10 @@ orderSchema.pre("save", async function (next) {
   next();
 });
 
+orderSchema.pre("find", function () {
+  this.populate("shipping.address");
+});
+
 const Order = mongoose.model("Order", orderSchema);
+
 export default Order;
