@@ -1,5 +1,5 @@
 import express from "express";
-import controller from "../../controllers/product.controller.js";
+import controller from "../../controllers/sellerProduct.controller.js";
 import {
   createProductValidator,
   sellerProductQueryValidator,
