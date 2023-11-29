@@ -7,13 +7,14 @@ const sessionSchema = mongoose.Schema(
       ref: "User",
       required: true,
     },
-    deviceName: {
-      type: String,
-      required: true,
-    },
     deviceType: {
       type: String,
       required: true,
+    },
+    loginMethod: {
+      type: String,
+      required: true,
+      enum: ["email", "google", "facebook"],
     },
     loginAt: {
       type: Date,
@@ -48,7 +49,7 @@ const sessionSchema = mongoose.Schema(
 sessionSchema.index({ accessToken: 1 });
 sessionSchema.index({ refreshToken: 1 });
 
-// Each document will remove from db after 30 days if not refresh the token
+// Each documentas will remove from db after 30 days if not refresh the token
 sessionSchema.index(
   { updatedAt: 1 },
   { expireAfterSeconds: 30 * 24 * 60 * 60 }

@@ -19,8 +19,6 @@ dotenv.config();
 // 9. Send authorization access token to client
 const handleSignIn = catchAsync(async (req, res, next) => {
   const cookies = req.cookies;
-  const { deviceType, deviceName } = req.body;
-
   const clientIp =
     req.headers["cf-connecting-ip"] ||
     req.headers["x-real-ip"] ||
@@ -28,16 +26,24 @@ const handleSignIn = catchAsync(async (req, res, next) => {
     req.socket.remoteAddress ||
     req.connection.remoteAddress ||
     "";
+
   let address;
   let coordinates;
-  const response = await axios.get(
-    `https://ipinfo.io/${clientIp}/json?token=${process.env.IPINFO_TOKEN}`
-  );
-  const location = response.data;
-  if (location.region && location.country && location.loc) {
-    address = `${location.region}, ${location.country}`;
-    coordinates = location.loc.split(",").map((element) => Number(element));
-  } else {
+  try {
+    const response = await axios.get(
+      `https://ipinfo.io/${clientIp}/json?token=${process.env.IPINFO_TOKEN}`
+    );
+
+    const location = response?.data;
+    if (location) {
+      address = `${location?.region}, ${location?.country}`;
+      coordinates = location?.loc.split(",").map((element) => Number(element));
+    } else {
+      address = "Unlocated";
+      coordinates = [0, 0];
+    }
+  } catch (err) {
+    console.error("Error fetching IP information:", err.response.data.error);
     address = "Unlocated";
     coordinates = [0, 0];
   }
@@ -58,11 +64,11 @@ const handleSignIn = catchAsync(async (req, res, next) => {
   }
   await Session.create({
     userId: req.user._id,
+    loginMethod: req.user.loginMethod,
     accessToken,
     refreshToken: newRefreshToken,
     loginAt: Date.now(),
-    deviceName,
-    deviceType,
+    deviceType: req.useragent.platform,
     deviceLocation: {
       coordinates,
       address,

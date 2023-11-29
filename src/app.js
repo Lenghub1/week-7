@@ -5,6 +5,7 @@ import v1Routes from "./routes/v1/index.js";
 import { converter, notFound } from "./middlewares/error.js";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
+import useragent from "express-useragent";
 
 dotenv.config();
 
@@ -26,6 +27,9 @@ app.use(
 );
 
 app.use(express.json());
+
+// Middleware to parse user agent information
+app.use(useragent.express());
 
 // API endpoints
 app.use("/api/v1", v1Routes);

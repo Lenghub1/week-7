@@ -33,7 +33,6 @@ const authController = {
     const data = req.body;
     const token = await authService.signup.signTokenForActivateAccount(data);
     const emailData = await authService.signup.createEmail(token, data);
-    console.log(emailData);
     const resultSendEmail = await sendEmailWithNodemailer(emailData);
     const user = await authService.signup.createNewUser(
       next,
@@ -60,6 +59,7 @@ const authController = {
     const data = req.body;
     const user = await authService.signup.activateAccount(next, data);
     req.user = user;
+    req.user.loginMethod = "email";
     next();
   }),
 
@@ -74,6 +74,7 @@ const authController = {
       next
     );
     req.user = user;
+    req.user.loginMethod = "email";
     next();
   }),
 
@@ -90,6 +91,7 @@ const authController = {
       data
     );
     req.user = user;
+    req.user.loginMethod = "google";
     return next();
   }),
 
@@ -184,34 +186,16 @@ const authController = {
     });
   }),
 
-  // Approve seller
-  // 1. Get seller id from params
+  // Handle seller
+  // 1. Get seller id and action from params
   // 2. Check for seller in database
   // 3. Update seller status to active
   handleSeller: catchAsync(async (req, res, next) => {
-    const sellerId = req.params.sellerId;
-    const action = "approve"; // For reuseable updateSellerStatus function
+    const { sellerId, action } = req.params;
     const seller = await authService.signupSeller.verifySeller(sellerId, next);
     await authService.signupSeller.updateSellerStatus(seller, action);
     return res.status(201).json({
       message: "Seller has been approved.",
-      data: {
-        sellerStatus: seller.sellerStatus,
-      },
-    });
-  }),
-
-  // Reject seller
-  // 1. Get seller id from params
-  // 2. Check for seller in database
-  // 3. Update seller status and role
-  rejectSeller: catchAsync(async (req, res, next) => {
-    const sellerId = req.params.sellerId;
-    const action = "reject";
-    const seller = await authService.signupSeller.verifySeller(sellerId, next);
-    await authService.signupSeller.updateSellerStatus(seller, action);
-    return res.status(201).json({
-      message: "Seller has been rejected!",
       data: {
         sellerStatus: seller.sellerStatus,
       },
