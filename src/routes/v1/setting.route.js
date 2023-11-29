@@ -28,13 +28,15 @@ router
 // Enable/Disable 2FA by user who log in by email and password
 router.route("/:action/2FA/pwd").patch(isAuth, controller.enable2FAByPassword);
 
-// // Enable/Disable 2FA by oAuth user
+// Enable/Disable 2FA by oAuth user
 router.route("/:action/2FA/oauth").get(isAuth, controller.enable2FAByOTP);
 
-router.route("/addresses").post(isAuth, controller.createNewAddress);
-
+// Enable 2FA (after verify otp)
 router
   .route("/:action/2FA/otp")
   .patch(isAuth, verify2FACode, controller.enable2FA);
+
+// Create delivery address
+router.route("/addresses").post(isAuth, controller.createNewAddress);
 
 export default router;

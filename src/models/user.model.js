@@ -4,7 +4,7 @@ import slugify from "slugify";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import otpGenerator from "otp-generator";
-import Address from "./address.model.js";
+import { addressSchema } from "./address.model.js";
 
 const userSchema = new mongoose.Schema(
   {
@@ -29,9 +29,7 @@ const userSchema = new mongoose.Schema(
       validate: validator.isEmail,
     },
     profilePicture: String,
-    deliveryAddresses: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "Address" },
-    ],
+    deliveryAddresses: [addressSchema],
     slug: {
       type: String,
       unique: true,
@@ -106,10 +104,6 @@ userSchema.pre("save", async function (next) {
       strict: true,
     });
   }
-  const address = await Address.findById(this.deliveryAddresses);
-  this.deliveryAddresses = address;
-  console.log(this.deliveryAddresses);
-  next();
 });
 
 userSchema.pre("save", async function (next) {
