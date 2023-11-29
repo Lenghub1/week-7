@@ -3,15 +3,28 @@
  */
 
 class APIFeatures {
-  constructor(model, queryStr) {
+  constructor(model, queryStr, isAdmin = false) {
     this.model = model;
     this.aggPipe = [];
     this.queryStr = queryStr;
+    this.isAdmin = isAdmin;
   }
 
   search() {
     const searchTerm = this.queryStr.q;
-    if (searchTerm)
+    if (this.isAdmin && searchTerm) {
+      // when admin is true, use regex-based search
+      const searchTerms = searchTerm.split(/\s+/).filter(Boolean);
+      const regexPatterns = searchTerms.map((term) => new RegExp(term, "i"));
+
+      this.aggPipe.push({
+        $match: {
+          $and: regexPatterns.map((pattern) => ({
+            title: { $regex: pattern },
+          })),
+        },
+      });
+    } else if (searchTerm) {
       this.aggPipe.push({
         $search: {
           index: "product-search",
@@ -36,6 +49,7 @@ class APIFeatures {
           },
         },
       });
+    }
 
     return this;
   }
@@ -56,9 +70,8 @@ class APIFeatures {
         if (/\b(gte|gt|lte|lt)\b/g.test(key))
           queryObj[eachKey][key] = Number(queryObj[eachKey][key]);
 
-      // Convert to $elemMatch to match each element regardless of order
       if (Array.isArray(queryObj[eachKey])) {
-        queryObj[eachKey] = { $in: queryObj[eachKey] };
+        queryObj[eachKey] = { $all: queryObj[eachKey] };
       }
     });
 
