@@ -2,37 +2,37 @@ import Order from "../models/order.model.js";
 import Product from "../models/product.model.js";
 
 const orderService = {
-  async getAllItems() {
+  async getAllOrders() {
     const orders = await Order.find({});
     if (!orders) {
-      throw new Error({ status: 404, message: "No product found" });
+      throw new Error({ status: 404, message: "Order not found." });
     }
     return orders;
   },
-  async getItem(itemId) {
-    const order = await Order.findById(itemId);
+  async getOrder(orderId) {
+    const order = await Order.findById(orderId);
     if (!order) {
-      throw new Error({ status: 404, message: "No product found" });
+      throw new Error({ status: 404, message: "Order not found." });
     }
     return order;
   },
-  async updateItem(itemId, itemBody) {
-    const order = await Order.findByIdAndUpdate(itemId, itemBody);
+  async updateOrder(orderId, orderBody) {
+    const order = await Order.findByIdAndUpdate(orderId, orderBody);
     if (!order) {
-      throw new Error({ status: 404, message: "No product found" });
+      throw new Error({ status: 404, message: "Order not found." });
     }
     return order;
   },
-  async deleteItem(itemId) {
-    const order = await Order.findByIdAndDelete(itemId);
+  async deleteOrder(orderId) {
+    const order = await Order.findByIdAndDelete(orderId);
     if (!order) {
-      throw new Error({ status: 404, message: "No product found" });
+      throw new Error({ status: 404, message: "Order not found." });
     }
     return order;
   },
-  async addItem(itemBody) {
+  async createOrder(orderBody) {
     const cartItemsWithDetails = await Promise.all(
-      itemBody.cartItems.map(async (cartItem) => {
+      orderBody.cartItems.map(async (cartItem) => {
         const product = await Product.findById(cartItem.productId);
         return {
           ...cartItem,
@@ -46,11 +46,11 @@ const orderService = {
       0
     );
 
-    itemBody.totalPrice = totalPrice.toFixed(2);
+    orderBody.totalPrice = totalPrice.toFixed(2);
 
-    const order = await Order.create(itemBody);
+    const order = await Order.create(orderBody);
     if (!order) {
-      throw new Error({ status: 404, message: "No product found" });
+      throw new Error({ status: 404, message: "Order not found." });
     }
     return order;
   },

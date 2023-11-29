@@ -10,7 +10,7 @@ import postRoute from "./post.route.js";
 import commentRoute from "./comment.route.js";
 import addressRoute from "./address.route.js";
 import orderRoute from "./order.route.js";
-import stripeRoute from "./stripe.route.js";
+import checkoutRoute from "./checkout.route.js";
 
 const router = express.Router();
 
@@ -61,7 +61,7 @@ const defaultRoutes = [
   },
   {
     path: "/checkout",
-    route: stripeRoute,
+    route: checkoutRoute,
   },
 ];
 

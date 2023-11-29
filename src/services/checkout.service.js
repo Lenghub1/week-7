@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import Product from "../models/product.model.js";
 dotenv.config();
 
-const stripService = {
+const checkoutService = {
   async getAllStripeProducts() {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
       apiVersion: `2023-10-16`,
@@ -48,4 +48,4 @@ const stripService = {
   },
 };
 
-export default stripService;
+export default checkoutService;
