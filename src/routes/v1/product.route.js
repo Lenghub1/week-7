@@ -1,13 +1,11 @@
 import express from "express";
-import controller from "../../controllers/product.controller.js";
-import { createProductValidator } from "../../validators/product.validator.js";
-import { runValidation } from "../../validators/index.js";
+import usersProductController from "../../controllers/product.controller.js";
 
 const router = express.Router();
 
-router
-  .route("/")
-  .post(createProductValidator, runValidation, controller.createProduct);
-//.get(controller.getAllProducts)
+router.route("/").get(usersProductController.getByCategories);
+router.route("/all").get(usersProductController.getUserProducts);
+router.route("/hot").get(usersProductController.getHotProducts);
+router.route("/top").get(usersProductController.getTopProducts);
 
 export default router;

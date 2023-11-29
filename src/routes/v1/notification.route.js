@@ -1,13 +1,10 @@
 import express from "express";
-import {
-  getNotifications,
-  markNotificationAsOpened,
-} from "../../controllers/notification.controller.js";
+import service from "../../controllers/notification.controller.js";
 
 const router = express.Router();
 
-router.get("/notifications/:userId", getNotifications);
+router.get("/:userId", service.getNotifications);
 
-router.patch("/notifications/:notificationId", markNotificationAsOpened);
+router.patch("/:notificationId", service.markNotificationAsOpened);
 
 export default router;

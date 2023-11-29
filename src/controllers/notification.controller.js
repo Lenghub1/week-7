@@ -1,25 +1,26 @@
+import catchAsync from "../utils/catchAsync.js";
 import notificationService from "../services/notification.service.js";
+import APIError from "../utils/APIError.js";
 
-export const getNotifications = async (req, res) => {
-  try {
-    const userId = req.params.userId;
+const notificationController = {
+  getNotifications: catchAsync(async (req, res, next) => {
+    const { userId } = req.params;
     const notifications = await notificationService.getNotifications(userId);
     res.status(200).json(notifications);
-  } catch (error) {
-    console.error("Error getting notifications:", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-};
+  }),
 
-export const markNotificationAsOpened = async (req, res) => {
-  try {
-    const notificationId = req.params.notificationId;
+  markNotificationAsOpened: async (req, res) => {
+    const { notificationId } = req.params;
     const notification =
       await notificationService.markNotificationAsOpened(notificationId);
-
+    if (!notification) {
+      throw new APIError({
+        status: 404,
+        message: `No Notifiaction found by this id ${notificationId}`,
+      });
+    }
     res.status(200).json(notification);
-  } catch (error) {
-    console.error("Error updating notification status:", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
+  },
 };
+
+export default notificationController;

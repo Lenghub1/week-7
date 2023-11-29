@@ -1,6 +1,7 @@
 import Notification from "../models/notification.model.js";
+import APIError from "../utils/APIError.js";
 
-class NotificationService {
+const NotificationService = {
   async getNotifications(userId) {
     try {
       const notifications = await Notification.find({ To: userId })
@@ -8,16 +9,19 @@ class NotificationService {
         .exec();
       return notifications;
     } catch (error) {
-      throw new Error("Error getting notifications");
+      throw new APIError({
+        status: 500,
+        message: "Error getting notifications",
+      });
     }
-  }
+  },
 
   async markNotificationAsOpened(notificationId) {
     try {
       const notification = await Notification.findById(notificationId);
 
       if (!notification) {
-        throw new Error("Notification not found");
+        throw new APIError({ status: 404, message: "Notification not found" });
       }
 
       notification.opened = true;
@@ -25,9 +29,12 @@ class NotificationService {
 
       return notification;
     } catch (error) {
-      throw new Error("Error updating notification status");
+      throw new APIError({
+        status: 404,
+        message: "Error updating notification status",
+      });
     }
-  }
-}
+  },
+};
 
-export default new NotificationService();
+export default NotificationService;
