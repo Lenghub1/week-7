@@ -4,6 +4,7 @@
  */
 import Product from "../models/product.model.js";
 import APIError from "../utils/APIError.js";
+import APIFeatures from "../utils/APIFeatures.js";
 
 /**
  * @typedef {Object} ProductInput

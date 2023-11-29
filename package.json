@@ -6,6 +6,9 @@
   "author": "DnD team",
   "license": "MIT",
   "type": "module",
+  "engines": {
+    "node": ">=8.10.0"
+  },
   "scripts": {
     "dev": "nodemon ./src/server.js",
     "lint": "eslint ./src/ --ignore-path .gitignore --ignore-pattern internals/scripts",
