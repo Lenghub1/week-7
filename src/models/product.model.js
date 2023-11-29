@@ -92,8 +92,18 @@ const productSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["public", "hidden"],
-      default: "public",
+      enum: ["Public", "Hidden", "Deleted"],
+      default: "Public",
+    },
+    expirationDate: {
+      type: Date,
+    },
+    signedImgCover: {
+      type: String,
+      default: "",
+    },
+    signedMedia: {
+      type: [String],
     },
   },
   {
