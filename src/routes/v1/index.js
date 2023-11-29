@@ -1,17 +1,20 @@
 import express from "express";
-import productRoute from "./product.route.js";
+import sellerProductRoute from "./sellerProduct.route.js";
 import reviewRoute from "./review.route.js";
 import sellerRoute from "./seller.route.js";
 import authRoute from "./auth.route.js";
-
+import productRoute from "./product.route.js";
+import notificationRoute from "./notification.route.js";
+import adminRoute from "./admin.route.js";
 import postRoute from "./post.route.js";
 import commentRoute from "./comment.route.js";
+
 const router = express.Router();
 
 const defaultRoutes = [
   {
-    path: "/products",
-    route: productRoute,
+    path: "/seller/products",
+    route: sellerProductRoute,
   },
   {
     path: "/reviews",
@@ -32,6 +35,18 @@ const defaultRoutes = [
   {
     path: "/comments",
     route: commentRoute,
+  },
+  {
+    path: "/products",
+    route: productRoute,
+  },
+  {
+    path: "/notification",
+    route: notificationRoute,
+  },
+  {
+    path: "/admin",
+    route: adminRoute,
   },
 ];
 

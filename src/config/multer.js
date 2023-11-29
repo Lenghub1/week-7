@@ -22,7 +22,7 @@ const productMediaFilter = (req, file, cb) => {
 export const productMediaUpload = multer({
   storage: productMediaStorage,
   fileFilter: productMediaFilter,
-  limits: {
-    fileSize: 1000000, //1MB ~ 1million bytes
-  },
+  // limits: {
+  //   fileSize: 1000000, //1MB ~ 1million bytes
+  // },
 });

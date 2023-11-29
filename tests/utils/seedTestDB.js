@@ -8,12 +8,42 @@ import Product from "../../src/models/product.model.js";
 import dotenv from "dotenv";
 import { categories } from "../fixtures/sellerProduct.fixture.js";
 import Category from "../../src/models/category.model.js";
+import Seller from "../../src/models/seller.model.js";
 
 dotenv.config();
 
 mongoose.connect(process.env.MONGO_URI_DEV).then(() => {
   console.log("DB connection open for seeding...");
 });
+
+function generateSeedSellers(n) {
+  let sellers = [];
+  for (let i = 0; i < n; i++) {
+    const email = faker.person.firstName() + faker.string.nanoid() + "@gg.com";
+    const firstName = faker.person.firstName();
+    const lastName = faker.person.firstName();
+    const storeName = faker.company.name();
+    const seller = new Seller({
+      firstName,
+      lastName,
+      email,
+      password: faker.string.alphanumeric(8) + faker.string.nanoid(),
+      role: "seller",
+      phoneNumber: faker.phone.number(),
+      storeName,
+      storeAndSellerName: storeName + " " + firstName + " " + lastName,
+      sellerStatus: faker.helpers.arrayElement([
+        "pending",
+        "active",
+        "inactive",
+      ]),
+      slug: faker.string.uuid(),
+    });
+    sellers.push(seller);
+  }
+
+  return sellers;
+}
 
 function generateSeedCategories() {
   return [
@@ -71,6 +101,10 @@ function generateSeedProducts(n) {
 
 async function seedDB() {
   try {
+    const seedSellers = generateSeedSellers(50);
+    await Seller.deleteMany();
+    await Seller.insertMany(seedSellers);
+
     const seedCategories = generateSeedCategories();
     await Category.deleteMany();
     await Category.insertMany(seedCategories);
