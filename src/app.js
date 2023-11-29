@@ -12,7 +12,7 @@ dotenv.config();
 const app = express();
 
 const corsOptions = {
-  origin: process.env.URL_CLIENT,
+  origin: process.env.CLIENT_URL,
   methods: "GET, POST, PUT, PATCH, DELETE, HEAD",
   credentials: true, // allow cookies to be sent
 };

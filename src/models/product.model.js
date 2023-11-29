@@ -112,6 +112,7 @@ productSchema.index({
 productSchema.index({
   categories: 1,
 });
+productSchema.index({ title: "text", description: "text" });
 
 productSchema.pre("save", function (next) {
   // Slugify
