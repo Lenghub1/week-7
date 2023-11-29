@@ -1,35 +1,85 @@
 import mongoose from "mongoose";
-import Cart from "./cart.model";
-import Payment from "./payment.model";
 
-const orderSchema = new mongoose.Schema(
+const orderSchema = mongoose.Schema(
   {
-    cart: [
+    cartItems: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Cart",
-        required: true,
+        productId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Product",
+          required: true,
+        },
+        quantity: {
+          type: Number,
+          required: true,
+          default: 1,
+        },
+        itemPrice: {
+          type: Number,
+        },
       },
     ],
-    payment: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Payment",
+    paymentMethod: {
+      type: String,
+      required: true,
+      enum: ["credit_card", "cash_on_delivery"],
+    },
+    paymentDetails: {
+      type: Object,
       required: true,
     },
-    shipping: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Shipping",
+
+    itemPrice: {
+      type: Number,
       required: true,
     },
+    shippingPrice: {
+      type: Number,
+      required: true,
+    },
+    totalPrice: {
+      type: Number,
+      required: true,
+    },
+    isPaid: {
+      type: Boolean,
+      default: false,
+    },
+    isDelivered: {
+      type: Boolean,
+      default: false,
+    },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    shipping: [
+      {
+        address: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Address",
+          required: true,
+        },
+        status: {
+          type: String,
+          enum: [
+            "pending",
+            "approved",
+            "shipped",
+            "cancelled",
+            "delivered",
+            "refunded",
+          ],
+          default: "pending",
+        },
+      },
+    ],
   },
   {
     timestamps: true,
   }
 );
-orderSchema.pre("save", async function (next) {
-  this.cart = await Cart.findById(this.cart);
-  next();
-});
 
 const Order = mongoose.model("Order", orderSchema);
 export default Order;
