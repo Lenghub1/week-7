@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 
 const orderSchema = mongoose.Schema(
   {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     cartItems: [
       {
         productId: {
@@ -16,6 +21,7 @@ const orderSchema = mongoose.Schema(
         },
         itemPrice: {
           type: Number,
+          required: true,
         },
       },
     ],
@@ -23,14 +29,15 @@ const orderSchema = mongoose.Schema(
       type: String,
       required: true,
       enum: ["credit_card", "cash_on_delivery"],
+      validate: {
+        validator: function (v) {
+          return ["credit_card", "cash_on_delivery"].includes(v);
+        },
+        message: (props) => `${props.value} is not a valid payment method!`,
+      },
     },
     paymentDetails: {
       type: Object,
-      required: true,
-    },
-
-    itemPrice: {
-      type: Number,
       required: true,
     },
     shippingPrice: {
@@ -44,15 +51,6 @@ const orderSchema = mongoose.Schema(
     isPaid: {
       type: Boolean,
       default: false,
-    },
-    isDelivered: {
-      type: Boolean,
-      default: false,
-    },
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
     },
     shipping: [
       {
@@ -80,6 +78,21 @@ const orderSchema = mongoose.Schema(
     timestamps: true,
   }
 );
+
+orderSchema.pre("save", async function (next) {
+  if (this.isNew) {
+    for (let item of this.cartItems) {
+      const product = await Product.findById(item.productId);
+      if (product && product.availableStock >= item.quantity) {
+        product.availableStock -= item.quantity;
+        await product.save();
+      } else {
+        throw new Error("Not enough stock for this product");
+      }
+    }
+  }
+  next();
+});
 
 const Order = mongoose.model("Order", orderSchema);
 export default Order;

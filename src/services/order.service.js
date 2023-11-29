@@ -1,40 +1,58 @@
 import Order from "../models/order.model.js";
+import Product from "../models/product.model.js";
 
 const orderService = {
   async getAllItems() {
-    const products = await Order.find({});
-    if (!products) {
+    const orders = await Order.find({});
+    if (!orders) {
       throw new Error({ status: 404, message: "No product found" });
     }
-    return products;
+    return orders;
   },
   async getItem(itemId) {
-    const product = await Order.findById(itemId);
-    if (!product) {
+    const order = await Order.findById(itemId);
+    if (!order) {
       throw new Error({ status: 404, message: "No product found" });
     }
-    return product;
+    return order;
   },
   async updateItem(itemId, itemBody) {
-    const product = await Order.findByIdAndUpdate(itemId, itemBody);
-    if (!product) {
+    const order = await Order.findByIdAndUpdate(itemId, itemBody);
+    if (!order) {
       throw new Error({ status: 404, message: "No product found" });
     }
-    return product;
+    return order;
   },
   async deleteItem(itemId) {
-    const product = await Order.findByIdAndDelete(itemId);
-    if (!product) {
+    const order = await Order.findByIdAndDelete(itemId);
+    if (!order) {
       throw new Error({ status: 404, message: "No product found" });
     }
-    return product;
+    return order;
   },
   async addItem(itemBody) {
-    const product = await Order.create(itemBody);
-    if (!product) {
+    const cartItemsWithDetails = await Promise.all(
+      itemBody.cartItems.map(async (cartItem) => {
+        const product = await Product.findById(cartItem.productId);
+        return {
+          ...cartItem,
+          itemPrice: product.unitPrice,
+          totalPrice: product.unitPrice * cartItem.quantity,
+        };
+      })
+    );
+    const totalPrice = cartItemsWithDetails.reduce(
+      (total, cartItem) => total + cartItem.quantity * cartItem.itemPrice,
+      0
+    );
+
+    itemBody.totalPrice = totalPrice.toFixed(2);
+
+    const order = await Order.create(itemBody);
+    if (!order) {
       throw new Error({ status: 404, message: "No product found" });
     }
-    return product;
+    return order;
   },
 };
 
