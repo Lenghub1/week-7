@@ -4,7 +4,7 @@ import catchAsync from "../utils/catchAsync.js";
 import bcrypt from "bcryptjs";
 
 const verify2FACode = catchAsync(async (req, res, next) => {
-  const { OTP, email } = req.body;
+  const { OTP, email, loginMethod } = req.body;
   const user = await User.findOne({
     email,
     OTPExpires: { $gt: Date.now() },
@@ -30,6 +30,7 @@ const verify2FACode = catchAsync(async (req, res, next) => {
   user.OTPExpires = undefined;
   await user.save();
   req.user = user;
+  req.user.loginMethod = loginMethod || undefined; // undefined because user not log in but only verify the code (enable 2FA)
   return next();
 });
 

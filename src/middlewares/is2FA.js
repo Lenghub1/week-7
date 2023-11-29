@@ -24,6 +24,10 @@ const is2FA = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     message: "Please check your email to confirm OTP code.",
+    data: {
+      email: user.email,
+      loginMethod: req.user.loginMethod,
+    },
   });
 });
 

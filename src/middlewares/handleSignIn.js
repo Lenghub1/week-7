@@ -35,7 +35,7 @@ const handleSignIn = catchAsync(async (req, res, next) => {
     );
 
     const location = response?.data;
-    if (location) {
+    if (location.country && location.loc && location.region) {
       address = `${location?.region}, ${location?.country}`;
       coordinates = location?.loc.split(",").map((element) => Number(element));
     } else {
@@ -43,7 +43,7 @@ const handleSignIn = catchAsync(async (req, res, next) => {
       coordinates = [0, 0];
     }
   } catch (err) {
-    console.error("Error fetching IP information:", err.response.data.error);
+    console.error("Error fetching IP information:", err.response?.data.error);
     address = "Unlocated";
     coordinates = [0, 0];
   }

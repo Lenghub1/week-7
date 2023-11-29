@@ -38,7 +38,9 @@ router
   );
 
 // Login with Google
-router.route("/login-google").post(controller.googleSignIn, handleSignIn);
+router
+  .route("/login-google")
+  .post(controller.googleSignIn, is2FA, handleSignIn);
 
 // Verify OTP code
 router.route("/verify2FA").post(verify2FACode, handleSignIn);

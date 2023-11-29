@@ -4,6 +4,7 @@ import slugify from "slugify";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import otpGenerator from "otp-generator";
+import Address from "./address.model.js";
 
 const userSchema = new mongoose.Schema(
   {
@@ -28,6 +29,9 @@ const userSchema = new mongoose.Schema(
       validate: validator.isEmail,
     },
     profilePicture: String,
+    deliveryAddresses: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "Address" },
+    ],
     slug: {
       type: String,
       unique: true,
@@ -60,6 +64,10 @@ const userSchema = new mongoose.Schema(
     forgotPasswordToken: String,
     forgotPasswordExpires: Date,
     passwordChangeAt: Date,
+    accountStatus: {
+      type: Boolean,
+      default: true,
+    },
     active: {
       type: Boolean,
       default: true,
@@ -84,10 +92,13 @@ userSchema.index({ email: 1 });
 // Auto delete document if user not activate their account for 10 minutes.
 userSchema.index(
   { updatedAt: 1 },
-  { expireAfterSeconds: 10 * 60, partialFilterExpression: { active: false } }
+  {
+    expireAfterSeconds: 10 * 60,
+    partialFilterExpression: { accountStatus: false },
+  }
 );
 
-userSchema.pre("save", function (next) {
+userSchema.pre("save", async function (next) {
   if (this.isModified("firstName") || this.isModified("lastName")) {
     const fullName = `${this.firstName} ${this.lastName}`;
     this.slug = slugify(fullName + "-" + Date.now(), {
@@ -95,6 +106,9 @@ userSchema.pre("save", function (next) {
       strict: true,
     });
   }
+  const address = await Address.findById(this.deliveryAddresses);
+  this.deliveryAddresses = address;
+  console.log(this.deliveryAddresses);
   next();
 });
 

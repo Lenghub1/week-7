@@ -56,7 +56,7 @@ const authService = {
         password,
         firstName,
         lastName,
-        active: false, // Account not yet activate
+        accountStatusstatus: false, // Account not yet activate
       });
 
       return user;
@@ -176,7 +176,7 @@ const authService = {
           audience: process.env.GOOGLE_CLIENT_ID,
         })
         .then(async (response) => {
-          const { email_verified, given_name, family_name, email } =
+          const { email_verified, given_name, family_name, email, picture } =
             response.payload;
           if (email_verified) {
             const user = await User.findOne({ email });
@@ -186,6 +186,7 @@ const authService = {
             const newUser = new User({
               firstName: given_name,
               lastName: family_name,
+              profilePicture: picture,
               email,
               active: true,
               signupMethod: "google",

@@ -18,9 +18,12 @@ export const createSignupValidator = [
     .withMessage("Phone number is requred.")
     .trim()
     .custom(async (value) => {
+      const result = /^[0-9\s\-()]{8,}$/.test(value);
       const user = await User.findOne({ phoneNumber: value });
       if (user) {
         throw new Error("Phone number is already existed.");
+      } else if (!result) {
+        throw new Error("Invalid phone number.");
       }
       return true;
     }),
