@@ -253,6 +253,30 @@ const adminService = {
         // deletedMedia.map(async (item) => await deleteFile(item));
       }
       await session.commitTransaction();
+
+      // Delete files only if the transaction is successfully committed
+      if (newImgCover) {
+        try {
+          await deleteFile(deletedImgCover);
+        } catch (deleteError) {
+          console.error(`Error deleting imgCover: ${deleteError.message}`);
+        }
+      }
+
+      if (deletedMedia.length > 0) {
+        await Promise.all(
+          deletedMedia.map(async (item) => {
+            try {
+              await deleteFile(item);
+            } catch (deleteError) {
+              console.error(
+                `Error deleting media file: ${deleteError.message}`
+              );
+            }
+          })
+        );
+      }
+
       return product;
     } catch (error) {
       await session.abortTransaction();
