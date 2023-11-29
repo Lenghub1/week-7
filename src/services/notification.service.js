@@ -1,4 +1,4 @@
-import Notification from "../models/notification.model";
+import Notification from "../models/notification.model.js";
 
 class NotificationService {
   async getNotifications(userId) {
