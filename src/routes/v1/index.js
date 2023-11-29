@@ -4,6 +4,7 @@ import reviewRoute from "./review.route.js";
 import sellerRoute from "./seller.route.js";
 import authRoute from "./auth.route.js";
 import productRoute from "./product.route.js";
+import notificationRoute from "./notification.route.js";
 import adminRoute from "./admin.route.js";
 
 const router = express.Router();
@@ -28,6 +29,10 @@ const defaultRoutes = [
   {
     path: "/products",
     route: productRoute,
+  },
+  {
+    path: "/notification",
+    route: notificationRoute,
   },
   {
     path: "/admin",
