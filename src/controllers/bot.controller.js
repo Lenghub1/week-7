@@ -4,9 +4,9 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const dialogflowService = new BotService(
-  process.env.googleProjectID,
-  process.env.dialogFlowSessionID,
-  process.env.dialogFlowSessionLanguageCode
+  process.env.GOOGLE_PROJECT_ID,
+  process.env.DIALOGFLOW_SESSION_ID,
+  process.env.DIALOGFLOW_SESSION_LANGUAGE_CODE
 );
 
 export default async function handleTextQuery(req, res) {
