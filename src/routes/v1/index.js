@@ -1,5 +1,4 @@
 import express from "express";
-import sellerProductRoute from "./sellerProduct.route.js";
 import reviewRoute from "./review.route.js";
 import sellerRoute from "./seller.route.js";
 import authRoute from "./auth.route.js";
@@ -16,10 +15,6 @@ import botRoute from "./bot.route.js";
 const router = express.Router();
 
 const defaultRoutes = [
-  {
-    path: "/seller/products",
-    route: sellerProductRoute,
-  },
   {
     path: "/reviews",
     route: reviewRoute,

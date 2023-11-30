@@ -1,6 +1,8 @@
 import Stripe from "stripe";
 import dotenv from "dotenv";
 import Product from "../models/product.model.js";
+import APIError from "../utils/APIError.js";
+
 dotenv.config();
 
 const checkoutService = {
@@ -12,7 +14,7 @@ const checkoutService = {
       .list({ limit: 100 })
       .autoPagingEach({ limit: 10000 });
     if (!products) {
-      throw new Error({ status: 404, message: "No stripe product found" });
+      throw new APIError({ status: 404, message: "No stripe product found" });
     }
     return products;
   },
@@ -33,7 +35,10 @@ const checkoutService = {
           },
         });
       } else {
-        throw new Error(`Product not found for id: ${item.productId}`);
+        throw new APIError({
+          status: 404,
+          message: `Product not found for id: ${item.productId}`,
+        });
       }
     }
 

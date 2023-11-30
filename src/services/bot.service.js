@@ -1,5 +1,5 @@
 import { SessionsClient } from "@google-cloud/dialogflow";
-
+import APIError from "../utils/APIError.js";
 class BotService {
   constructor(projectId, sessionId, languageCode) {
     // Use the GOOGLE_APPLICATION_CREDENTIALS environment variable to authenticate
@@ -33,7 +33,7 @@ class BotService {
       return response.queryResult;
     } catch (error) {
       console.error("Error detecting text intent:", error);
-      throw error;
+      throw new APIError({ status: 500, message: "Internal server error" });
     }
   }
 }

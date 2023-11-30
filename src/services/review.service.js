@@ -62,7 +62,7 @@ const reviewService = {
         session: session,
       });
       if (!review) {
-        throw new Error("Review not found");
+        throw new APIError({ status: 404, message: "Review not found" });
       }
 
       const product = await Product.findById(productId).session(session);

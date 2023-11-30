@@ -1,15 +1,14 @@
 import mongoose from "mongoose";
-import { Schema } from "mongoose";
 
-const NotificationSchema = new Schema(
+const NotificationSchema = new mongoose.Schema(
   {
-    To: { type: Schema.Types.ObjectId, ref: "User" },
-    From: { type: Schema.Types.ObjectId, ref: "User" },
+    To: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    From: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     title: String,
     content: String,
     notificationType: String,
     opened: { type: Boolean, default: false },
-    entityId: Schema.Types.ObjectId,
+    entityId: mongoose.Schema.Types.ObjectId,
   },
   { timestamps: true }
 );
