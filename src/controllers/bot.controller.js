@@ -1,4 +1,7 @@
 import BotService from "../services/bot.service.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const dialogflowService = new BotService(
   process.env.googleProjectID,
@@ -38,4 +41,3 @@ export default async function handleTextQuery(req, res) {
     res.status(500).json({ error: "Internal Server Error" });
   }
 }
-

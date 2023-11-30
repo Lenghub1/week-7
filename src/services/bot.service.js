@@ -1,11 +1,9 @@
 import { SessionsClient } from "@google-cloud/dialogflow";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 class BotService {
   constructor(projectId, sessionId, languageCode) {
     // Use the GOOGLE_APPLICATION_CREDENTIALS environment variable to authenticate
+
     this.sessionClient = new SessionsClient();
     this.sessionPath = this.sessionClient.projectAgentSessionPath(
       projectId,
@@ -41,4 +39,3 @@ class BotService {
 }
 
 export default BotService;
-
