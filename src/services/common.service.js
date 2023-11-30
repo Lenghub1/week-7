@@ -27,7 +27,8 @@ const createService = (Model) => {
         .limitFields()
         .paginate();
       // Execute the query and return the result.
-      const items = await features.query;
+      let items = await features.execute();
+      items = items[0];
       return items;
     },
 

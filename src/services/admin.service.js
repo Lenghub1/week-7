@@ -105,7 +105,7 @@ const adminService = {
       const product = await Product.findById(productId).populate("sellerId");
       if (!product) {
         return new APIError({
-          status: 400,
+          status: 404,
           message: `Cannot find product with this ID ${productId}`,
         });
       }
@@ -290,6 +290,7 @@ const adminService = {
     } catch (error) {
       await session.abortTransaction();
       throw new APIError({
+        status: 500,
         message: "Something went wrong! Cannot update the product.",
       });
     } finally {
