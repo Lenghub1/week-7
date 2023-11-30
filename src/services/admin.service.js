@@ -101,57 +101,43 @@ const adminService = {
   },
 
   async getProductById(productId) {
-    try {
-      const product = await Product.findById(productId).populate("sellerId");
-      if (!product) {
-        return new APIError({
-          status: 404,
-          message: `Cannot find product with this ID ${productId}`,
-        });
-      }
-      const allFileUrls = [];
-      allFileUrls.push(product.imgCover);
-      product.media.map((each) => allFileUrls.push(each));
-
-      const urls = await Promise.all(
-        allFileUrls.map(async (each) => await getFileSignedUrl(each))
-      );
-
-      product.signedImgCover = urls[0];
-      product.signedMedia = urls.slice(1);
-      return product;
-    } catch (error) {
-      throw new APIError({
-        message: "Something went wrong while fetching the product.",
-        status: 500,
+    const product = await Product.findById(productId).populate("sellerId");
+    if (!product) {
+      return new APIError({
+        status: 404,
+        message: `Cannot find product with this ID ${productId}`,
       });
     }
+    const allFileUrls = [];
+    allFileUrls.push(product.imgCover);
+    product.media.map((each) => allFileUrls.push(each));
+
+    const urls = await Promise.all(
+      allFileUrls.map(async (each) => await getFileSignedUrl(each))
+    );
+
+    product.signedImgCover = urls[0];
+    product.signedMedia = urls.slice(1);
+    return product;
   },
 
   async searchSeller(query) {
-    try {
-      const searchQuery = query;
-      const searchTerms = searchQuery.split(/\s+/).filter(Boolean);
-      const regexPatterns = searchTerms.map((term) => new RegExp(term, "i"));
+    const searchQuery = query;
+    const searchTerms = searchQuery.split(/\s+/).filter(Boolean);
+    const regexPatterns = searchTerms.map((term) => new RegExp(term, "i"));
 
-      const pipeLine = [
-        {
-          $match: {
-            active: true,
-            $and: regexPatterns.map((pattern) => ({
-              storeAndSellerName: { $regex: pattern },
-            })),
-          },
+    const pipeLine = [
+      {
+        $match: {
+          active: true,
+          $and: regexPatterns.map((pattern) => ({
+            storeAndSellerName: { $regex: pattern },
+          })),
         },
-      ];
-      const sellers = await Seller.aggregate(pipeLine);
-      return sellers;
-    } catch (error) {
-      throw new APIError({
-        status: 500,
-        message: "Internal server error",
-      });
-    }
+      },
+    ];
+    const sellers = await Seller.aggregate(pipeLine);
+    return sellers;
   },
 
   async updateProduct({ productInput, newImgCover, newMedia, productId }) {
