@@ -33,6 +33,7 @@ const sellerSchema = User.discriminator(
       address: String,
       description: String,
     },
+    storeAndSellerName: String,
   })
 );
 

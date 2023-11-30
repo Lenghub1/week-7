@@ -62,9 +62,9 @@ const userSchema = new mongoose.Schema(
     forgotPasswordToken: String,
     forgotPasswordExpires: Date,
     passwordChangeAt: Date,
-    accountStatus: {
+    accountVerify: {
       type: Boolean,
-      default: true,
+      default: false, // Account not yet activate
     },
     active: {
       type: Boolean,
@@ -92,7 +92,7 @@ userSchema.index(
   { updatedAt: 1 },
   {
     expireAfterSeconds: 10 * 60,
-    partialFilterExpression: { accountStatus: false },
+    partialFilterExpression: { accountVerify: false },
   }
 );
 
@@ -104,12 +104,9 @@ userSchema.pre("save", async function (next) {
       strict: true,
     });
   }
-});
-
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-
-  this.password = await bcrypt.hash(this.password, 12);
+  if (this.isModified("storeName")) {
+    this.storeAndSellerName = `${this.storeName} ${this.firstName} ${this.lastName}`;
+  }
   next();
 });
 

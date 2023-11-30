@@ -3,7 +3,7 @@ import APIError from "../utils/APIError.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import Address from "../models/address.model.js";
+import Session from "../models/session.model.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,27 +24,44 @@ const settingService = {
     },
   },
 
-  address: {
-    async verifyUser(req, next) {
-      const user = await User.findById(req.user._id);
-      if (!user || !user.active) {
+  getUserSessions: {
+    async verifyUser(next, data) {
+      const { userId } = data;
+      const user = await User.findById(userId);
+      if (!user) {
         return next(
           new APIError({
             status: 404,
-            message: "User is undefined!",
+            message: "User not found!",
           })
         );
       }
       return user;
     },
-    async createAddress(next, user, data) {
-      const { receiverName, phoneNumber, deliveryAddress } = data;
-      const address = await Address.create({
-        receiverName,
-        phoneNumber,
-        deliveryAddress,
+    async getSessions(user) {
+      const sessions = await Session.find({ userId: user._id }).select(
+        "-__v -refreshToken -accessToken"
+      );
+      return sessions;
+    },
+  },
+
+  logOutOne: {
+    async verifySession(next, user, data) {
+      const { sessionId } = data;
+      const session = await Session.findOneAndDelete({
+        _id: sessionId,
+        userId: user._id.toString(),
       });
-      return address;
+      if (!session) {
+        return next(
+          new APIError({
+            status: 404,
+            message: "Device not found!",
+          })
+        );
+      }
+      return session;
     },
   },
 

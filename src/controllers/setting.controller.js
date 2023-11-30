@@ -22,19 +22,35 @@ const settingController = {
     });
   }),
 
-  createNewAddress: catchAsync(async (req, res, next) => {
-    const data = req.body;
-    const user = await settingService.address.verifyUser(req, next);
-    const address = await settingService.address.createAddress(
+  // Get user's sessions
+  // 1. Get data
+  // 2. Verify User
+  // 3. Find session in db and return
+  getUserSessions: catchAsync(async (req, res, next) => {
+    const data = req.params;
+    const user = await settingService.getUserSessions.verifyUser(next, data);
+    const sessions = await settingService.getUserSessions.getSessions(user);
+    return res.status(200).json({
+      message: "Sessions retrieved.",
+      result: sessions.length,
+      sessions,
+    });
+  }),
+
+  // Log out one device
+  // 1. Get session Id from request
+  // 2. Find session in db and delete if exist
+  // 3. Else Return error
+  logOutOne: catchAsync(async (req, res, next) => {
+    const data = req.params;
+    const user = req?.user;
+    const session = await settingService.logOutOne.verifySession(
       next,
       user,
       data
     );
-    return res.status(201).json({
-      message: "Address successfully created!",
-      data: {
-        address,
-      },
+    return res.status(200).json({
+      message: `device ${session.deviceType} successfully loggd out!`,
     });
   }),
 

@@ -36,7 +36,10 @@ router
   .route("/:action/2FA/otp")
   .patch(isAuth, verify2FACode, controller.enable2FA);
 
-// Create delivery address
-router.route("/addresses").post(isAuth, controller.createNewAddress);
+// Log out one device
+router.route("/:sessionId/logout").delete(isAuth, controller.logOutOne);
+
+// Get all devices that user have logged in
+router.route("/:userId/sessions").get(controller.getUserSessions);
 
 export default router;

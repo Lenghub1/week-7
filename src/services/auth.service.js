@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
+import bcrypt from "bcryptjs";
 import { fileURLToPath } from "url";
 
 dotenv.config();
@@ -53,11 +54,11 @@ const authService = {
       }
       const user = await User.create({
         email,
-        password,
+        password: await bcrypt.hash(password, 12),
         firstName,
         lastName,
-        accountStatusstatus: false, // Account not yet activate
       });
+      await user.save();
 
       return user;
     },
@@ -136,7 +137,7 @@ const authService = {
             );
           }
 
-          user.active = true;
+          user.accountVerify = true;
           await user.save();
 
           return user;
