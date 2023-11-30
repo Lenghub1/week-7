@@ -12,6 +12,7 @@ const handler = (err, req, res, next) => {
   if (process.env.NODE_ENV !== "development") {
     delete response.stack;
   }
+
   return res.status(err.status).json(response);
 };
 
@@ -43,6 +44,10 @@ const converter = (err, req, res, next) => {
     convertedError.status = httpStatus.BAD_REQUEST;
   }
 
+  // Multer error
+  if (["LIMIT_FILE_SIZE", "LIMIT_UNEXPECTED_FILE"].includes(err.code))
+    convertedError.status = httpStatus.BAD_REQUEST;
+
   return handler(convertedError, req, res);
 };
 
@@ -51,7 +56,7 @@ const converter = (err, req, res, next) => {
  */
 const notFound = (req, res, next) => {
   const err = new APIError({
-    statusCode: httpStatus.NOT_FOUND,
+    status: httpStatus.NOT_FOUND,
     message: "Not found",
   });
   return handler(err, req, res);
