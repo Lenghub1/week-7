@@ -156,11 +156,11 @@ const authService = {
             message: "Email or password is incorrected.", // For more secure and prevent malicious from knowing which field they input wrong.
           })
         );
-      } else if (user && user.active === false) {
+      } else if (user && user.activateAccount === false) {
         return next(
           APIError({
             status: 401,
-            message: "Please sign up first!",
+            message: "Please activate your account first.",
           })
         );
       }

@@ -3,8 +3,11 @@ import APIError from "../utils/APIError.js";
 import catchAsync from "../utils/catchAsync.js";
 import bcrypt from "bcryptjs";
 
-const verify2FACode = catchAsync(async (req, res, next) => {
-  const { OTP, email, loginMethod } = req.body;
+const verifyOTPCode = catchAsync(async (req, res, next) => {
+  let { OTP, email, loginMethod } = req.body;
+
+  // User who update email can't request along with current email
+  if (!email) email = req?.user.email;
   const user = await User.findOne({
     email,
     OTPExpires: { $gt: Date.now() },
@@ -34,4 +37,4 @@ const verify2FACode = catchAsync(async (req, res, next) => {
   return next();
 });
 
-export default verify2FACode;
+export default verifyOTPCode;

@@ -4,7 +4,6 @@ import slugify from "slugify";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import otpGenerator from "otp-generator";
-import { addressSchema } from "./address.model.js";
 
 const userSchema = new mongoose.Schema(
   {
@@ -29,7 +28,6 @@ const userSchema = new mongoose.Schema(
       validate: validator.isEmail,
     },
     profilePicture: String,
-    deliveryAddresses: [addressSchema],
     slug: {
       type: String,
       unique: true,
@@ -107,6 +105,12 @@ userSchema.pre("save", async function (next) {
   if (this.isModified("storeName")) {
     this.storeAndSellerName = `${this.storeName} ${this.firstName} ${this.lastName}`;
   }
+  next();
+});
+
+// All mongoose method start with find will not search for user's active equal to false
+userSchema.pre(/^find/, function (next) {
+  this.find({ active: { $ne: false } });
   next();
 });
 

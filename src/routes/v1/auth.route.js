@@ -11,7 +11,7 @@ import verifyRoles from "../../middlewares/verifyRoles.js";
 import isRecentlySignup from "../../middlewares/isRecentlySignup.js";
 import isRecentlyForgotPwd from "../../middlewares/isRecentlyForgotPwd.js";
 import is2FA from "../../middlewares/is2FA.js";
-import verify2FACode from "../../middlewares/verify2FACode.js";
+import verifyOTPCode from "../../middlewares/verifyOTPCode.js";
 import isRecently2FA from "../../middlewares/isRecently2FA.js";
 
 const router = express.Router();
@@ -43,7 +43,7 @@ router
   .post(controller.googleSignIn, is2FA, handleSignIn);
 
 // Verify OTP code
-router.route("/verify2FA").post(verify2FACode, handleSignIn);
+router.route("/verify2FA").post(verifyOTPCode, handleSignIn);
 
 // Forgot password
 router

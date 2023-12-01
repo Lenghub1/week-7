@@ -22,13 +22,71 @@ const settingController = {
     });
   }),
 
+  // Confirm email before update
+  // 1. Get current email and new email
+  // 2. Get current user
+  // 3. Verify new email. Make sure does not exist in db
+  // 4. Generate OTP code
+  // 5. Send email along the otp code
+  confirmNewEmail: catchAsync(async (req, res, next) => {
+    const data = req?.body;
+    const user = await settingService.updateEmail.verifyUser(next, data);
+    const newEmail = await settingService.updateEmail.verifyNewEmail(
+      next,
+      data
+    );
+    const OTP = await user.createOTPToken();
+    await user.save({ validateBeforeSave: false });
+    const emailData = await settingService.updateEmail.createEmail(
+      OTP,
+      newEmail
+    );
+    const resultSendEmail = await sendEmailWithNodemailer(emailData);
+    await settingService.updateEmail.verifyResultSendEmail(
+      next,
+      resultSendEmail
+    );
+    return res.status(200).json({
+      message: `We've sent a 6-digit verification code to your email (${newEmail}). Kindly check your inbox and confirm your email address by entering the code.`,
+      data: {
+        newEmail,
+      },
+    });
+  }),
+
+  // Update email
+  // 1. Get current user
+  // 2. Get new email
+  // 3. Update new email
+  updateEmail: catchAsync(async (req, res, next) => {
+    const user = req?.user;
+    const data = req.body;
+    const email = await settingService.updateEmail.update(user, data);
+    return res.status(201).json({
+      message: "Email successfully updated!",
+      data: {
+        email,
+      },
+    });
+  }),
+
+  // Delete Account
+  // 1. Get current user
+  // 2. Set active status to false
+  deleteAccount: catchAsync(async (req, res, next) => {
+    const user = req?.user;
+    await settingService.deleteAccount(user);
+    res.status(204).json({
+      message: "Account successfully deleted",
+    });
+  }),
+
   // Get user's sessions
   // 1. Get data
   // 2. Verify User
   // 3. Find session in db and return
   getUserSessions: catchAsync(async (req, res, next) => {
-    const data = req.params;
-    const user = await settingService.getUserSessions.verifyUser(next, data);
+    const user = req?.user;
     const sessions = await settingService.getUserSessions.getSessions(user);
     return res.status(200).json({
       message: "Sessions retrieved.",

@@ -5,7 +5,8 @@ import { createPasswordValidator } from "../../validators/password.validator.js"
 import handleSignIn from "../../middlewares/handleSignIn.js";
 import controller from "../../controllers/setting.controller.js";
 import isAuth from "../../middlewares/isAuth.js";
-import verify2FACode from "../../middlewares/verify2FACode.js";
+import verifyOTPCode from "../../middlewares/verifyOTPCode.js";
+import { createEmailValidator } from "../../validators/email.validator.js";
 
 const router = express.Router();
 
@@ -34,12 +35,30 @@ router.route("/:action/2FA/oauth").get(isAuth, controller.enable2FAByOTP);
 // Enable 2FA (after verify otp)
 router
   .route("/:action/2FA/otp")
-  .patch(isAuth, verify2FACode, controller.enable2FA);
+  .patch(isAuth, verifyOTPCode, controller.enable2FA);
 
 // Log out one device
 router.route("/:sessionId/logout").delete(isAuth, controller.logOutOne);
 
 // Get all devices that user have logged in
-router.route("/:userId/sessions").get(controller.getUserSessions);
+router.route("/sessions").get(isAuth, controller.getUserSessions);
+
+// Request to update email
+router
+  .route("/confirm/email")
+  .post(
+    createEmailValidator,
+    runValidation,
+    isAuth,
+    controller.confirmNewEmail
+  );
+
+// Verify OTP code and update email
+router
+  .route("/update/email")
+  .patch(isAuth, verifyOTPCode, controller.updateEmail);
+
+// User delete account
+router.route("/delete/account").patch(isAuth, controller.deleteAccount);
 
 export default router;

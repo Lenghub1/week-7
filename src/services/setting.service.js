@@ -24,20 +24,70 @@ const settingService = {
     },
   },
 
-  getUserSessions: {
+  updateEmail: {
     async verifyUser(next, data) {
-      const { userId } = data;
-      const user = await User.findById(userId);
+      const { currentEmail } = data;
+      const user = await User.findOne({ email: currentEmail });
       if (!user) {
         return next(
           new APIError({
-            status: 404,
+            status: 401,
             message: "User not found!",
           })
         );
       }
       return user;
     },
+
+    async verifyNewEmail(next, data) {
+      const { email } = data;
+      const newEmail = email;
+      const userWithEmail = await User.findOne({ email: newEmail });
+      if (userWithEmail) {
+        return next(
+          new APIError({
+            status: 409, // Indicates a conflict
+            message: "Email address is already in use by another user.",
+          })
+        );
+      }
+      return newEmail;
+    },
+
+    async createEmail(OTP, email) {
+      const emailTemplate = await fs.promises.readFile(
+        path.join(__dirname, "..", "emails", "updateEmail.html"),
+        "utf-8"
+      );
+      const emailData = {
+        from: "Rukhak Team <noreply@rukhak.com>",
+        to: email,
+        subject: "Rukhak, Confirm Email Address",
+        html: emailTemplate.replaceAll("${OTP}", OTP),
+      };
+      return emailData;
+    },
+
+    verifyResultSendEmail(next, resultSendEmail) {
+      if (!resultSendEmail) {
+        return next(
+          new APIError({
+            status: 500,
+            message: "Internal server error.",
+          })
+        );
+      }
+    },
+
+    async update(user, data) {
+      const { newEmail } = data;
+      user.email = newEmail;
+      await user.save();
+      return newEmail;
+    },
+  },
+
+  getUserSessions: {
     async getSessions(user) {
       const sessions = await Session.find({ userId: user._id }).select(
         "-__v -refreshToken -accessToken"
@@ -143,7 +193,7 @@ const settingService = {
       const emailData = {
         from: "Rukhak Team <noreply@rukhak.com>",
         to: email,
-        subject: "Rukhak 2-Step Verification Code",
+        subject: "Rukhak, Enable 2-Step Verification",
         html: emailTemplate.replaceAll("${OTP}", OTP),
       };
       return emailData;
@@ -169,6 +219,12 @@ const settingService = {
         await user.save();
       }
     },
+  },
+
+  async deleteAccount(user) {
+    user.active = false;
+    user.email = undefined;
+    await user.save({ validateBeforeSave: false });
   },
 };
 
