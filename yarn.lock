@@ -2795,6 +2795,11 @@ eslint@^8.52.0:
     strip-ansi "^6.0.1"
     text-table "^0.2.0"
 
+esm-module-alias@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/esm-module-alias/-/esm-module-alias-2.1.0.tgz#fa24a7ef1066ff91009e501423c7d3ffd85795b2"
+  integrity sha512-/4OKQIPH6vmlADQEXVdvHuURqf8qqKempJyXn/tFGek59y+ZnBzJlfgSZ389j3HRDK8XGyaB3HN+YBXS6Xc6jA==
+
 espree@^9.6.0, espree@^9.6.1:
   version "9.6.1"
   resolved "https://registry.npmjs.org/espree/-/espree-9.6.1.tgz"
@@ -4320,6 +4325,11 @@ mkdirp@^0.5.4:
   integrity sha512-FP+p8RB8OWpF3YZBCrP5gtADmtXApB5AMLn+vdyA+PyxCjrCs00mjyUozssO33cwDeT3wNGdLxJ5M//YqtHAJw==
   dependencies:
     minimist "^1.2.6"
+
+module-alias@2.2.3:
+  version "2.2.3"
+  resolved "https://registry.yarnpkg.com/module-alias/-/module-alias-2.2.3.tgz#ec2e85c68973bda6ab71ce7c93b763ec96053221"
+  integrity sha512-23g5BFj4zdQL/b6tor7Ji+QY4pEfNH784BMslY9Qb0UnJWRAt+lQGLYmRaM0KDBwIG23ffEBELhZDP2rhi9f/Q==
 
 mongodb-connection-string-url@^2.6.0:
   version "2.6.0"
