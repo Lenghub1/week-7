@@ -5,7 +5,12 @@ const reviewController = {
   createReview: catchAsync(async (req, res) => {
     const { productId } = req.params;
     const reviewInput = req.body;
-    const newReview = await reviewService.createReview(productId, reviewInput);
+    const userId = req.user.id;
+    const newReview = await reviewService.createReview(
+      productId,
+      userId,
+      reviewInput
+    );
     res.status(201).json(newReview);
   }),
   deleteReview: catchAsync(async (req, res) => {

@@ -2,9 +2,38 @@ import mongoose from "mongoose";
 import Review from "../models/review.model.js";
 import APIError from "../utils/APIError.js";
 import Product from "../models/product.model.js";
+import User from "../models/user.model.js";
 
 const reviewService = {
-  async createReview(productId, reviewInput) {
+  async createReview(productId, userId, reviewInput) {
+    // Check if user or product exist
+    if (!(await Product.findOne({ _id: productId, status: "Public" }))) {
+      throw new APIError({
+        status: 400,
+        message: "No Product with this id.",
+      });
+    }
+
+    if (!(await User.findOne({ _id: userId, active: true }))) {
+      throw new APIError({
+        status: 400,
+        message: "No User with this id.",
+      });
+    }
+
+    // Check if the user has already reviewed the product
+    const existingReview = await Review.findOne({
+      product: productId,
+      userId,
+    });
+
+    if (existingReview) {
+      throw new APIError({
+        status: 400,
+        message: "You have already reviewed this product.",
+      });
+    }
+
     // Start a session
     const session = await mongoose.startSession();
     const reviewData = { product: productId, ...reviewInput };
@@ -30,7 +59,7 @@ const reviewService = {
         _id: review._id,
         review: review.review,
         rating: review.rating,
-        userId: review.userId,
+        userId,
       });
       // Limit the reviews array to 10
       product.reviews = product.reviews.slice(0, 10);
@@ -42,12 +71,13 @@ const reviewService = {
       session.endSession();
       return review;
     } catch (error) {
+      console.log(error);
       // If an error occurs, abort the transaction
       await session.abortTransaction();
       session.endSession();
       throw new APIError({
         status: 400,
-        message: "Cannot create a comment!",
+        message: "Cannot create a review!",
         error: error,
       });
     }
