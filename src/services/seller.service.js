@@ -7,10 +7,12 @@ import APIError from "../utils/APIError.js";
 import APIFeatures from "../utils/APIFeatures.js";
 import utils from "../utils/utils.js";
 import { deleteFile, uploadFile, getFileSignedUrl } from "../config/s3.js";
+import mongoose from "mongoose";
+
 /**
  * @typedef {Object} ProductInput
  * @property {string} title - The title of the product.
- * ß@property {string} description - The description of the product.
+ * @property {string} description - The description of the product.
  * @property {number} unitPrice - The price of the product.
  * @property {number} unit - The unit of the product.
  */
@@ -62,11 +64,13 @@ const sellerService = {
   /**
    * Get own product detail (for seller)
    * @param {string} productId - The ID of the product to retrieve.
+   * @param {string} ownerId
    * @returns {Promise} A promise that resolves with the retrieved product or rejects with an error if not found.
    */
-  async getOwnProductDetail(productId) {
+  async getOwnProductDetail(productId, ownerId) {
     let product = await Product.findOne({
       _id: productId,
+      sellerId: ownerId,
       status: { $ne: "deleted" },
     }).select("-__v");
     if (!product) {
@@ -95,6 +99,7 @@ const sellerService = {
    * @param {FileObject} imgCover
    * @param {FileObject} media
    * @param {ProductObject} productInput
+   * @returns {Promise} - Promise that resolves new product document
    */
   async createProduct(imgCover, media, productInput) {
     const allFiles = [];
@@ -179,8 +184,20 @@ const sellerService = {
     newMediaFiles,
     productInput
   ) {
+    // [{name, buffer, mimetype}, ...]
+    const filesToUpload = [];
+
+    // ['filename1', 'filename2', ...]
+    const filesToDelete = [];
+
+    const CONDITION = {
+      _id: productId,
+      sellerId,
+      status: { $ne: "deleted" },
+    };
+
     // find Product
-    const foundProductFiles = await Product.findById(productId).select(
+    const foundProductFiles = await Product.findOne(CONDITION).select(
       "title imgCover media"
     );
 
@@ -199,13 +216,24 @@ const sellerService = {
       );
 
       productInput.imgCover = filename;
+      filesToDelete.push(foundProductFiles.imgCover);
+      filesToUpload.push({
+        name: filename,
+        buffer: newImgCoverFile[0].buffer,
+        mimetype: newImgCoverFile[0].mimetype,
+      });
     }
 
-    // deal with media - validate remove and add new
-    const updatedMediaList = foundProductFiles.media.filter(
+    // deal with media
+    let updatedMediaList = [];
+    // remove the removedMedia
+    updatedMediaList = foundProductFiles.media.filter(
       (item) => !productInput.removedMedia.includes(item)
     );
+    for (let i = 0; i < productInput.removedMedia.length; i++)
+      filesToDelete.push(productInput.removedMedia[i]);
 
+    // add new to updatedMediaList
     if (newMediaFiles)
       newMediaFiles.map((each) => {
         const filename = utils.generateFileName(
@@ -214,14 +242,19 @@ const sellerService = {
           each.mimetype
         );
         updatedMediaList.push(filename);
-        // Add generated name to newMediaFiles for later use (ie s3 upload)
-        each.name = filename;
+
+        filesToUpload.push({
+          name: filename,
+          buffer: each.buffer,
+          mimetype: each.mimetype,
+        });
       });
 
+    // validate remove and add new
     if (updatedMediaList.length < 1)
-      throw new APIError({ status: 401, message: "media files are required." });
+      throw new APIError({ status: 400, message: "media files are required." });
     else if (updatedMediaList.length > 3)
-      throw new APIError({ status: 401, message: "maximum 3 media files" });
+      throw new APIError({ status: 400, message: "maximum 3 media files" });
 
     productInput.media = updatedMediaList;
 
@@ -233,45 +266,49 @@ const sellerService = {
     });
     if (redundantTitles > 0)
       throw new APIError({
-        status: 401,
+        status: 400,
         message: `found product with same title: '${productInput.title}'`,
       });
 
-    // update product data
-    const product = await Product.findOneAndUpdate(
-      { _id: productId },
-      productInput,
-      {
+    // update product data - start the transaction
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    let product;
+    try {
+      product = await Product.findOneAndUpdate(CONDITION, productInput, {
         new: true,
-      }
-    );
+        session,
+      });
 
-    // S3 process - update imgCover
-    if (newImgCoverFile) {
-      await deleteFile(foundProductFiles.imgCover);
-      await uploadFile(
-        newImgCoverFile[0].buffer,
-        productInput.imgCover,
-        newImgCoverFile[0].mimetype
-      );
-    }
-
-    // S3 process - on media, delete old images (removedMedia)
-    if (productInput.removedMedia.length > 0)
+      // S3 Process - upload files
       await Promise.all(
-        productInput.removedMedia.map(async (each) => await deleteFile(each))
-      );
-
-    // S3 process - on media, add new images (newMediaFile)
-    if (newMediaFiles)
-      await Promise.all(
-        newMediaFiles.map(
-          async (each) =>
-            await uploadFile(each.buffer, each.name, each.mimetype)
+        filesToUpload.map(
+          async (eachFile) =>
+            await uploadFile(eachFile.buffer, eachFile.name, eachFile.mimetype)
         )
       );
 
-    return product;
+      await session.commitTransaction();
+
+      // S3 Process - delete files
+      try {
+        await Promise.all(
+          filesToDelete.map(
+            async (eachFileName) => await deleteFile(eachFileName)
+          )
+        );
+      } catch (error) {
+        console.log("===delete files error===", error);
+      }
+
+      return product;
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      await session.endSession();
+    }
   },
 
   /**
@@ -284,12 +321,11 @@ const sellerService = {
     const deleteStatus = await Product.updateOne(
       {
         _id: productId,
+        sellerId,
         status: { $ne: "deleted" },
       },
       { status: "deleted" }
     );
-
-    console.log("===ddd====:", deleteStatus);
 
     return deleteStatus;
   },

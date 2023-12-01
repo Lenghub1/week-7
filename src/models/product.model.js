@@ -129,7 +129,8 @@ productSchema.pre("save", function (next) {
 });
 
 productSchema.pre("findOneAndUpdate", function (next) {
-  this._update.unitPrice = utils.calculateUnitPrice(this._update.basePrice);
+  if (this._update.basePrice)
+    this._update.unitPrice = utils.calculateUnitPrice(this._update.basePrice);
   next();
 });
 

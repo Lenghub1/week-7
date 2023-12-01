@@ -2,6 +2,8 @@
  * @fileoverview I test API fetures but using aggregate pipeline instead
  */
 
+import mongoose from "mongoose";
+
 class APIFeatures {
   constructor(model, queryStr) {
     this.model = model;
@@ -59,6 +61,10 @@ class APIFeatures {
       // Convert to $elemMatch to match each element regardless of order
       if (Array.isArray(queryObj[eachKey]))
         queryObj[eachKey] = { $elemMatch: { $in: [...queryObj[eachKey]] } };
+
+      // Convert sellerId to ObjectId (if not, it cannot filter it)
+      if (eachKey == "sellerId")
+        queryObj[eachKey] = new mongoose.Types.ObjectId(queryObj[eachKey]);
     });
 
     this.aggPipe.push({ $match: queryObj });
