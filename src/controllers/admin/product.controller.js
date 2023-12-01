@@ -1,8 +1,8 @@
-import APIError from "../utils/APIError.js";
-import catchAsync from "../utils/catchAsync.js";
-import adminService from "../services/admin.service.js";
+import APIError from "../../utils/APIError.js";
+import catchAsync from "../../utils/catchAsync.js";
+import adminService from "../../services/admin/product.service.js";
 
-const adminController = {
+const productControllerAdmin = {
   createProduct: catchAsync(async (req, res, next) => {
     if (!req.files.imgCover || !req.files.media) {
       throw new APIError({
@@ -42,11 +42,6 @@ const adminController = {
     });
   }),
 
-  searchSeller: catchAsync(async (req, res, next) => {
-    const sellers = await adminService.searchSeller(req.query.q);
-    return res.status(200).json(sellers);
-  }),
-
   updateProduct: catchAsync(async (req, res, next) => {
     const product = await adminService.updateProduct({
       productInput: req.body,
@@ -58,4 +53,4 @@ const adminController = {
   }),
 };
 
-export default adminController;
+export default productControllerAdmin;
