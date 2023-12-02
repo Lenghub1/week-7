@@ -1,4 +1,4 @@
-import Seller from "../../models/seller.model.js";
+import Seller from "@/models/seller.model.js";
 
 const sellerServiceAdmin = {
   async searchSeller(query) {

@@ -1,6 +1,6 @@
-import APIError from "../../utils/APIError.js";
-import catchAsync from "../../utils/catchAsync.js";
-import adminService from "../../services/admin/product.service.js";
+import APIError from "@/utils/APIError.js";
+import catchAsync from "@/utils/catchAsync.js";
+import adminService from "@/services/admin/product.service.js";
 
 const productControllerAdmin = {
   createProduct: catchAsync(async (req, res, next) => {

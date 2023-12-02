@@ -1,8 +1,8 @@
-import Product from "../../models/product.model.js";
-import APIError from "../../utils/APIError.js";
-import utils from "../../utils/utils.js";
-import { uploadFile, deleteFile, getFileSignedUrl } from "../../config/s3.js";
-import APIFeatures from "../../utils/APIFeatures.js";
+import Product from "@/models/product.model.js";
+import APIError from "@/utils/APIError.js";
+import utils from "@/utils/utils.js";
+import { uploadFile, deleteFile, getFileSignedUrl } from "@/config/s3.js";
+import APIFeatures from "@/utils/APIFeatures.js";
 
 import mongoose from "mongoose";
 

@@ -1,5 +1,5 @@
-import catchAsync from "../../utils/catchAsync.js";
-import sellerServiceAdmin from "../../services/admin/seller.service.js";
+import catchAsync from "@/utils/catchAsync.js";
+import sellerServiceAdmin from "@/services/admin/seller.service.js";
 
 const sellerControllerAdmin = {
   searchSeller: catchAsync(async (req, res, next) => {
