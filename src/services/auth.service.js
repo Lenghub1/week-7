@@ -57,6 +57,7 @@ const authService = {
         password: await bcrypt.hash(password, 12),
         firstName,
         lastName,
+        accountVerify: false, // Account not yet activate
       });
       await user.save();
 

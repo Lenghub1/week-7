@@ -118,6 +118,14 @@ const settingService = {
   updatePassword: {
     async getCurrentUser(req) {
       const user = await User.findById(req.user._id);
+      if (!user) {
+        return next(
+          new APIError({
+            status: 404,
+            message: "User not found!",
+          })
+        );
+      }
       return user;
     },
 
@@ -221,10 +229,31 @@ const settingService = {
     },
   },
 
-  async deleteAccount(user) {
-    user.active = false;
-    user.email = undefined;
-    await user.save({ validateBeforeSave: false });
+  deleteAccount: {
+    async verifyPassword(next, data, user) {
+      const { password } = data;
+      if (!(await user.verifyPassword(password))) {
+        return next(
+          new APIError({
+            status: 400,
+            message: "Password is incorrect!",
+          })
+        );
+      }
+    },
+
+    async delete(user, data) {
+      const { reasonDeleteAccount } = data;
+      console.log(user.email);
+      user.active = false;
+      user.reasonDeleteAccount = reasonDeleteAccount;
+      // We don't want to lost user's email and make it possible for user to sign up again
+      const slugEmail = user.slugEmailBeforeDelete(user.email);
+      user.email = slugEmail;
+      await user.save({ validateBeforeSave: false });
+      // Log out all devices
+      await Session.deleteMany({ userId: user._id });
+    },
   },
 };
 

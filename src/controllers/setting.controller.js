@@ -1,6 +1,7 @@
 import catchAsync from "../utils/catchAsync.js";
 import settingService from "../services/setting.service.js";
 import sendEmailWithNodemailer from "../utils/email.js";
+import authController from "./auth.controller.js";
 
 const settingController = {
   // Update first or last names
@@ -29,7 +30,7 @@ const settingController = {
   // 4. Generate OTP code
   // 5. Send email along the otp code
   confirmNewEmail: catchAsync(async (req, res, next) => {
-    const data = req?.body;
+    const data = req.body;
     const user = await settingService.updateEmail.verifyUser(next, data);
     const newEmail = await settingService.updateEmail.verifyNewEmail(
       next,
@@ -59,7 +60,7 @@ const settingController = {
   // 2. Get new email
   // 3. Update new email
   updateEmail: catchAsync(async (req, res, next) => {
-    const user = req?.user;
+    const user = req.user;
     const data = req.body;
     const email = await settingService.updateEmail.update(user, data);
     return res.status(201).json({
@@ -72,13 +73,14 @@ const settingController = {
 
   // Delete Account
   // 1. Get current user
-  // 2. Set active status to false
+  // 2. Clear cookie
   deleteAccount: catchAsync(async (req, res, next) => {
-    const user = req?.user;
-    await settingService.deleteAccount(user);
-    res.status(204).json({
-      message: "Account successfully deleted",
-    });
+    const data = req.body;
+    const user = req.user;
+    await settingService.deleteAccount.verifyPassword(next, data, user);
+    await settingService.deleteAccount.delete(user, data);
+    authController.clearCookie(res);
+    res.status(204).send(); // No Content
   }),
 
   // Get user's sessions
@@ -86,7 +88,7 @@ const settingController = {
   // 2. Verify User
   // 3. Find session in db and return
   getUserSessions: catchAsync(async (req, res, next) => {
-    const user = req?.user;
+    const user = req.user;
     const sessions = await settingService.getUserSessions.getSessions(user);
     return res.status(200).json({
       message: "Sessions retrieved.",
@@ -101,7 +103,7 @@ const settingController = {
   // 3. Else Return error
   logOutOne: catchAsync(async (req, res, next) => {
     const data = req.params;
-    const user = req?.user;
+    const user = req.user;
     const session = await settingService.logOutOne.verifySession(
       next,
       user,

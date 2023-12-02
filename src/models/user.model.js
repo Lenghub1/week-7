@@ -23,7 +23,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       lowercase: true,
-      unique: true,
+      uniqure: true,
       trim: true,
       validate: validator.isEmail,
     },
@@ -32,6 +32,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       unique: true,
     },
+    reasonDeleteAccount: String,
     password: {
       type: String,
       required: true,
@@ -62,7 +63,7 @@ const userSchema = new mongoose.Schema(
     passwordChangeAt: Date,
     accountVerify: {
       type: Boolean,
-      default: false, // Account not yet activate
+      default: true,
     },
     active: {
       type: Boolean,
@@ -140,6 +141,13 @@ userSchema.methods.createOTPToken = async function () {
   this.OTP = await bcrypt.hash(OTP, salt);
   this.OTPExpires = Date.now() + 10 * 60 * 1000;
   return OTP;
+};
+
+userSchema.methods.slugEmailBeforeDelete = function (email) {
+  const slugEmail = `${email}-${Date.now()}-${crypto
+    .randomBytes(32)
+    .toString("hex")}`;
+  return slugEmail;
 };
 
 const User = mongoose.model("User", userSchema);

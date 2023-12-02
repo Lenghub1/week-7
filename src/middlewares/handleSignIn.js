@@ -52,15 +52,12 @@ const handleSignIn = catchAsync(async (req, res, next) => {
   const newRefreshToken = authService.signRefreshToken(req.user._id);
   if (cookies?.jwt) {
     const refreshToken = cookies.jwt;
-    const session = await Session.findOne({ refreshToken });
-
-    // Detected refresh token reuse!
+    const session = await Session.findOneAndDelete({ refreshToken });
+    // Refresh token may expired and required user to log in again
     if (!session) {
-      // clear out ALL sessions
-      await Session.deleteMany({ userId: req.user._id });
+      authController.clearCookie(res);
     }
-
-    res.clearCookie("jwt", { httpOnly: true, sameSite: "None", secure: true });
+    authController.clearCookie(res);
   }
   await Session.create({
     userId: req.user._id,
