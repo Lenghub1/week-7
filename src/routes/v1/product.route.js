@@ -14,10 +14,12 @@ router.route("/:id").get(usersProductController.getProductDetails);
 router
   .route("/:productId/reviews")
   .get(reviewController.getReviews)
+  // TODO @later: verify if user purchased the product to be able create to a Review.
   .post(isAuth, reviewController.createReview);
 
 router
   .route("/:productId/reviews/:reviewId")
-  .delete(isAuth, reviewController.deleteReview);
+  .delete(isAuth, reviewController.deleteReview)
+  .patch(isAuth, reviewController.updateReview);
 
 export default router;

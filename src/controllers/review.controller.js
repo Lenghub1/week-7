@@ -27,12 +27,17 @@ const reviewController = {
     res.status(200).json(deletedReview);
   }),
   updateReview: catchAsync(async (req, res) => {
-    const { productId } = req.params;
-    const { reviewId, rating, review } = req.body;
+    const { productId, reviewId } = req.params;
+    const { rating, review } = req.body;
     const updateData = { rating, review };
+    const { id: userId, role: userRole } = req.user;
+    // const userId = "656870f96833280aceb69dbf";
+    // const userRole = "user";
     const updatedReview = await reviewService.updateReview(
       productId,
       reviewId,
+      userId,
+      userRole,
       updateData
     );
     res.status(200).json(updatedReview);
