@@ -16,6 +16,8 @@ router
   .get(reviewController.getReviews)
   .post(isAuth, reviewController.createReview);
 
-router.route("/:productId/reviews/:reviewId").delete();
+router
+  .route("/:productId/reviews/:reviewId")
+  .delete(isAuth, reviewController.deleteReview);
 
 export default router;

@@ -10,14 +10,14 @@ const reviewService = {
     if (!(await Product.findOne({ _id: productId, status: "Public" }))) {
       throw new APIError({
         status: 400,
-        message: "No Product with this id.",
+        message: "No Product found with this id.",
       });
     }
 
     if (!(await User.findOne({ _id: userId, active: true }))) {
       throw new APIError({
         status: 400,
-        message: "No User with this id.",
+        message: "No found User with this id.",
       });
     }
 
@@ -36,7 +36,7 @@ const reviewService = {
 
     // Start a session
     const session = await mongoose.startSession();
-    const reviewData = { product: productId, ...reviewInput };
+    const reviewData = { product: productId, userId, ...reviewInput };
 
     try {
       // Start the transaction
@@ -82,7 +82,37 @@ const reviewService = {
       });
     }
   },
-  async deleteReview(productId, reviewId) {
+  async deleteReview(productId, reviewId, userId, userRole) {
+    // Check if the product or review or user exist
+    if (!(await Product.findOne({ _id: productId, status: "Public" }))) {
+      throw new APIError({
+        status: 400,
+        message: "No Product found with this id.",
+      });
+    }
+
+    if (!(await Review.findOne({ _id: reviewId }))) {
+      throw new APIError({
+        status: 400,
+        message: "No Review found with this id.",
+      });
+    }
+
+    if (!(await User.findOne({ _id: userId, active: true }))) {
+      throw new APIError({
+        status: 400,
+        message: "No found User with this id.",
+      });
+    }
+
+    // Check role, if role 'admin' they can delete the review without checking if their userId match the review's userId
+    const review = await Review.findById(reviewId);
+    if (userRole !== "admin") {
+      if (userId !== review.userId.toString()) {
+        throw new APIError({ status: 401, message: "Unauthorize." });
+      }
+    }
+
     const session = await mongoose.startSession();
 
     try {
