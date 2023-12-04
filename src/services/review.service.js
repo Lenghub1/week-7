@@ -2,22 +2,14 @@ import mongoose from "mongoose";
 import Review from "../models/review.model.js";
 import APIError from "../utils/APIError.js";
 import Product from "../models/product.model.js";
-import User from "../models/user.model.js";
 
 const reviewService = {
   async createReview(productId, userId, reviewInput) {
-    // Check if user or product exist
+    // Check if product exist
     if (!(await Product.findOne({ _id: productId, status: "Public" }))) {
       throw new APIError({
         status: 400,
-        message: "No Product found with this id.",
-      });
-    }
-
-    if (!(await User.findOne({ _id: userId, active: true }))) {
-      throw new APIError({
-        status: 400,
-        message: "No found User with this id.",
+        message: "No product found with this id.",
       });
     }
 
@@ -83,30 +75,24 @@ const reviewService = {
     }
   },
   async deleteReview(productId, reviewId, userId, userRole) {
-    // Check if the product or review or user exist
+    // Check if the product exist
     if (!(await Product.findOne({ _id: productId, status: "Public" }))) {
       throw new APIError({
         status: 400,
-        message: "No Product found with this id.",
+        message: "No product found with this id.",
       });
     }
 
-    if (!(await Review.findOne({ _id: reviewId }))) {
+    // Check if the review exist
+    const review = await Review.findById(reviewId);
+    if (!review) {
       throw new APIError({
-        status: 400,
-        message: "No Review found with this id.",
-      });
-    }
-
-    if (!(await User.findOne({ _id: userId, active: true }))) {
-      throw new APIError({
-        status: 400,
-        message: "No found User with this id.",
+        status: 404,
+        message: "No review found with this id.",
       });
     }
 
     // Check role, if role 'admin' they can delete the review without checking if their userId match the review's userId
-    const review = await Review.findById(reviewId);
     if (userRole !== "admin") {
       if (userId !== review.userId.toString()) {
         throw new APIError({ status: 401, message: "Unauthorize." });
@@ -185,7 +171,7 @@ const reviewService = {
     }
   },
   async updateReview(productId, reviewId, userId, userRole, updateData) {
-    // Check if the product or review or user exist
+    // Check if the product exist
     if (!(await Product.findOne({ _id: productId, status: "Public" }))) {
       throw new APIError({
         status: 400,
@@ -193,22 +179,16 @@ const reviewService = {
       });
     }
 
-    if (!(await Review.findOne({ _id: reviewId }))) {
+    // Check if the review exist
+    const review = await Review.findById(reviewId);
+    if (!review) {
       throw new APIError({
-        status: 400,
-        message: "No Review found with this id.",
-      });
-    }
-
-    if (!(await User.findOne({ _id: userId, active: true }))) {
-      throw new APIError({
-        status: 400,
-        message: "No found User with this id.",
+        status: 404,
+        message: "No review found with this id.",
       });
     }
 
     // Check role, if role 'admin' they can delete the review without checking if their userId match the review's userId
-    const review = await Review.findById(reviewId);
     if (userRole !== "admin") {
       if (userId !== review.userId.toString()) {
         throw new APIError({ status: 401, message: "Unauthorize." });
