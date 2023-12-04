@@ -6,6 +6,7 @@ const reviewController = {
     const { productId } = req.params;
     const reviewInput = req.body;
     const userId = req.user.id;
+    // const userId = "656870f96833280aceb69dba";
     const newReview = await reviewService.createReview(
       productId,
       userId,
@@ -16,8 +17,6 @@ const reviewController = {
   deleteReview: catchAsync(async (req, res) => {
     const { productId, reviewId } = req.params;
     const { id: userId, role: userRole } = req.user;
-    // const userId = "656870f96833280aceb69dbf";
-    // const userRole = "admin";
     const deletedReview = await reviewService.deleteReview(
       productId,
       reviewId,
@@ -31,8 +30,6 @@ const reviewController = {
     const { rating, review } = req.body;
     const updateData = { rating, review };
     const { id: userId, role: userRole } = req.user;
-    // const userId = "656870f96833280aceb69dbf";
-    // const userRole = "user";
     const updatedReview = await reviewService.updateReview(
       productId,
       reviewId,

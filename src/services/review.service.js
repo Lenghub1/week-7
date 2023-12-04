@@ -3,6 +3,32 @@ import Review from "../models/review.model.js";
 import APIError from "../utils/APIError.js";
 import Product from "../models/product.model.js";
 
+// Utility function to check conditions
+async function checkConditions(productId, reviewId, userId, userRole) {
+  // Check if product exists
+  const product = await Product.findOne({ _id: productId, status: "Public" });
+  if (!product) {
+    throw new APIError({
+      status: 400,
+      message: "No product found with this id.",
+    });
+  }
+
+  // Check if review exists
+  const review = await Review.findById(reviewId);
+  if (!review) {
+    throw new APIError({
+      status: 404,
+      message: "No review found with this id.",
+    });
+  }
+
+  // Check user authorization
+  if (userRole !== "admin" && userId !== review.userId.toString()) {
+    throw new APIError({ status: 401, message: "Unauthorized." });
+  }
+}
+
 const reviewService = {
   async createReview(productId, userId, reviewInput) {
     // Check if product exist
@@ -75,29 +101,7 @@ const reviewService = {
     }
   },
   async deleteReview(productId, reviewId, userId, userRole) {
-    // Check if the product exist
-    if (!(await Product.findOne({ _id: productId, status: "Public" }))) {
-      throw new APIError({
-        status: 400,
-        message: "No product found with this id.",
-      });
-    }
-
-    // Check if the review exist
-    const review = await Review.findById(reviewId);
-    if (!review) {
-      throw new APIError({
-        status: 404,
-        message: "No review found with this id.",
-      });
-    }
-
-    // Check role, if role 'admin' they can delete the review without checking if their userId match the review's userId
-    if (userRole !== "admin") {
-      if (userId !== review.userId.toString()) {
-        throw new APIError({ status: 401, message: "Unauthorize." });
-      }
-    }
+    await checkConditions(productId, reviewId, userId, userRole);
 
     const session = await mongoose.startSession();
 
@@ -171,29 +175,7 @@ const reviewService = {
     }
   },
   async updateReview(productId, reviewId, userId, userRole, updateData) {
-    // Check if the product exist
-    if (!(await Product.findOne({ _id: productId, status: "Public" }))) {
-      throw new APIError({
-        status: 400,
-        message: "No Product found with this id.",
-      });
-    }
-
-    // Check if the review exist
-    const review = await Review.findById(reviewId);
-    if (!review) {
-      throw new APIError({
-        status: 404,
-        message: "No review found with this id.",
-      });
-    }
-
-    // Check role, if role 'admin' they can delete the review without checking if their userId match the review's userId
-    if (userRole !== "admin") {
-      if (userId !== review.userId.toString()) {
-        throw new APIError({ status: 401, message: "Unauthorize." });
-      }
-    }
+    await checkConditions(productId, reviewId, userId, userRole);
 
     const session = await mongoose.startSession();
     try {
