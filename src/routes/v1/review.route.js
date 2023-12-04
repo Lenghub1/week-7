@@ -1,6 +1,7 @@
 import express from "express";
 import reviewController from "../../controllers/review.controller.js";
 import isAuth from "../../middlewares/isAuth.js";
+import isAuthorizeReview from "../../middlewares/isAuthorizeReview.js";
 
 const router = express.Router({ mergeParams: true });
 
@@ -12,7 +13,7 @@ router
 
 router
   .route("/:reviewId")
-  .delete(isAuth, reviewController.deleteReview)
-  .patch(isAuth, reviewController.updateReview);
+  .delete(isAuth, isAuthorizeReview, reviewController.deleteReview)
+  .patch(isAuth, isAuthorizeReview, reviewController.updateReview);
 
 export default router;
