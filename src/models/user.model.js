@@ -95,6 +95,13 @@ userSchema.index(
   }
 );
 
+// Virtual populate
+userSchema.virtual("sessions", {
+  ref: "Session",
+  foreignField: "userId",
+  localField: "_id",
+});
+
 userSchema.pre("save", async function (next) {
   if (this.isModified("firstName") || this.isModified("lastName")) {
     const fullName = `${this.firstName} ${this.lastName}`;

@@ -1,16 +1,36 @@
 import catchAsync from "../utils/catchAsync.js";
-import settingService from "../services/setting.service.js";
+import userService from "../services/user.service.js";
 import sendEmailWithNodemailer from "../utils/email.js";
 import authController from "./auth.controller.js";
 
-const settingController = {
+const userController = {
+  // Get all users
+  // 1. Get query
+  // 2. Find all users
+  getAllUsers: catchAsync(async (req, res, next) => {
+    const query = req.query;
+    const users = await userService.getAll(query);
+    return res.status(200).json({
+      message: "Users retrieved.",
+      data: users,
+    });
+  }),
+
+  getOneUser: catchAsync(async (req, res, next) => {
+    const { userId } = req.params;
+    const user = await userService.getOne.verifyUser(next, userId);
+    return res.status(200).json({
+      message: "success!",
+      data: user,
+    });
+  }),
   // Update first or last names
   // 1. Get user data
   // 2. Verify with db
   // 3. Update the name
   updateName: catchAsync(async (req, res, next) => {
     const data = req.body;
-    const user = await settingService.updateName.verifyUserAndUpdate(
+    const user = await userService.updateName.verifyUserAndUpdate(
       req,
       next,
       data
@@ -31,22 +51,13 @@ const settingController = {
   // 5. Send email along the otp code
   confirmNewEmail: catchAsync(async (req, res, next) => {
     const data = req.body;
-    const user = await settingService.updateEmail.verifyUser(next, data);
-    const newEmail = await settingService.updateEmail.verifyNewEmail(
-      next,
-      data
-    );
+    const user = await userService.updateEmail.verifyUser(next, data);
+    const newEmail = await userService.updateEmail.verifyNewEmail(next, data);
     const OTP = await user.createOTPToken();
     await user.save({ validateBeforeSave: false });
-    const emailData = await settingService.updateEmail.createEmail(
-      OTP,
-      newEmail
-    );
+    const emailData = await userService.updateEmail.createEmail(OTP, newEmail);
     const resultSendEmail = await sendEmailWithNodemailer(emailData);
-    await settingService.updateEmail.verifyResultSendEmail(
-      next,
-      resultSendEmail
-    );
+    await userService.updateEmail.verifyResultSendEmail(next, resultSendEmail);
     return res.status(200).json({
       message: `We've sent a 6-digit verification code to your email (${newEmail}). Kindly check your inbox and confirm your email address by entering the code.`,
       data: {
@@ -62,7 +73,7 @@ const settingController = {
   updateEmail: catchAsync(async (req, res, next) => {
     const user = req.user;
     const data = req.body;
-    const email = await settingService.updateEmail.update(user, data);
+    const email = await userService.updateEmail.update(user, data);
     return res.status(201).json({
       message: "Email successfully updated!",
       data: {
@@ -77,24 +88,10 @@ const settingController = {
   deleteAccount: catchAsync(async (req, res, next) => {
     const data = req.body;
     const user = req.user;
-    await settingService.deleteAccount.verifyPassword(next, data, user);
-    await settingService.deleteAccount.delete(user, data);
+    await userService.deleteAccount.verifyPassword(next, data, user);
+    await userService.deleteAccount.delete(user, data);
     authController.clearCookie(res);
     res.status(204).send(); // No Content
-  }),
-
-  // Get user's sessions
-  // 1. Get data
-  // 2. Verify User
-  // 3. Find session in db and return
-  getUserSessions: catchAsync(async (req, res, next) => {
-    const user = req.user;
-    const sessions = await settingService.getUserSessions.getSessions(user);
-    return res.status(200).json({
-      message: "Sessions retrieved.",
-      result: sessions.length,
-      sessions,
-    });
   }),
 
   // Log out one device
@@ -104,11 +101,7 @@ const settingController = {
   logOutOne: catchAsync(async (req, res, next) => {
     const data = req.params;
     const user = req.user;
-    const session = await settingService.logOutOne.verifySession(
-      next,
-      user,
-      data
-    );
+    const session = await userService.logOutOne.verifySession(next, user, data);
     return res.status(200).json({
       message: `device ${session.deviceType} successfully loggd out!`,
     });
@@ -121,13 +114,9 @@ const settingController = {
   // 4. Delete session and reauthenticate
   updatePassword: catchAsync(async (req, res, next) => {
     const data = req.body;
-    const user = await settingService.updatePassword.getCurrentUser(req);
-    await settingService.updatePassword.verifyAndUpdatePassword(
-      user,
-      data,
-      next
-    );
-    await settingService.updatePassword.removeSession(user);
+    const user = await userService.updatePassword.getCurrentUser(req);
+    await userService.updatePassword.verifyAndUpdatePassword(user, data, next);
+    await userService.updatePassword.removeSession(user);
     req.user = user;
     return next();
   }),
@@ -139,9 +128,9 @@ const settingController = {
   enable2FAByPassword: catchAsync(async (req, res, next) => {
     const data = req.body;
     const { action } = req.params;
-    const user = await settingService.enable2FA.verifyUser(req, next, action);
-    await settingService.enable2FA.verifyPassword(next, user, data);
-    await settingService.enable2FA.enable(user, action);
+    const user = await userService.enable2FA.verifyUser(req, next, action);
+    await userService.enable2FA.verifyPassword(next, user, data);
+    await userService.enable2FA.enable(user, action);
     return res.status(200).json({
       message: `2-Step-Verification successfully ${action}d!`,
     });
@@ -155,18 +144,12 @@ const settingController = {
   // 5. Verify the result sending email
   enable2FAByOTP: catchAsync(async (req, res, next) => {
     const { action } = req.params;
-    const user = await settingService.enable2FA.verifyUser(req, next, action);
+    const user = await userService.enable2FA.verifyUser(req, next, action);
     const OTP = await user.createOTPToken();
     await user.save({ validateBeforeSave: false });
-    const emailData = await settingService.enable2FA.createEmail(
-      OTP,
-      user.email
-    );
+    const emailData = await userService.enable2FA.createEmail(OTP, user.email);
     const resultSendEmail = sendEmailWithNodemailer(emailData);
-    await settingService.enable2FA.confirmResultSendEmail(
-      next,
-      resultSendEmail
-    );
+    await userService.enable2FA.confirmResultSendEmail(next, resultSendEmail);
     return res.status(201).json({
       message:
         "Please verify your OTP code that we have sent to your email address.",
@@ -183,11 +166,11 @@ const settingController = {
   enable2FA: catchAsync(async (req, res, next) => {
     const { action } = req.params;
     const user = req?.user;
-    await settingService.enable2FA.enable(user, action);
+    await userService.enable2FA.enable(user, action);
     return res.status(200).json({
       message: `2-Step-Verification successfully ${action}d!`,
     });
   }),
 };
 
-export default settingController;
+export default userController;

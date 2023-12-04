@@ -4,11 +4,43 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import Session from "../models/session.model.js";
+import APIFeatures from "../utils/APIFeatures.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const settingService = {
+const userService = {
+  async getAll(query) {
+    const features = new APIFeatures(User, query)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
+    // const doc = await features.query.explain();
+    let users = await features.execute();
+    users = users[0];
+
+    if (!users)
+      throw new APIError({
+        status: 404,
+        message: "There is no document found.",
+      });
+    return users;
+  },
+  getOne: {
+    async verifyUser(next, userId) {
+      const user = await User.findById(userId).populate({ path: "sessions" });
+      if (!user) {
+        return next(
+          new APIError({
+            status: 404,
+            message: "User not found!",
+          })
+        );
+      }
+      return user;
+    },
+  },
   updateName: {
     async verifyUserAndUpdate(req, next, data) {
       const { firstName, lastName } = data;
@@ -84,15 +116,6 @@ const settingService = {
       user.email = newEmail;
       await user.save();
       return newEmail;
-    },
-  },
-
-  getUserSessions: {
-    async getSessions(user) {
-      const sessions = await Session.find({ userId: user._id }).select(
-        "-__v -refreshToken -accessToken"
-      );
-      return sessions;
     },
   },
 
@@ -257,4 +280,4 @@ const settingService = {
   },
 };
 
-export default settingService;
+export default userService;

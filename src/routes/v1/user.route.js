@@ -3,13 +3,18 @@ import { runValidation } from "../../validators/index.js";
 import { createNameValidator } from "../../validators/name.validator.js";
 import { createPasswordValidator } from "../../validators/password.validator.js";
 import handleSignIn from "../../middlewares/handleSignIn.js";
-import controller from "../../controllers/setting.controller.js";
+import controller from "../../controllers/user.controller.js";
 import isAuth from "../../middlewares/isAuth.js";
 import verifyOTPCode from "../../middlewares/verifyOTPCode.js";
 import { createEmailValidator } from "../../validators/email.validator.js";
+import verifyRoles from "../../middlewares/verifyRoles.js";
 
 const router = express.Router();
 
+// Get all users
+router.route("/").get(isAuth, verifyRoles("admin"), controller.getAllUsers);
+
+router.route("/:userId").get(isAuth, controller.getOneUser);
 // Update first or last name
 router
   .route("/name")
@@ -39,9 +44,6 @@ router
 
 // Log out one device
 router.route("/:sessionId/logout").delete(isAuth, controller.logOutOne);
-
-// Get all devices that user have logged in
-router.route("/sessions").get(isAuth, controller.getUserSessions);
 
 // Request to update email
 router
