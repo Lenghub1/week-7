@@ -1,23 +1,34 @@
 import Seller from "@/models/seller.model.js";
+import APIFeatures from "@/utils/APIFeatures.js";
 
 const sellerServiceAdmin = {
-  async searchSeller(query) {
-    const searchQuery = query;
-    const searchTerms = searchQuery.split(/\s+/).filter(Boolean);
-    const regexPatterns = searchTerms.map((term) => new RegExp(term, "i"));
-
-    const pipeLine = [
-      {
-        $match: {
-          active: true,
-          $and: regexPatterns.map((pattern) => ({
-            storeAndSellerName: { $regex: pattern },
-          })),
+  async searchSeller(queryStr) {
+    function generatePipeline(regexPatterns) {
+      return [
+        {
+          $match: {
+            active: true,
+            $and: regexPatterns.map((pattern) => ({
+              storeAndSellerName: { $regex: pattern },
+            })),
+          },
         },
-      },
-    ];
-    const sellers = await Seller.aggregate(pipeLine);
+      ];
+    }
+
+    const features = new APIFeatures(Seller, queryStr, true, generatePipeline)
+      .search()
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
+
+    let sellers = await features.execute();
+    sellers = sellers[0];
     return sellers;
+  },
+  async getAllSeller() {
+    return;
   },
 };
 

@@ -3,7 +3,7 @@ import sellerServiceAdmin from "@/services/admin/seller.service.js";
 
 const sellerControllerAdmin = {
   searchSeller: catchAsync(async (req, res, next) => {
-    const sellers = await sellerServiceAdmin.searchSeller(req.query.q);
+    const sellers = await sellerServiceAdmin.searchSeller(req.query);
     return res.status(200).json(sellers);
   }),
 

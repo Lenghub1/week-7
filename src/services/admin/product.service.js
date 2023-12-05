@@ -50,8 +50,6 @@ const productServiceAdmin = {
         });
       });
 
-      console.log("all files", allFiles);
-
       await Promise.all(
         allFiles.map(
           async (eachFile) =>
