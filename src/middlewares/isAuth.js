@@ -31,6 +31,7 @@ const isAuth = catchAsync(async (req, res, next) => {
       })
     );
   }
+
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, async (err, decoded) => {
     if (err) return res.status(403).send(); // invalid token
     const currentUser = await User.findById(decoded.userId);

@@ -151,12 +151,10 @@ const authService = {
       const { email, password } = data;
       const user = await User.findOne({ email });
       if (!user || !(await user.verifyPassword(password))) {
-        return next(
-          new APIError({
-            status: 400,
-            message: "Email or password is incorrected.", // For more secure and prevent malicious from knowing which field they input wrong.
-          })
-        );
+        throw new APIError({
+          status: 400,
+          message: "Email or password is incorrected.", // For more secure and prevent malicious from knowing which field they input wrong.
+        });
       } else if (user && user.activateAccount === false) {
         return next(
           APIError({

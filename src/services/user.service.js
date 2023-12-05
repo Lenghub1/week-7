@@ -5,6 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import Session from "../models/session.model.js";
 import APIFeatures from "../utils/APIFeatures.js";
+import utils from "../utils/utils.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,6 +18,7 @@ const userService = {
       .limitFields()
       .paginate();
     // const doc = await features.query.explain();
+
     let users = await features.execute();
     users = users[0];
 
@@ -25,6 +27,8 @@ const userService = {
         status: 404,
         message: "There is no document found.",
       });
+
+    users.metadata = utils.getPaginateMetadata(users.metadata, query);
     return users;
   },
   getOne: {
@@ -267,7 +271,6 @@ const userService = {
 
     async delete(user, data) {
       const { reasonDeleteAccount } = data;
-      console.log(user.email);
       user.active = false;
       user.reasonDeleteAccount = reasonDeleteAccount;
       // We don't want to lost user's email and make it possible for user to sign up again

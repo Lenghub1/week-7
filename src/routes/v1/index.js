@@ -25,7 +25,7 @@ const defaultRoutes = [
     route: sellerRoute,
   },
   {
-    path: "/user",
+    path: "/users",
     route: userRoute,
   },
 ];

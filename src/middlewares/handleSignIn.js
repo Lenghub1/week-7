@@ -37,7 +37,7 @@ const handleSignIn = catchAsync(async (req, res, next) => {
     const location = response?.data;
     if (location.country && location.loc && location.region) {
       address = `${location?.region}, ${location?.country}`;
-      coordinates = location?.loc.split(",").map((element) => Number(element));
+      coordinates = location?.loc?.split(",").map((element) => Number(element));
     } else {
       address = "Unlocated";
       coordinates = [0, 0];

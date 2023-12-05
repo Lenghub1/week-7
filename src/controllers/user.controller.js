@@ -7,15 +7,20 @@ const userController = {
   // Get all users
   // 1. Get query
   // 2. Find all users
+  // 3. Return users
   getAllUsers: catchAsync(async (req, res, next) => {
-    const query = req.query;
+    const { query } = req;
     const users = await userService.getAll(query);
     return res.status(200).json({
       message: "Users retrieved.",
-      data: users,
+      users,
     });
   }),
 
+  // Get one user
+  // 1. Get user id from params
+  // 2. Verify a user
+  // 3. Return a user
   getOneUser: catchAsync(async (req, res, next) => {
     const { userId } = req.params;
     const user = await userService.getOne.verifyUser(next, userId);
@@ -24,6 +29,7 @@ const userController = {
       data: user,
     });
   }),
+
   // Update first or last names
   // 1. Get user data
   // 2. Verify with db
@@ -71,7 +77,7 @@ const userController = {
   // 2. Get new email
   // 3. Update new email
   updateEmail: catchAsync(async (req, res, next) => {
-    const user = req.user;
+    const { user } = req;
     const data = req.body;
     const email = await userService.updateEmail.update(user, data);
     return res.status(201).json({
@@ -87,7 +93,7 @@ const userController = {
   // 2. Clear cookie
   deleteAccount: catchAsync(async (req, res, next) => {
     const data = req.body;
-    const user = req.user;
+    const { user } = req;
     await userService.deleteAccount.verifyPassword(next, data, user);
     await userService.deleteAccount.delete(user, data);
     authController.clearCookie(res);
@@ -100,7 +106,7 @@ const userController = {
   // 3. Else Return error
   logOutOne: catchAsync(async (req, res, next) => {
     const data = req.params;
-    const user = req.user;
+    const { user } = req;
     const session = await userService.logOutOne.verifySession(next, user, data);
     return res.status(200).json({
       message: `device ${session.deviceType} successfully loggd out!`,
@@ -165,7 +171,7 @@ const userController = {
   // 3. Start enable/disable 2FA
   enable2FA: catchAsync(async (req, res, next) => {
     const { action } = req.params;
-    const user = req?.user;
+    const { user } = req;
     await userService.enable2FA.enable(user, action);
     return res.status(200).json({
       message: `2-Step-Verification successfully ${action}d!`,
