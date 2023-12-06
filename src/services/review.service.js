@@ -5,19 +5,6 @@ import Product from "../models/product.model.js";
 
 const reviewService = {
   async createReview(productId, userId, reviewInput) {
-    // Check if the user has already reviewed the product
-    const existingReview = await Review.findOne({
-      product: productId,
-      userId,
-    });
-
-    if (existingReview) {
-      throw new APIError({
-        status: 400,
-        message: "You have already reviewed this product.",
-      });
-    }
-
     // Start a session
     const session = await mongoose.startSession();
     const reviewData = { product: productId, userId, ...reviewInput };
