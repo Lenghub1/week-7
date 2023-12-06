@@ -1,55 +1,58 @@
-import Stripe from "stripe";
 import dotenv from "dotenv";
-import Product from "../models/product.model.js";
-import APIError from "../utils/APIError.js";
+import Order from "@/models/order.model.js";
+import paypal from "paypal-rest-sdk";
 
 dotenv.config();
 
 const checkoutService = {
-  async getAllStripeProducts() {
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: `2023-10-16`,
-    });
-    const products = await stripe.products
-      .list({ limit: 100 })
-      .autoPagingEach({ limit: 10000 });
-    if (!products) {
-      throw new APIError({ status: 404, message: "No stripe product found" });
-    }
-    return products;
+  mode: process.env.MODE,
+  client_id: process.env.CLIENT_ID,
+  client_secret: process.env.CLIENT_SECRET,
+
+  async getAllPayment() {
+    const payment = {
+      intent: "sale",
+      payer: {
+        payment_method: "paypal",
+      },
+      redirect_urls: {
+        success_url: `${process.env.CLIENT_URL}/success`,
+        cancel_url: `${process.env.CLIENT_URL}/cancel`,
+      },
+      transactions: [
+        {
+          item_list: {
+            items: Order.cartItems.map((cartItem) => ({
+              name: cartItem.productId.title,
+              sku: cartItem.productId.sku,
+              price: cartItem.itemPrice.toFixed(2),
+              currency: "USD",
+              quantity: cartItem.quantity,
+              total: totalPrice,
+            })),
+          },
+        },
+      ],
+    };
+    return payment;
   },
 
-  async createCheckoutSession(cartItems) {
-    const lineItems = [];
-
-    for (let item of cartItems) {
-      const product = await Product.findById(item.productId);
-      if (product) {
-        lineItems.push({
-          price_data: {
-            currency: "usd",
-            product_data: {
-              productId: product.productId,
-            },
-            quantity: item.quantity,
-          },
-        });
-      } else {
-        throw new APIError({
-          status: 404,
-          message: `Product not found for id: ${item.productId}`,
-        });
+  async createPayment() {
+    const paypalPayment = paypal.payment(
+      create_payment_json,
+      (error, payment) => {
+        if (error) {
+          throw error;
+        } else {
+          for (let i = 0; i < payment.links.length; i++) {
+            if (payment.links[i].rel === "approval_url") {
+              res.redirect(payment.links[i].href);
+            }
+          }
+        }
       }
-    }
-
-    const session = await Stripe.checkout.session.create({
-      line_items: lineItems,
-      mode: "payment",
-      success_url: `${process.env.CLIENT_URL}/checkout-success`,
-      cancel_url: `${process.env.CLIENT_URL}/your-cart`,
-    });
-
-    return session.url;
+    );
+    return paypalPayment;
   },
 };
 
