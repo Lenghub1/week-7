@@ -8,59 +8,55 @@ import isAuth from "../../middlewares/isAuth.js";
 import verifyOTPCode from "../../middlewares/verifyOTPCode.js";
 import { createEmailValidator } from "../../validators/email.validator.js";
 import verifyRoles from "../../middlewares/verifyRoles.js";
+import { createSignupValidator } from "../../validators/signup.validator.js";
 
 const router = express.Router();
 
-// Get all users
-router.route("/").get(isAuth, verifyRoles("admin"), controller.getAllUsers);
+router.use(isAuth);
 
-router.route("/:userId").get(isAuth, controller.getOneUser);
-// Update first or last name
+router.route("/update/me").patch(controller.updateMe);
+
 router
   .route("/name")
-  .patch(createNameValidator, runValidation, isAuth, controller.updateName);
+  .patch(createNameValidator, runValidation, controller.updateName);
 
-// Update password
 router
-  .route("/update-password")
+  .route("/update/password")
   .patch(
     createPasswordValidator,
     runValidation,
-    isAuth,
     controller.updatePassword,
     handleSignIn
   );
 
-// Enable/Disable 2FA by user who log in by email and password
-router.route("/:action/2FA/pwd").patch(isAuth, controller.enable2FAByPassword);
+router.route("/update/email").patch(verifyOTPCode, controller.updateEmail);
 
-// Enable/Disable 2FA by oAuth user
-router.route("/:action/2FA/oauth").get(isAuth, controller.enable2FAByOTP);
+router.route("/:action/2FA/pwd").patch(controller.enable2FAByPassword);
 
-// Enable 2FA (after verify otp)
-router
-  .route("/:action/2FA/otp")
-  .patch(isAuth, verifyOTPCode, controller.enable2FA);
+router.route("/:action/2FA/oauth").get(controller.enable2FAByOTP);
 
-// Log out one device
-router.route("/:sessionId/logout").delete(isAuth, controller.logOutOne);
+router.route("/:action/2FA/otp").patch(verifyOTPCode, controller.enable2FA);
 
-// Request to update email
+router.route("/:sessionId/logout").delete(controller.logOutOne);
+
 router
   .route("/confirm/email")
-  .post(
-    createEmailValidator,
-    runValidation,
-    isAuth,
-    controller.confirmNewEmail
-  );
+  .post(createEmailValidator, runValidation, controller.confirmNewEmail);
 
-// Verify OTP code and update email
+router.route("/delete/account").delete(controller.deleteAccount);
+
+// Admin interact with users ----
+router.use(verifyRoles("admin"));
+
 router
-  .route("/update/email")
-  .patch(isAuth, verifyOTPCode, controller.updateEmail);
+  .route("/")
+  .get(controller.getAllUsers)
+  .post(createSignupValidator, runValidation, controller.createOneUser);
 
-// User delete account
-router.route("/delete/account").patch(isAuth, controller.deleteAccount);
+router
+  .route("/:userId")
+  .get(controller.getOneUser)
+  .patch(controller.updateOneUser)
+  .delete(controller.deleteOneUser);
 
 export default router;

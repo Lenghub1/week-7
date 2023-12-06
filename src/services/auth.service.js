@@ -151,10 +151,12 @@ const authService = {
       const { email, password } = data;
       const user = await User.findOne({ email });
       if (!user || !(await user.verifyPassword(password))) {
-        throw new APIError({
-          status: 400,
-          message: "Email or password is incorrected.", // For more secure and prevent malicious from knowing which field they input wrong.
-        });
+        return next(
+          new APIError({
+            status: 400,
+            message: "Email or password is incorrected.", // For more secure and prevent malicious from knowing which field they input wrong.
+          })
+        );
       } else if (user && user.activateAccount === false) {
         return next(
           APIError({
@@ -176,7 +178,7 @@ const authService = {
           audience: process.env.GOOGLE_CLIENT_ID,
         })
         .then(async (response) => {
-          const { email_verified, given_name, family_name, email, picture } =
+          const { email_verified, given_name, family_name, email } =
             response.payload;
           if (email_verified) {
             const user = await User.findOne({ email });
@@ -186,7 +188,6 @@ const authService = {
             const newUser = new User({
               firstName: given_name,
               lastName: family_name,
-              profilePicture: picture,
               email,
               active: true,
               signupMethod: "google",

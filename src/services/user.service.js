@@ -6,9 +6,18 @@ import { fileURLToPath } from "url";
 import Session from "../models/session.model.js";
 import APIFeatures from "../utils/APIFeatures.js";
 import utils from "../utils/utils.js";
+import bcrypt from "bcryptjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const filteredObj = (data, ...allowedFields) => {
+  const newData = {};
+  Object.keys(data).forEach((el) => {
+    if (allowedFields.includes(el)) newData[el] = data[el];
+  });
+  return newData;
+};
 
 const userService = {
   async getAll(query) {
@@ -31,6 +40,16 @@ const userService = {
     users.metadata = utils.getPaginateMetadata(users.metadata, query);
     return users;
   },
+
+  async createOne(data) {
+    const { password } = data;
+    const user = await User.create({
+      ...data,
+      password: await bcrypt.hash(password, 12),
+    });
+    return user;
+  },
+
   getOne: {
     async verifyUser(next, userId) {
       const user = await User.findById(userId).populate({ path: "sessions" });
@@ -38,25 +57,72 @@ const userService = {
         return next(
           new APIError({
             status: 404,
-            message: "User not found!",
+            message: "No user found with that ID!",
           })
         );
       }
       return user;
     },
   },
-  updateName: {
-    async verifyUserAndUpdate(req, next, data) {
-      const { firstName, lastName } = data;
-      const user = await User.findByIdAndUpdate(
-        req.user._id,
-        { firstName, lastName },
-        { new: true }
-      );
+
+  updateOne: {
+    async verifyAndUpdateUser(next, userId, data) {
+      const user = await User.findByIdAndUpdate(userId, data, {
+        new: true,
+        runValidators: true,
+      });
       if (!user) {
-        return next(new APIError({ status: 404, message: "User not found." }));
+        return next({
+          status: 404,
+          message: "No user found with that ID!",
+        });
       }
       return user;
+    },
+  },
+
+  deleteOne: {
+    async verifyUserAndDelete(next, userId) {
+      const user = await User.findByIdAndDelete(userId);
+      if (!user) {
+        return next(
+          new APIError({
+            status: 404,
+            message: "No user found with that ID.",
+          })
+        );
+      }
+    },
+  },
+
+  updateMe: {
+    async verifyData(next, data) {
+      if (data?.password || data?.email) {
+        return next(
+          new APIError({
+            status: 400,
+            message: "This route is not for update password or email.",
+          })
+        );
+      }
+      const filteredData = filteredObj(
+        data,
+        "firstName",
+        "lastName",
+        "phoneNumber",
+        "storeName",
+        "storeLocation",
+        "dateOfBirth"
+      );
+      return filteredData;
+    },
+
+    async update(user, filteredData) {
+      const updatedUser = await User.findByIdAndUpdate(user._id, filteredData, {
+        new: true,
+        runValidators: true,
+      });
+      return updatedUser;
     },
   },
 

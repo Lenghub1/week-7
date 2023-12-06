@@ -13,6 +13,11 @@ const sellerSchema = User.discriminator(
       type: Date,
       required: true,
     },
+    gender: {
+      type: String,
+      enum: ["male", "female", "hide"],
+      default: "hide",
+    },
     storeName: {
       type: String,
       required: true,

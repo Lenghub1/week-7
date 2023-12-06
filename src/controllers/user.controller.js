@@ -17,6 +17,18 @@ const userController = {
     });
   }),
 
+  // Create one user
+  // 1. Get user data
+  // 2. Create new user
+  createOneUser: catchAsync(async (req, res, next) => {
+    const data = req.body;
+    const user = await userService.createOne(data);
+    return res.status(201).json({
+      message: "New user created.",
+      user,
+    });
+  }),
+
   // Get one user
   // 1. Get user id from params
   // 2. Verify a user
@@ -26,7 +38,50 @@ const userController = {
     const user = await userService.getOne.verifyUser(next, userId);
     return res.status(200).json({
       message: "success!",
-      data: user,
+      user,
+    });
+  }),
+
+  // Update one user
+  // 1. Get user id from params
+  // 2. Verify and update user
+  // 3. Return result
+  updateOneUser: catchAsync(async (req, res, next) => {
+    const { userId } = req.params;
+    const data = req.body;
+    const user = await userService.updateOne.verifyAndUpdateUser(
+      next,
+      userId,
+      data
+    );
+    return res.status(200).json({
+      message: "User updated",
+      user,
+    });
+  }),
+
+  // Delete one user
+  // 1. Get user id from params
+  // 2. Veriy user and delete
+  // 3. Return 204 (No content)
+  deleteOneUser: catchAsync(async (req, res, next) => {
+    const { userId } = req.params;
+    await userService.deleteOne.verifyUserAndDelete(next, userId);
+    return res.status(204).send();
+  }),
+
+  // Update me
+  // 1. Get user data
+  // 2. Filter data (only required fields can be update here)
+  // 3. Start update the data
+  updateMe: catchAsync(async (req, res, next) => {
+    const data = req.body;
+    const { user } = req;
+    const filteredData = await userService.updateMe.verifyData(next, data);
+    const updatedUser = await userService.updateMe.update(user, filteredData);
+    return res.status(200).json({
+      message: "Your profile information successfullay updated.",
+      user: updatedUser,
     });
   }),
 
@@ -43,9 +98,7 @@ const userController = {
     );
     return res.status(200).json({
       message: "Name successfully changed!",
-      data: {
-        user,
-      },
+      user,
     });
   }),
 
