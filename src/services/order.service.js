@@ -29,12 +29,69 @@ const orderService = {
     return order;
   },
   async updateOrder(orderId, orderBody) {
-    const order = await Order.findByIdAndUpdate(orderId, orderBody);
+    const order = await Order.findByIdAndUpdate(orderId, orderBody, {
+      new: true,
+    });
     if (!order) {
       throw new APIError({ status: 404, message: "Order not found." });
     }
+
+    const status = order.shipping[0].status;
+    const user = await User.findById(order.userId);
+
+    let emailSubject = "";
+    let emailBody = "";
+
+    switch (status) {
+      case "approved":
+        emailSubject = "Order Approved";
+        emailBody = "Your Order has been approved by the seller.";
+        break;
+      case "shipped":
+        emailSubject = "Order Shipped";
+        emailBody = "Your Order has been shipped.";
+        break;
+      case "cancelled":
+        emailSubject = "Order Cancelled";
+        emailBody = "Your Order has been cancelled.";
+        break;
+      case "delivered":
+        emailSubject = "Order Delivered";
+        emailBody = "Your Order has been delivered.";
+        break;
+      case "refunded":
+        emailSubject = "Order Refunded";
+        emailBody = "Your Order has been refunded.";
+        break;
+      default:
+        // Handle any other status if needed
+        break;
+    }
+
+    const mailOptions = {
+      from: process.env.EMAIL_FROM,
+      to: user.email,
+      subject: emailSubject,
+      html: emailBody,
+    };
+
+    if (
+      status === "approved" ||
+      status === "shipped" ||
+      status === "cancelled" ||
+      status === "delivered" ||
+      status === "refunded"
+    ) {
+      const emailSent = await sendEmailWithNodemailer(mailOptions);
+
+      if (!emailSent) {
+        throw new APIError({ status: 500, message: "Failed to send email." });
+      }
+    }
+
     return order;
   },
+
   async deleteOrder(orderId) {
     const order = await Order.findByIdAndDelete(orderId);
     if (!order) {
