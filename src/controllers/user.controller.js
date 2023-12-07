@@ -85,23 +85,6 @@ const userController = {
     });
   }),
 
-  // Update first or last names
-  // 1. Get user data
-  // 2. Verify with db
-  // 3. Update the name
-  updateName: catchAsync(async (req, res, next) => {
-    const data = req.body;
-    const user = await userService.updateName.verifyUserAndUpdate(
-      req,
-      next,
-      data
-    );
-    return res.status(200).json({
-      message: "Name successfully changed!",
-      user,
-    });
-  }),
-
   // Confirm email before update
   // 1. Get current email and new email
   // 2. Get current user

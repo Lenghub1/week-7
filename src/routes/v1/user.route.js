@@ -17,10 +17,6 @@ router.use(isAuth);
 router.route("/update/me").patch(controller.updateMe);
 
 router
-  .route("/name")
-  .patch(createNameValidator, runValidation, controller.updateName);
-
-router
   .route("/update/password")
   .patch(
     createPasswordValidator,
