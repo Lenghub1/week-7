@@ -5,64 +5,101 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Order Confirmation</title>
-  </head>
+    <style>
+      body {
+        font-family: "Arial", sans-serif;
+        background-color: #e8f4e5; /* Light green background */
+      }
 
-  <body style="font-family: Arial, sans-serif">
-    <div
-      style="
+      .container {
         max-width: 600px;
         margin: 0 auto;
         padding: 20px;
         border: 1px solid #ddd;
         border-radius: 10px;
-      "
-    >
-      <h2 style="text-align: center; color: #333">Order Confirmation</h2>
+        background-color: #fff; /* White container background */
+      }
+
+      h2 {
+        text-align: center;
+        color: #3d7042; /* Dark green heading */
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+
+      th,
+      td {
+        padding: 10px;
+        border: 1px solid #ddd;
+      }
+
+      th {
+        background-color: #aed581; /* Light green table header background */
+      }
+
+      tr:nth-child(even) {
+        background-color: #f2f2f2;
+      }
+
+      strong {
+        color: #3d7042; /* Dark green strong text */
+      }
+
+      .footer-link {
+        text-align: center;
+        margin-top: 20px;
+      }
+
+      .footer-link a {
+        text-decoration: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <h2>Order Confirmation</h2>
 
       <p>Dear valued customer,</p>
 
       <p>
-        Thank you for your purchase. We are pleased to confirm that we have
-        received your order. Below are the details of your purchase:
+        Thank you for your purchase item in our Rukhak website. We are pleased
+        to confirm that we have received your order. Below are the details of
+        your purchase:
       </p>
 
       <!-- Order Details Table -->
-      <table style="width: 100%; border-collapse: collapse; margin-top: 20px">
-        <tr style="background-color: #f2f2f2">
-          <th style="padding: 10px; text-align: left; border: 1px solid #ddd">
-            Item
-          </th>
-          <th style="padding: 10px; text-align: left; border: 1px solid #ddd">
-            Quantity
-          </th>
-          <th style="padding: 10px; text-align: left; border: 1px solid #ddd">
-            Unit Price
-          </th>
-          <th style="padding: 10px; text-align: left; border: 1px solid #ddd">
-            Total Price
-          </th>
+      <table>
+        <tr>
+          <th>Item</th>
+          <th>Quantity</th>
+          <th>Unit Price</th>
+          <th>Total Price</th>
         </tr>
         <!-- Iterate over each item in the order -->
         ${cartItemsWithDetails}
-        <tr style="background-color: #f2f2f2">
-          <td
-            colspan="3"
-            style="padding: 10px; text-align: right; border: 1px solid #ddd"
-          >
+        <tr>
+          <td colspan="3" style="text-align: right">
             <strong>Total</strong>
           </td>
-          <td style="padding: 10px; border: 1px solid #ddd">
+          <td>
             <strong>$${totalPrice}</strong>
           </td>
         </tr>
       </table>
 
       <p>
-        Your order has been successfully placed. We will notify you once your
-        items have been shipped.
+        Your order has been successfully placed. We will notify you once ours seller approve.
       </p>
 
-      <p>Thank you for choosing us!</p>
+      <p class="footer-link">
+        Thank you for choosing us! Visit us at 🌱
+        <a href="https://www.rukhak.com" target="_blank">Rukhak.com</a>.
+      </p>
     </div>
   </body>
 </html>

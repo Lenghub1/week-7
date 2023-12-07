@@ -28,6 +28,7 @@ const orderService = {
     }
     return order;
   },
+
   async updateOrder(orderId, orderBody) {
     const order = await Order.findByIdAndUpdate(orderId, orderBody, {
       new: true,
@@ -39,14 +40,31 @@ const orderService = {
     const status = order.shipping[0].status;
     const user = await User.findById(order.userId);
 
+    const emailApprove = await fs.promises.readFile(
+      path.join(__dirname, "..", "emails", "orderApproved.html"),
+      "utf-8"
+    );
+    const emailShip = await fs.promises.readFile(
+      path.join(__dirname, "..", "emails", "orderShipped.html"),
+      "utf-8"
+    );
+    const emailDelivery = await fs.promises.readFile(
+      path.join(__dirname, "..", "emails", "orderDelivered.html"),
+      "utf-8"
+    );
+    const emailRefund = await fs.promises.readFile(
+      path.join(__dirname, "..", "emails", "orderRefunded.html"),
+      "utf-8"
+    );
     let emailSubject = "";
     let emailBody = "";
 
     switch (status) {
       case "approved":
         emailSubject = "Order Approved";
-        emailBody = "Your Order has been approved by the seller.";
+        emailBody = emailApprove;
         break;
+
       case "shipped":
         emailSubject = "Order Shipped";
         emailBody = "Your Order has been shipped.";
@@ -128,9 +146,14 @@ const orderService = {
     const entityId = new mongoose.Types.ObjectId();
 
     const user = await User.findById(orderBody.userId);
-
     if (!user) {
       throw new APIError({ status: 404, message: "User not found." });
+    }
+
+    const seller = await User.findById(sellerId);
+
+    if (!seller) {
+      throw new APIError({ status: 404, message: "Seller not found." });
     }
 
     const emailTemplate = await fs.promises.readFile(
@@ -152,6 +175,13 @@ const orderService = {
         .replace("${totalPrice}", totalPrice.toFixed(2)),
     };
 
+    const mailOptionSeller = {
+      from: process.env.EMAIL_FROM,
+      to: seller.email,
+      subject: "Order Confirmation",
+      html: "Your product has been ordered, please confirm",
+    };
+
     const notification = await Notification.insertNotification(
       sellerId,
       admin,
@@ -160,6 +190,7 @@ const orderService = {
       "Product order",
       entityId
     );
+
     const order = await Order.create(orderBody);
 
     if (!order) {
@@ -169,9 +200,19 @@ const orderService = {
     // Check if the order was successfully created before sending the email
     if (order) {
       const emailSent = await sendEmailWithNodemailer(mailOptions);
+      const emailSend1 = await sendEmailWithNodemailer(mailOptionSeller);
 
       if (!emailSent) {
-        throw new APIError({ status: 500, message: "Failed to send email." });
+        throw new APIError({
+          status: 500,
+          message: "Failed to send email to user.",
+        });
+      }
+      if (!emailSend1) {
+        throw new APIError({
+          status: 500,
+          message: "Failed to send email to seller.",
+        });
       }
     }
 
