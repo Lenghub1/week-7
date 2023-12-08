@@ -5,14 +5,14 @@ import { createEmailValidator } from "../../validators/email.validator.js";
 import { createPasswordValidator } from "../../validators/password.validator.js";
 import { runValidation } from "../../validators/index.js";
 import controller from "../../controllers/auth.controller.js";
-import handleSignIn from "../../middlewares/handleSignIn.js";
-import isAuth from "../../middlewares/isAuth.js";
-import verifyRoles from "../../middlewares/verifyRoles.js";
-import isRecentlySignup from "../../middlewares/isRecentlySignup.js";
-import isRecentlyForgotPwd from "../../middlewares/isRecentlyForgotPwd.js";
-import is2FA from "../../middlewares/is2FA.js";
-import verifyOTPCode from "../../middlewares/verifyOTPCode.js";
-import isRecently2FA from "../../middlewares/isRecently2FA.js";
+import handleSignIn from "../../middlewares/authMiddlewares/handleSignIn.js";
+import isAuth from "../../middlewares/authMiddlewares/isAuth.js";
+import verifyRoles from "../../middlewares/authMiddlewares/verifyRoles.js";
+import isRecentlySignup from "../../middlewares/authMiddlewares/isRecentlySignup.js";
+import isRecentlyForgotPwd from "../../middlewares/authMiddlewares/isRecentlyForgotPwd.js";
+import is2FA from "../../middlewares/authMiddlewares/is2FA.js";
+import verifyOTPCode from "../../middlewares/authMiddlewares/verifyOTPCode.js";
+import isRecently2FA from "../../middlewares/authMiddlewares/isRecently2FA.js";
 
 const router = express.Router();
 

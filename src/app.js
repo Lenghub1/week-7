@@ -10,7 +10,6 @@ import useragent from "express-useragent";
 dotenv.config();
 
 const app = express();
-
 const corsOptions = {
   origin: process.env.CLIENT_URL,
   methods: "GET, POST, PUT, PATCH, DELETE, HEAD",

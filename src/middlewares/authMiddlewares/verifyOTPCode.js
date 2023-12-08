@@ -1,6 +1,6 @@
-import User from "../models/user.model.js";
-import APIError from "../utils/APIError.js";
-import catchAsync from "../utils/catchAsync.js";
+import User from "../../models/user.model.js";
+import APIError from "../../utils/APIError.js";
+import catchAsync from "../../utils/catchAsync.js";
 import bcrypt from "bcryptjs";
 
 const verifyOTPCode = catchAsync(async (req, res, next) => {

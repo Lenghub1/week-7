@@ -1,8 +1,8 @@
-import catchAsync from "../utils/catchAsync.js";
-import APIError from "../utils/APIError.js";
+import catchAsync from "../../utils/catchAsync.js";
+import APIError from "../../utils/APIError.js";
 import jwt from "jsonwebtoken";
-import User from "../models/user.model.js";
-import Session from "../models/session.model.js";
+import User from "../../models/user.model.js";
+import Session from "../../models/session.model.js";
 
 // Verify user login
 // 1. Receive header request.

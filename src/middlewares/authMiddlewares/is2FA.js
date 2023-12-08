@@ -1,8 +1,8 @@
-import User from "../models/user.model.js";
-import APIError from "../utils/APIError.js";
-import catchAsync from "../utils/catchAsync.js";
-import sendEmailWithNodemailer from "../utils/email.js";
-import authService from "../services/auth.service.js";
+import User from "../../models/user.model.js";
+import APIError from "../../utils/APIError.js";
+import catchAsync from "../../utils/catchAsync.js";
+import sendEmailWithNodemailer from "../../utils/email.js";
+import authService from "../../services/auth.service.js";
 
 const is2FA = catchAsync(async (req, res, next) => {
   const user = await User.findById(req.user._id);

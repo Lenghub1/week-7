@@ -77,6 +77,8 @@ const userController = {
   updateMe: catchAsync(async (req, res, next) => {
     const data = req.body;
     const { user } = req;
+    console.log(req.files);
+    console.log(req.file);
     const filteredData = await userService.updateMe.verifyData(next, data);
     const updatedUser = await userService.updateMe.update(user, filteredData);
     return res.status(200).json({

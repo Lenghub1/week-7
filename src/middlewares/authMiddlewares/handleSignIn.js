@@ -1,9 +1,9 @@
-import catchAsync from "../utils/catchAsync.js";
-import Session from "../models/session.model.js";
-import authService from "../services/auth.service.js";
+import catchAsync from "../../utils/catchAsync.js";
+import Session from "../../models/session.model.js";
+import authService from "../../services/auth.service.js";
 import axios from "axios";
 import dotenv from "dotenv";
-import authController from "../controllers/auth.controller.js";
+import authController from "../../controllers/auth.controller.js";
 
 dotenv.config();
 
