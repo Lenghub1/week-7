@@ -8,7 +8,7 @@
     <style>
       body {
         font-family: "Arial", sans-serif;
-        background-color: #e8f4e5; /* Light green background */
+        background-color: #e8f4e5;
       }
 
       .container {
@@ -17,12 +17,12 @@
         padding: 20px;
         border: 1px solid #ddd;
         border-radius: 10px;
-        background-color: #fff; /* White container background */
+        background-color: #fff;
       }
 
       h2 {
         text-align: center;
-        color: #3d7042; /* Dark green heading */
+        color: #3d7042;
       }
 
       table {
@@ -38,7 +38,7 @@
       }
 
       th {
-        background-color: #aed581; /* Light green table header background */
+        background-color: #aed581;
       }
 
       tr:nth-child(even) {
@@ -46,7 +46,7 @@
       }
 
       strong {
-        color: #3d7042; /* Dark green strong text */
+        color: #3d7042;
       }
 
       .footer-link {
@@ -56,6 +56,28 @@
 
       .footer-link a {
         text-decoration: none;
+      }
+      .footer {
+        margin-top: 20px;
+        text-align: center;
+        color: #777;
+      }
+      @media (max-width: 600px) {
+        .container {
+          width: 100%;
+          border-radius: 0;
+          margin: 0;
+        }
+
+        table {
+          margin-top: 10px;
+        }
+
+        .a-link a {
+          display: block;
+          width: 100%;
+          box-sizing: border-box;
+        }
       }
     </style>
   </head>
@@ -72,15 +94,14 @@
         your purchase:
       </p>
 
-      <!-- Order Details Table -->
       <table>
         <tr>
           <th>Item</th>
           <th>Quantity</th>
           <th>Unit Price</th>
           <th>Total Price</th>
+          <th>Picture</th>
         </tr>
-        <!-- Iterate over each item in the order -->
         ${cartItemsWithDetails}
         <tr>
           <td colspan="3" style="text-align: right">
@@ -93,13 +114,15 @@
       </table>
 
       <p>
-        Your order has been successfully placed. We will notify you once ours seller approve.
+        Your order has been successfully placed. We will notify you once ours
+        seller approve.
       </p>
-
+      <img src="${url}" alt="" />
       <p class="footer-link">
         Thank you for choosing us! Visit us at 🌱
         <a href="https://www.rukhak.com" target="_blank">Rukhak.com</a>.
       </p>
+      <p class="footer">&copy; 2023 RUKHAK TEAM. All rights reserved.</p>
     </div>
   </body>
 </html>
