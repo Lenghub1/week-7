@@ -1,7 +1,7 @@
 import APIError from "../../utils/APIError.js";
 
 const verifyMe = async (req, res, next) => {
-  if (req.user._id !== req.params.userId) {
+  if (req.user._id.toString() !== req.params.userId) {
     return next(
       new APIError({
         status: 400,

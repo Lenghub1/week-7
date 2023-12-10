@@ -9,16 +9,19 @@ import { createEmailValidator } from "../../validators/email.validator.js";
 import verifyRoles from "../../middlewares/authMiddlewares/verifyRoles.js";
 import { createSignupValidator } from "../../validators/signup.validator.js";
 import verifyMe from "../../middlewares/userMiddlewares/verifyMe.js";
+import { uploadProductMedia } from "../../middlewares/uploadFiles.js";
 
 const router = express.Router();
 
-// router.use(isAuth);
+router.use(isAuth);
 
 router
   .route("/me/:userId")
   .get(verifyMe, controller.getOneUser)
-  .patch(controller.updateMe)
+  .patch(verifyMe, controller.updateMe)
   .delete(verifyMe, controller.deleteAccount);
+
+router.route("/upload/image").post(uploadProductMedia, controller.uploadImage);
 
 router
   .route("/update/password")

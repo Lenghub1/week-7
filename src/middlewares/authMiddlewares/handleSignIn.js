@@ -77,10 +77,6 @@ const handleSignIn = catchAsync(async (req, res, next) => {
     user: {
       id: req.user.id,
       role: req.user.role,
-      email: req.user.email,
-      firstName: req.user.firstName,
-      lastName: req.user.lastName,
-      signupMethod: req.user.signupMethod,
       accessToken,
     },
   });

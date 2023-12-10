@@ -7,6 +7,10 @@ import Session from "../models/session.model.js";
 import APIFeatures from "../utils/APIFeatures.js";
 import utils from "../utils/utils.js";
 import bcrypt from "bcryptjs";
+import { uploadFile, getFileSignedUrl, deleteFile } from "../config/s3.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -52,7 +56,9 @@ const userService = {
 
   getOne: {
     async verifyUser(next, userId) {
-      const user = await User.findById(userId).populate({ path: "sessions" });
+      const user = await User.findById(userId)
+        .populate({ path: "sessions" })
+        .select("-password -__v");
       if (!user) {
         return next(
           new APIError({
@@ -123,6 +129,53 @@ const userService = {
         runValidators: true,
       });
       return updatedUser;
+    },
+  },
+
+  uploadImage: {
+    verifyFile(req, next) {
+      const file = req.files;
+      if (!file) {
+        return next(
+          new APIError({
+            status: 400,
+            message: "Image is required!",
+          })
+        );
+      }
+      return file;
+    },
+
+    async createImage(file, user) {
+      const profileImage = file.profilePicture;
+      if (user.profilePicture) {
+        const fileName = user.profilePicture;
+        await deleteFile(fileName);
+      }
+      // prepare file names
+      const imageName = utils.generateFileName(
+        "profilePictures",
+        profileImage[0].originalname,
+        profileImage[0].mimetype
+      );
+      // upload all files to S3
+      await uploadFile(
+        profileImage[0].buffer,
+        imageName,
+        profileImage[0].mimetype
+      );
+
+      user.profilePicture = imageName;
+      await user.save();
+      return imageName;
+    },
+
+    async createURL(imageName) {
+      const imageURL = await getFileSignedUrl(
+        imageName,
+        process.env.USER_IMAGE_URL_EXPIRES
+      );
+      return imageURL;
     },
   },
 

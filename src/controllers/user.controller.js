@@ -2,6 +2,7 @@ import catchAsync from "../utils/catchAsync.js";
 import userService from "../services/user.service.js";
 import sendEmailWithNodemailer from "../utils/email.js";
 import authController from "./auth.controller.js";
+import { getFileSignedUrl } from "../config/s3.js";
 
 const userController = {
   // Get all users
@@ -36,9 +37,17 @@ const userController = {
   getOneUser: catchAsync(async (req, res, next) => {
     const { userId } = req.params;
     const user = await userService.getOne.verifyUser(next, userId);
+    if (user.profilePicture) {
+      const imageURL = await getFileSignedUrl(user.profilePicture);
+      user.profilePicture = undefined;
+      return res.status(200).json({
+        message: "success!",
+        user: { ...user, imageURL },
+      });
+    }
     return res.status(200).json({
       message: "success!",
-      user,
+      user: { ...user },
     });
   }),
 
@@ -57,6 +66,17 @@ const userController = {
     return res.status(200).json({
       message: "User updated",
       user,
+    });
+  }),
+
+  uploadImage: catchAsync(async (req, res, next) => {
+    const { user } = req;
+    const file = userService.uploadImage.verifyFile(req, next);
+    const imageName = await userService.uploadImage.createImage(file, user);
+    const imageURL = await userService.uploadImage.createURL(imageName);
+    return res.status(201).json({
+      message: "profile image successfully uploaded",
+      imageURL,
     });
   }),
 

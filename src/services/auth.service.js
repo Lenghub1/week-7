@@ -263,6 +263,20 @@ const authService = {
         }
       );
     },
+
+    async findUser(session) {
+      const userId = session.userId;
+      const user = await User.findById(userId);
+      if (!user) {
+        return next(
+          new APIError({
+            status: 404,
+            message: "User not found.",
+          })
+        );
+      }
+      return user;
+    },
   },
   signupSeller: {
     async verifyUserById(req, next) {

@@ -117,8 +117,15 @@ const authController = {
       session
     );
     const { accessToken, refreshToken } = data;
+    const user = await authService.refreshToken.findUser(session);
     authController.signCookie(res, refreshToken);
-    res.json({ accessToken });
+    res.status(200).json({
+      user: {
+        id: user._id,
+        role: user.role,
+        accessToken,
+      },
+    });
   }),
 
   // Forgot Password
