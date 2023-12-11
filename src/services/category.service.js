@@ -1,6 +1,5 @@
-import Category from "@/models/category.model";
-import APIError from "@/utils/APIError";
-// import APIFeatures from "@/utils/APIFeatures";
+import Category from "@/models/category.model.js";
+import APIError from "@/utils/APIError.js";
 
 const categoryService = {
   async getAllCategory() {

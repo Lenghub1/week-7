@@ -6,11 +6,10 @@ import {
   updateProductValidator,
 } from "@/validators/product.validator.js";
 import { runValidation } from "@/validators/index.js";
-import { runValidation } from "../../validators/index.js";
 import { uploadProductMedia } from "../../middlewares/uploadFiles.js";
-import isAuth from "../../middlewares/isAuth.js";
-import verifyRoles from "../../middlewares/verifyRoles.js";
-import verifySellerStatus from "../../middlewares/verifySellerStatus.js";
+import isAuth from "@/middlewares/authMiddlewares/isAuth.js";
+import verifyRoles from "@/middlewares/authMiddlewares/verifyRoles.js";
+import verifySellerStatus from "@/middlewares/authMiddlewares/verifySellerStatus.js";
 
 const router = express.Router();
 
