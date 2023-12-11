@@ -69,6 +69,24 @@ const userService = {
       }
       return user;
     },
+
+    async getImageURL(next, user) {
+      let imageURL;
+      if (user.profilePicture) {
+        try {
+          imageURL = await getFileSignedUrl(
+            user.profilePicture,
+            process.env.USER_IMAGE_URL_EXPIRES
+          );
+          user.profilePicture = undefined;
+          return imageURL;
+        } catch (err) {
+          // prevent S3 bucket error sign URL for image, so client can display default image
+          imageURL = "";
+          return imageURL;
+        }
+      }
+    },
   },
 
   updateOne: {
@@ -159,23 +177,24 @@ const userService = {
         profileImage[0].mimetype
       );
       // upload all files to S3
-      await uploadFile(
-        profileImage[0].buffer,
-        imageName,
-        profileImage[0].mimetype
-      );
+      try {
+        await uploadFile(
+          profileImage[0].buffer,
+          imageName,
+          profileImage[0].mimetype
+        );
+      } catch (err) {
+        return next(
+          new APIError({
+            status: "400",
+            message: "Upload image fail. Please try again later.",
+          })
+        );
+      }
 
       user.profilePicture = imageName;
       await user.save();
       return imageName;
-    },
-
-    async createURL(imageName) {
-      const imageURL = await getFileSignedUrl(
-        imageName,
-        process.env.USER_IMAGE_URL_EXPIRES
-      );
-      return imageURL;
     },
   },
 

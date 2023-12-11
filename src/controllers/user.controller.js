@@ -37,9 +37,8 @@ const userController = {
   getOneUser: catchAsync(async (req, res, next) => {
     const { userId } = req.params;
     const user = await userService.getOne.verifyUser(next, userId);
-    if (user.profilePicture) {
-      const imageURL = await getFileSignedUrl(user.profilePicture);
-      user.profilePicture = undefined;
+    const imageURL = await userService.getOne.getImageURL(next, user);
+    if (imageURL) {
       return res.status(200).json({
         message: "success!",
         user: { ...user, imageURL },
@@ -72,11 +71,9 @@ const userController = {
   uploadImage: catchAsync(async (req, res, next) => {
     const { user } = req;
     const file = userService.uploadImage.verifyFile(req, next);
-    const imageName = await userService.uploadImage.createImage(file, user);
-    const imageURL = await userService.uploadImage.createURL(imageName);
+    await userService.uploadImage.createImage(file, user);
     return res.status(201).json({
       message: "profile image successfully uploaded",
-      imageURL,
     });
   }),
 
@@ -97,8 +94,6 @@ const userController = {
   updateMe: catchAsync(async (req, res, next) => {
     const data = req.body;
     const { user } = req;
-    console.log(req.files);
-    console.log(req.file);
     const filteredData = await userService.updateMe.verifyData(next, data);
     const updatedUser = await userService.updateMe.update(user, filteredData);
     return res.status(200).json({
