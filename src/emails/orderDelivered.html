@@ -79,8 +79,8 @@
 
       <p>
         Thanks for shopping with us ! We are glad to inform you that order
-        #${orderId} has been fully delivered with details as below. We hope you
-        enjoy your purchase on
+        <strong>#${orderId}</strong> has been fully delivered with details as
+        below. We hope you enjoy your purchase on
         <a href="https://www.rukhak.com"> Rukhak.com</a>!
       </p>
       <h4>What's Next?</h4>
@@ -98,12 +98,13 @@
       <h4>Delivery Details</h4>
 
       <p>Name: ${user}</p>
-      <p>Address:</p>
+      <p>Address: ${adress}</p>
       <p>Email: ${userEmail}</p>
+      <p>PhoneNumber: ${phoneNumber}</p>
     </div>
 
     <div class="container">
-      <p>Product Details</p>
+      <p>Product Order Details</p>
       ${cartItemsWithDetails}
     </div>
 
@@ -113,7 +114,7 @@
       <p>Shipping fee: $0</p>
       <p>Total (Vat included): $${totall}</p>
       <hr />
-      <p>Delivery Type:</p>
+      <p>Delivery Type: STANDARD</p>
       <p>Payment Method: ${payment}</p>
     </div>
 
@@ -123,7 +124,10 @@
         Please keep your invoice and orginal packaging in case you need to
         return replace, or clain your product's warranty,
       </p>
-      <p>Return are easy! Check <a href=""></a>Return Type and How to Return</p>
+      <p>
+        Return are easy! Check
+        <a href="https://www.rukhak.com">Return Type and How to Return !</a>
+      </p>
     </div>
 
     <div class="container">

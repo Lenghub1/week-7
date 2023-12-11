@@ -14,6 +14,7 @@ import {
 import mongoose from "mongoose";
 import { getFileSignedUrl } from "../config/s3.js";
 import { url } from "inspector";
+import Address from "@/models/address.model.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -58,14 +59,13 @@ const orderService = {
       })
     );
 
-    console.log(order);
-
     const cartItemsHTML = cartItemsWithDetails
       .map(generateCartItemHTMLRow)
       .join("");
 
     const status = order.shipping[0].status;
     const user = await User.findById(order.userId);
+    const address = await Address.findById(order.shipping[0].address);
 
     const emailApprove = await fs.promises.readFile(
       path.join(__dirname, "..", "emails", "orderApproved.html"),
@@ -120,7 +120,11 @@ const orderService = {
           .replace("${cartItemsWithDetails}", `<ul>${cartItemsHTML}</ul>`)
           .replace("${total}", order.totalPrice)
           .replace("${totall}", order.totalPrice)
-          .replace("${payment}", order.paymentMethod);
+          .replace("${payment}", order.paymentMethod)
+          .replace("${orderId}", order._id)
+          .replace("${adress}", address.addressLine)
+          .replace("${phoneNumber}", address.phoneNumber);
+
         break;
       case "refunded":
         emailSubject = "Order Refunded";
