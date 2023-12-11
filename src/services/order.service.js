@@ -62,11 +62,12 @@ const orderService = {
     const cartItemsHTML = cartItemsWithDetails
       .map(generateCartItemHTMLRow)
       .join("");
-
-    const status = order.shipping[0].status;
+    ("");
+   
+    const status = order.shipping.status;
     const user = await User.findById(order.userId);
-    const address = await Address.findById(order.shipping[0].address);
-
+    const address = await Address.findById(order.shipping.address);
+    console.log(status);
     const emailApprove = await fs.promises.readFile(
       path.join(__dirname, "..", "emails", "orderApproved.html"),
       "utf-8"
