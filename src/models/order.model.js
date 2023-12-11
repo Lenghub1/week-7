@@ -53,27 +53,25 @@ const orderSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    shipping: [
-      {
-        address: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Address",
-          required: true,
-        },
-        status: {
-          type: String,
-          enum: [
-            "pending",
-            "approved",
-            "shipped",
-            "cancelled",
-            "delivered",
-            "refunded",
-          ],
-          default: "pending",
-        },
+    shipping: {
+      address: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Address",
+        required: true,
       },
-    ],
+      status: {
+        type: String,
+        enum: [
+          "pending",
+          "approved",
+          "shipped",
+          "cancelled",
+          "delivered",
+          "refunded",
+        ],
+        default: "pending",
+      },
+    },
   },
   {
     timestamps: true,
