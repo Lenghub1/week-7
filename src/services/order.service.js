@@ -1,6 +1,6 @@
-import Order from "../models/order.model.js";
-import Product from "../models/product.model.js";
-import APIError from "../utils/APIError.js";
+import Order from "@/models/order.model.js";
+import Product from "@/models/product.model.js";
+import APIError from "@/utils/APIError.js";
 import sendEmailWithNodemailer from "@/utils/email.js";
 import fs from "fs";
 import path from "path";
@@ -13,7 +13,6 @@ import {
 } from "@/utils/emailTemplate.js";
 import mongoose from "mongoose";
 import { getFileSignedUrl } from "../config/s3.js";
-import { url } from "inspector";
 import Address from "@/models/address.model.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -63,7 +62,7 @@ const orderService = {
       .map(generateCartItemHTMLRow)
       .join("");
     ("");
-   
+
     const status = order.shipping.status;
     const user = await User.findById(order.userId);
     const address = await Address.findById(order.shipping.address);

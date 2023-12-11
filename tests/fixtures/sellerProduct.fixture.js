@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import Product from "../../src/models/product.model.js";
+import Product from "@/models/product.model.js";
 
 const productUnits = Product.schema.path("unit").enumValues;
 export const categories = ["waterplant", "landplant", "tools", "fruit"];

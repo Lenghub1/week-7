@@ -1,12 +1,12 @@
 import { setupTestDB } from "../utils/setupTestDB.js";
 import request from "supertest";
-import app from "../../src/app.js";
+import app from "@/app.js";
 import {
   categories,
   insertManyProducts,
 } from "../fixtures/sellerProduct.fixture.js";
 import dotenv from "dotenv";
-import Product from "../../src/models/product.model.js";
+import Product from "@/models/product.model.js";
 
 dotenv.config();
 

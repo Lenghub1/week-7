@@ -1,7 +1,7 @@
-import postController from "../../controllers/post.controller.js";
+import postController from "@/controllers/post.controller.js";
 import express from "express";
-import { runValidation } from "../../validators/index.js";
-import createPostValidator from "../../validators/post.validator.js";
+import { runValidation } from "@/validators/index.js";
+import createPostValidator from "@/validators/post.validator.js";
 import commentRoute from "./comment.route.js";
 
 const route = express.Router();

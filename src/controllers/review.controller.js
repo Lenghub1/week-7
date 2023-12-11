@@ -1,5 +1,5 @@
-import reviewService from "../services/review.service.js";
-import catchAsync from "../utils/catchAsync.js";
+import reviewService from "@/services/review.service.js";
+import catchAsync from "@/utils/catchAsync.js";
 
 const reviewController = {
   createReview: catchAsync(async (req, res) => {

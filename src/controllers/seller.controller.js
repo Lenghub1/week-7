@@ -1,6 +1,6 @@
-import service from "../services/seller.service.js";
-import APIError from "../utils/APIError.js";
-import catchAsync from "../utils/catchAsync.js";
+import service from "@/services/seller.service.js";
+import APIError from "@/utils/APIError.js";
+import catchAsync from "@/utils/catchAsync.js";
 
 const sellerController = {
   createProduct: catchAsync(async (req, res, next) => {

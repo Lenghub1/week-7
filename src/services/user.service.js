@@ -1,13 +1,13 @@
-import User from "../models/user.model.js";
-import APIError from "../utils/APIError.js";
+import User from "@/models/user.model.js";
+import APIError from "@/utils/APIError.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import Session from "../models/session.model.js";
-import APIFeatures from "../utils/APIFeatures.js";
-import utils from "../utils/utils.js";
+import Session from "@/models/session.model.js";
+import APIFeatures from "@/utils/APIFeatures.js";
+import utils from "@/utils/utils.js";
 import bcrypt from "bcryptjs";
-import { uploadFile, getFileSignedUrl, deleteFile } from "../config/s3.js";
+import { uploadFile, getFileSignedUrl, deleteFile } from "@/config/s3.js";
 import dotenv from "dotenv";
 
 dotenv.config();

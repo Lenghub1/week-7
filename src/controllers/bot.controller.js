@@ -1,4 +1,4 @@
-import BotService from "../services/bot.service.js";
+import BotService from "@/services/bot.service.js";
 import dotenv from "dotenv";
 
 dotenv.config();

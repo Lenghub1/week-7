@@ -1,11 +1,11 @@
 import express from "express";
-import controller from "../../controllers/seller.controller.js";
+import controller from "@/controllers/seller.controller.js";
 import {
   createProductValidator,
   sellerProductQueryValidator,
-} from "../../validators/product.validator.js";
-import { runValidation } from "../../validators/index.js";
-import { uploadProductMedia } from "../../middlewares/uploadFiles.js";
+} from "@/validators/product.validator.js";
+import { runValidation } from "@/validators/index.js";
+import { uploadProductMedia } from "@/middlewares/uploadFiles.js";
 
 const router = express.Router();
 

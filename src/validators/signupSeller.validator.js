@@ -1,5 +1,5 @@
 import { check } from "express-validator";
-import User from "../models/user.model";
+import User from "@/models/user.model";
 
 export const createSignupValidator = [
   check("storeName")

@@ -1,6 +1,6 @@
 import { setupTestDB } from "../utils/setupTestDB.js";
 import request from "supertest";
-import app from "../../src/app.js";
+import app from "@/app.js";
 import { base, faker } from "@faker-js/faker";
 
 setupTestDB();

@@ -1,7 +1,7 @@
 import Stripe from "stripe";
 import dotenv from "dotenv";
-import Product from "../models/product.model.js";
-import APIError from "../utils/APIError.js";
+import Product from "@/models/product.model.js";
+import APIError from "@/utils/APIError.js";
 
 dotenv.config();
 
