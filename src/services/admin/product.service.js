@@ -1,12 +1,12 @@
-import Product from "../models/product.model.js";
-import APIError from "../utils/APIError.js";
-import utils from "../utils/utils.js";
-import { uploadFile, deleteFile, getFileSignedUrl } from "../config/s3.js";
-import APIFeatures from "../utils/APIFeatures.js";
-import Seller from "./../models/seller.model.js";
+import Product from "@/models/product.model.js";
+import APIError from "@/utils/APIError.js";
+import utils from "@/utils/utils.js";
+import { uploadFile, deleteFile, getFileSignedUrl } from "@/config/s3.js";
+import APIFeatures from "@/utils/APIFeatures.js";
+
 import mongoose from "mongoose";
 
-const adminService = {
+const productServiceAdmin = {
   async createProduct(imgCover, media, productInput) {
     const allFiles = [];
     try {
@@ -49,8 +49,6 @@ const adminService = {
           mimetype: each.mimetype,
         });
       });
-
-      console.log("all files", allFiles);
 
       await Promise.all(
         allFiles.map(
@@ -119,25 +117,6 @@ const adminService = {
     product.signedImgCover = urls[0];
     product.signedMedia = urls.slice(1);
     return product;
-  },
-
-  async searchSeller(query) {
-    const searchQuery = query;
-    const searchTerms = searchQuery.split(/\s+/).filter(Boolean);
-    const regexPatterns = searchTerms.map((term) => new RegExp(term, "i"));
-
-    const pipeLine = [
-      {
-        $match: {
-          active: true,
-          $and: regexPatterns.map((pattern) => ({
-            storeAndSellerName: { $regex: pattern },
-          })),
-        },
-      },
-    ];
-    const sellers = await Seller.aggregate(pipeLine);
-    return sellers;
   },
 
   async updateProduct({ productInput, newImgCover, newMedia, productId }) {
@@ -258,7 +237,7 @@ const adminService = {
         }
       }
 
-      if (deletedMedia.length > 0) {
+      if (deletedMedia && deletedMedia.length > 0) {
         await Promise.all(
           deletedMedia.map(async (item) => {
             try {
@@ -285,4 +264,4 @@ const adminService = {
   },
 };
 
-export default adminService;
+export default productServiceAdmin;
