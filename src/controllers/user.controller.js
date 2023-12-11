@@ -2,7 +2,6 @@ import catchAsync from "../utils/catchAsync.js";
 import userService from "../services/user.service.js";
 import sendEmailWithNodemailer from "../utils/email.js";
 import authController from "./auth.controller.js";
-import { getFileSignedUrl } from "../config/s3.js";
 
 const userController = {
   // Get all users
