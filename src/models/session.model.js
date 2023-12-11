@@ -23,10 +23,12 @@ const sessionSchema = mongoose.Schema(
     refreshToken: {
       type: String,
       required: true,
+      select: false,
     },
     accessToken: {
       type: String,
       required: true,
+      select: false,
     },
     deviceLocation: {
       type: {

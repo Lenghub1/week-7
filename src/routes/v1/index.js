@@ -11,6 +11,7 @@ import addressRoute from "./address.route.js";
 import orderRoute from "./order.route.js";
 import checkoutRoute from "./checkout.route.js";
 import botRoute from "./bot.route.js";
+import userRoute from "./user.route.js";
 
 const router = express.Router();
 
@@ -62,6 +63,10 @@ const defaultRoutes = [
   {
     path: "/bot",
     route: botRoute,
+  },
+  {
+    path: "/users",
+    route: userRoute,
   },
 ];
 

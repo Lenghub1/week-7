@@ -1,9 +1,8 @@
-import catchAsync from "../utils/catchAsync.js";
-import { promisify } from "util";
-import APIError from "../utils/APIError.js";
+import catchAsync from "../../utils/catchAsync.js";
+import APIError from "../../utils/APIError.js";
 import jwt from "jsonwebtoken";
-import User from "../models/user.model.js";
-import Session from "../models/session.model.js";
+import User from "../../models/user.model.js";
+import Session from "../../models/session.model.js";
 
 // Verify user login
 // 1. Receive header request.
@@ -32,24 +31,23 @@ const isAuth = catchAsync(async (req, res, next) => {
       })
     );
   }
-  const decoded = await promisify(jwt.verify)(
-    token,
-    process.env.ACCESS_TOKEN_SECRET
-  );
 
-  const currentUser = await User.findById(decoded.userId);
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, async (err, decoded) => {
+    if (err) return res.status(403).send(); // invalid token
+    const currentUser = await User.findById(decoded.userId);
 
-  if (!currentUser || currentUser.active === false) {
-    return next(
-      new APIError({
-        status: 401,
-        message: "The user belonging to this token does no longer exist.",
-      })
-    );
-  }
+    if (!currentUser || currentUser.active === false) {
+      return next(
+        new APIError({
+          status: 401,
+          message: "The user belonging to this token does no longer exist.",
+        })
+      );
+    }
 
-  req.user = currentUser;
-  return next();
+    req.user = currentUser;
+    return next();
+  });
 });
 
 export default isAuth;

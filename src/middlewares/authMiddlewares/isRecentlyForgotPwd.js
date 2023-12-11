@@ -1,6 +1,6 @@
-import User from "../models/user.model.js";
-import APIError from "../utils/APIError.js";
-import catchAsync from "../utils/catchAsync.js";
+import User from "../../models/user.model.js";
+import APIError from "../../utils/APIError.js";
+import catchAsync from "../../utils/catchAsync.js";
 
 // Prevent someone accidentally request to resend email
 const isRecentlyForgotPwd = catchAsync(async (req, res, next) => {

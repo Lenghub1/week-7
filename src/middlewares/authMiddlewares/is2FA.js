@@ -1,8 +1,8 @@
-import User from "../models/user.model.js";
-import APIError from "../utils/APIError.js";
-import catchAsync from "../utils/catchAsync.js";
-import sendEmailWithNodemailer from "../utils/email.js";
-import authService from "../services/auth.service.js";
+import User from "../../models/user.model.js";
+import APIError from "../../utils/APIError.js";
+import catchAsync from "../../utils/catchAsync.js";
+import sendEmailWithNodemailer from "../../utils/email.js";
+import authService from "../../services/auth.service.js";
 
 const is2FA = catchAsync(async (req, res, next) => {
   const user = await User.findById(req.user._id);
@@ -24,6 +24,10 @@ const is2FA = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     message: "Please check your email to confirm OTP code.",
+    data: {
+      email: user.email,
+      loginMethod: req.user.loginMethod,
+    },
   });
 });
 
