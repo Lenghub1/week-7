@@ -1,5 +1,5 @@
 import express from "express";
-import commentController from "../../controllers/comment.controller.js";
+import commentController from "@/controllers/comment.controller.js";
 
 const route = express.Router({ mergeParams: true });
 

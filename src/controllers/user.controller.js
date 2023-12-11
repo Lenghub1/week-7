@@ -1,6 +1,6 @@
-import catchAsync from "../utils/catchAsync.js";
-import userService from "../services/user.service.js";
-import sendEmailWithNodemailer from "../utils/email.js";
+import catchAsync from "@/utils/catchAsync.js";
+import userService from "@/services/user.service.js";
+import sendEmailWithNodemailer from "@/utils/email.js";
 import authController from "./auth.controller.js";
 
 const userController = {

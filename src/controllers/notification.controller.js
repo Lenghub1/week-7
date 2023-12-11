@@ -1,6 +1,6 @@
-import catchAsync from "../utils/catchAsync.js";
-import notificationService from "../services/notification.service.js";
-import APIError from "../utils/APIError.js";
+import catchAsync from "@/utils/catchAsync.js";
+import notificationService from "@/services/notification.service.js";
+import APIError from "@/utils/APIError.js";
 
 const notificationController = {
   getNotifications: catchAsync(async (req, res, next) => {

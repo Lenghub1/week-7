@@ -1,5 +1,5 @@
-import Address from "../models/address.model.js";
-import APIError from "../utils/APIError.js";
+import Address from "@/models/address.model.js";
+import APIError from "@/utils/APIError.js";
 
 const addressService = {
   async getAllAddresses() {

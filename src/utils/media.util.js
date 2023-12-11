@@ -1,5 +1,4 @@
 import utils from "./utils.js";
-import APIError from "./APIError.js";
 import { uploadFile, deleteFile, getFileSignedUrl } from "@/config/s3.js";
 
 const MediaUtil = {

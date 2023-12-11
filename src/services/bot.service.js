@@ -1,5 +1,5 @@
 import { SessionsClient } from "@google-cloud/dialogflow";
-import APIError from "../utils/APIError.js";
+import APIError from "@/utils/APIError.js";
 class BotService {
   constructor(projectId, sessionId, languageCode) {
     // Use the GOOGLE_APPLICATION_CREDENTIALS environment variable to authenticate

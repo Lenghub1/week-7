@@ -4,11 +4,11 @@
 
 import { faker } from "@faker-js/faker";
 import mongoose from "mongoose";
-import Product from "../../src/models/product.model.js";
+import Product from "@/models/product.model.js";
 import dotenv from "dotenv";
 import { categories } from "../fixtures/sellerProduct.fixture.js";
-import Category from "../../src/models/category.model.js";
-import Seller from "../../src/models/seller.model.js";
+import Category from "@/models/category.model.js";
+import Seller from "@/models/seller.model.js";
 
 dotenv.config();
 

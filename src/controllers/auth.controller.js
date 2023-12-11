@@ -1,6 +1,6 @@
-import catchAsync from "../utils/catchAsync.js";
-import authService from "../services/auth.service.js";
-import sendEmailWithNodemailer from "../utils/email.js";
+import catchAsync from "@/utils/catchAsync.js";
+import authService from "@/services/auth.service.js";
+import sendEmailWithNodemailer from "@/utils/email.js";
 import { OAuth2Client } from "google-auth-library"; // Follow Google's documentation
 import dotenv from "dotenv";
 

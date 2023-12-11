@@ -1,5 +1,5 @@
 import express from "express";
-import handleTextQuery from "../../controllers/bot.controller.js";
+import handleTextQuery from "@/controllers/bot.controller.js";
 
 const router = express.Router();
 

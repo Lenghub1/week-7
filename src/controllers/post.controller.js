@@ -1,5 +1,5 @@
 import factory from "./factory.js";
-import postService from "../services/post.service.js";
+import postService from "@/services/post.service.js";
 
 const postController = {
   getAllPosts: factory.getAll(postService.getAll),

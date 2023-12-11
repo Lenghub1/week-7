@@ -1,5 +1,5 @@
 import factory from "./factory.js";
-import orderService from "../services/order.service.js";
+import orderService from "@/services/order.service.js";
 
 const orderController = {
   getAllOrder: factory.getAll(orderService.getAllOrders),

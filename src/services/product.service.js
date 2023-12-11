@@ -3,8 +3,8 @@
  * @description This module provides functions to interact with product data in the application. It includes methods for creating, retrieving, updating, and deleting products.
  */
 import Product from "../models/product.model.js";
-import APIError from "../utils/APIError.js";
-import APIFeatures from "../utils/APIFeatures.js";
+import APIError from "@/utils/APIError.js";
+import APIFeatures from "@/utils/APIFeatures.js";
 
 /**
  * @typedef {Object} ProductInput

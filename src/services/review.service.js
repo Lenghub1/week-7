@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
-import Review from "../models/review.model.js";
-import APIError from "../utils/APIError.js";
-import Product from "../models/product.model.js";
+import Review from "@/models/review.model.js";
+import APIError from "@/utils/APIError.js";
+import Product from "@/models/product.model.js";
 
 const reviewService = {
   async createReview(productId, userId, reviewInput) {

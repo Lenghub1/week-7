@@ -1,5 +1,5 @@
 import factory from "./factory.js";
-import addressService from "../services/address.service.js";
+import addressService from "@/services/address.service.js";
 
 const addressController = {
   getAllAddresses: factory.getAll(addressService.getAllAddresses),

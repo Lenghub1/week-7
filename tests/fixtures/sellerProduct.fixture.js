@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import Product from "../../src/models/product.model.js";
+import Product from "@/models/product.model.js";
 
 const productUnits = Product.schema.path("unit").enumValues;
 export const categories = ["waterplant", "landplant", "tools", "fruit"];
@@ -15,7 +15,7 @@ function _chooseRandomPrice(min, max) {
   return randomPrice;
 }
 
-export const insertManyProducts = async (n) => {
+export const insertManyProducts = async (n, sellerId) => {
   const products = [];
   for (let i = 0; i < n; i++) {
     const basePrice = _chooseRandomPrice(1, 100);
@@ -34,6 +34,7 @@ export const insertManyProducts = async (n) => {
         min: 1,
         max: 3,
       }),
+      sellerId,
     });
   }
   return await Product.insertMany(products);

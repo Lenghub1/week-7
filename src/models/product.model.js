@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import slugify from "slugify";
+import utils from "../utils/utils.js";
 
 const productSchema = new mongoose.Schema(
   {
@@ -92,7 +93,7 @@ const productSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Public", "Hidden", "Deleted"],
+      enum: ["Public", "Hidden", "Deleted"], // if status does not work for seller, change them to lowercase.
       default: "Public",
     },
     expirationDate: {
@@ -134,8 +135,13 @@ productSchema.pre("save", function (next) {
   }
 
   // Set unitPrice (add +10%)
-  const unitPrice = (this.basePrice * 110) / 100;
-  this.unitPrice = Math.round(unitPrice * 100) / 100;
+  this.unitPrice = utils.calculateUnitPrice(this.basePrice);
+  next();
+});
+
+productSchema.pre("findOneAndUpdate", function (next) {
+  if (this._update.basePrice)
+    this._update.unitPrice = utils.calculateUnitPrice(this._update.basePrice);
   next();
 });
 

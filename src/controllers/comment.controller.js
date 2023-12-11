@@ -1,4 +1,4 @@
-import commentService from "./../services/comment.service.js";
+import commentService from "@/services/comment.service.js";
 import factory from "./factory.js";
 
 const commentController = {
