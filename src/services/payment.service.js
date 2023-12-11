@@ -1,6 +1,7 @@
-import APIError from "../utils/APIError.js";
 import dotenv from "dotenv";
 import paypal from "paypal-rest-sdk";
+
+dotenv.config();
 
 paypal.configure({
   mode: "sandbox",
@@ -8,7 +9,7 @@ paypal.configure({
   client_secret: "CLIENT_SECRET",
 });
 
-exports.createPayment = function (paymentData) {
+const createPayment = function (paymentData) {
   return new Promise((resolve, reject) => {
     const payment = {
       intent: "sale",
@@ -16,8 +17,8 @@ exports.createPayment = function (paymentData) {
         payment_method: "paypal",
       },
       redirect_urls: {
-        return_url: "http://localhost:3000/success",
-        cancel_url: "http://localhost:3000/cancel",
+        return_url: "http://localhost:5173/success",
+        cancel_url: "http://localhost:5173/cancel",
       },
       transactions: [
         {
@@ -44,7 +45,7 @@ exports.createPayment = function (paymentData) {
   });
 };
 
-exports.executePayment = function (paymentId, payerId) {
+const executePayment = function (paymentId, payerId) {
   return new Promise((resolve, reject) => {
     const execute_payment_json = {
       payer_id: payerId,
@@ -71,3 +72,5 @@ exports.executePayment = function (paymentId, payerId) {
     );
   });
 };
+
+export default { createPayment, executePayment };

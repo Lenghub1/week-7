@@ -1,4 +1,4 @@
-import paymentService from "@/services/checkout.service.js";
+import paymentService from "@/services/payment.service.js";
 
 const createPayment = async function (req, res) {
   try {
