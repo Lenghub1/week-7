@@ -119,8 +119,15 @@ const authController = {
       session
     );
     const { accessToken, refreshToken } = data;
+    const user = await authService.refreshToken.findUser(session);
     authController.signCookie(res, refreshToken);
-    res.json({ accessToken });
+    res.status(200).json({
+      user: {
+        id: user._id,
+        role: user.role,
+        accessToken,
+      },
+    });
   }),
 
   // Forgot Password
@@ -211,7 +218,7 @@ const authController = {
   // 4. Delete Session contain refresh token in db
   // 5. Clear cookie
   logOut: catchAsync(async (req, res, next) => {
-    const { cookies } = req;
+    const cookies = req?.cookies;
     const refreshToken = await authService.logOut.checkJWT(res, cookies);
     await authService.logOut.verifySession(res, refreshToken);
     authController.clearCookie(res);
@@ -224,7 +231,7 @@ const authController = {
   // 3. Create email data along with the token to client side
   // 4. Send Email again
   resendActivationEmail: catchAsync(async (req, res, next) => {
-    const data = req.user;
+    const data = req?.user;
     const token = await authService.signup.signTokenForActivateAccount(data);
     const emailData = authService.signup.createEmail(token, data);
     const resultSendEmail = await sendEmailWithNodemailer(emailData);
@@ -241,7 +248,7 @@ const authController = {
   // 4. Create new email.
   // 5. Send email to user again.
   resendEmailOTP: catchAsync(async (req, res, next) => {
-    const { user } = req;
+    const user = req?.user;
     const OTP = await user.createOTPToken();
     await user.save({ validateBeforeSave: false });
     const emailData = await authService.twoFA.createEmail(user.email, OTP);
@@ -258,7 +265,7 @@ const authController = {
   // 3. Create new email data
   // 4. Send email again
   resendEmailResetPassword: catchAsync(async (req, res, next) => {
-    const { user } = req;
+    const user = req?.user;
     const resetToken = user.createPasswordResetToken();
     await user.save({ validateBeforeSave: false });
     const emailData = await authService.forgotPassword.createEmail(

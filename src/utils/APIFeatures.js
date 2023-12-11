@@ -3,11 +3,12 @@
  */
 
 class APIFeatures {
-  constructor(model, queryStr, isAdmin = false) {
+  constructor(model, queryStr, isAdmin = false, generatePipeline) {
     this.model = model;
     this.aggPipe = [];
     this.queryStr = queryStr;
     this.isAdmin = isAdmin;
+    this.generatePipeline = generatePipeline;
   }
 
   search() {
@@ -17,13 +18,18 @@ class APIFeatures {
       const searchTerms = searchTerm.split(/\s+/).filter(Boolean);
       const regexPatterns = searchTerms.map((term) => new RegExp(term, "i"));
 
-      this.aggPipe.push({
-        $match: {
-          $and: regexPatterns.map((pattern) => ({
-            title: { $regex: pattern },
-          })),
-        },
-      });
+      if (typeof this.generatePipeline === "function") {
+        const searchPipeline = this.generatePipeline(regexPatterns);
+        this.aggPipe.push(...searchPipeline);
+      } else {
+        this.aggPipe.push({
+          $match: {
+            $and: regexPatterns.map((pattern) => ({
+              title: { $regex: pattern },
+            })),
+          },
+        });
+      }
     } else if (searchTerm) {
       this.aggPipe.push({
         $search: {
@@ -56,6 +62,7 @@ class APIFeatures {
 
   filter() {
     let queryObj = { ...this.queryStr };
+    const dateRelatedFields = ["createdAt", "updatedAt"];
     const excludedFields = ["page", "sort", "limit", "fields", "q"];
     excludedFields.forEach((el) => delete queryObj[el]);
 
@@ -67,8 +74,13 @@ class APIFeatures {
     Object.keys(queryObj).forEach((eachKey) => {
       // Convert $gte value to Number()
       for (const key in queryObj[eachKey])
-        if (/\b(gte|gt|lte|lt)\b/g.test(key))
-          queryObj[eachKey][key] = Number(queryObj[eachKey][key]);
+        if (/\b(gte|gt|lte|lt)\b/g.test(key)) {
+          if (!dateRelatedFields.includes(eachKey)) {
+            queryObj[eachKey][key] = Number(queryObj[eachKey][key]);
+          } else {
+            queryObj[eachKey][key] = new Date(queryObj[eachKey][key]);
+          }
+        }
 
       if (Array.isArray(queryObj[eachKey])) {
         queryObj[eachKey] = { $all: queryObj[eachKey] };

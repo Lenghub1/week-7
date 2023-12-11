@@ -1,122 +1,178 @@
-// Import necessary error handling utilities.
-import APIError from "../utils/APIError.js";
-import APIFeatures from "../utils/APIFeatures.js";
+// Import necessary modules
+import mongoose from "mongoose";
+import APIError from "@/utils/APIError.js";
+import MediaUtil from "@/utils/media.util.js";
+import APIFeatures from "@/utils/APIFeatures.js";
 
 /**
- * Reusable service function for working with Mongoose models.
- *
- * @param {Model} Model - The Mongoose model to create a service for.
- * @returns {Object} - An object containing CRUD (Create, Read, Update, Delete) methods for the specified model.
+ * Creates a service for CRUD operations on a given Mongoose model.
+ * @param {mongoose.Model} Model - The Mongoose model for which the service is created.
+ * @returns {Object} - The service object with CRUD methods.
  */
 const createService = (Model) => {
-  // Define a service object with various CRUD (Create, Read, Update, Delete) methods.
+  // Service object containing CRUD methods
   const service = {
     /**
-     * Retrieve a list of items based on query parameters.
-     *
-     * @param {Object} queryString - Query parameters for filtering, sorting, limiting, and pagination.
-     * @returns {Promise<Array>} - A list of items that match the query parameters.
-     * @throws {APIError} - Throws an error if there's an issue with the query or if no items match the criteria.
+     * Retrieves all items from the database based on optional query parameters.
+     * @param {string} queryString - The optional query string for filtering, sorting, and pagination.
+     * @returns {Promise<Array>} - A promise resolving to an array of retrieved items.
      */
     async getAll(queryString) {
-      // Create and apply filters, sorting, field limiting, and pagination to the query.
+      // Create API features based on query parameters
       const features = new APIFeatures(Model, queryString)
         .search()
         .filter()
         .sort()
         .limitFields()
         .paginate();
-      // Execute the query and return the result.
-      let items = await features.execute();
-      items = items[0];
+
+      // Execute features and return items
+      const [items] = await features.execute();
+      if (!items) {
+        throw new APIError({ status: 404, message: "No ducuments Found" });
+      }
       return items;
     },
 
     /**
-     * Retrieve a single item by its unique identifier (ID).
-     *
-     * @param {string} id - The unique identifier of the item to retrieve.
-     * @returns {Promise<Model|null>} - The retrieved item, or null if not found.
-     * @throws {APIError} - Throws an error if there's an issue with the retrieval or if the item is not found.
+     * Retrieves a single item by its ID.
+     * @param {string} id - The ID of the item to retrieve.
+     * @returns {Promise<Object>} - A promise resolving to the retrieved item.
+     * @throws {APIError} - Throws a 404 error if the item is not found.
      */
     async get(id) {
-      // Attempt to find and return the item by its ID.
+      // Find item by ID
       const item = await Model.findById(id);
       if (!item) {
-        // If the item is not found, throw an APIError indicating the status and a custom error message.
+        // Throw a 404 error if the item is not found
         throw new APIError({
           status: 404,
           message: `No ${Model.modelName} Found with this ID`,
         });
       }
+      // Fetch and modify media URLs if present
+      if (item.media) {
+        item.media = await MediaUtil.getMediaUrls(item.media);
+      }
       return item;
     },
 
     /**
-     * Create a new item.
-     *
-     * @param {Object} itemBody - The data to create the new item.
-     * @returns {Promise<Model>} - The created item.
-     * @throws {APIError} - Throws an error if there's an issue with the creation process.
+     * Creates a new item in the database.
+     * @param {Object} itemBody - The data for the new item.
+     * @returns {Promise<Object>} - A promise resolving to the newly created item.
+     * @throws {APIError} - Throws an error if the creation fails.
      */
     async create(itemBody) {
-      // Attempt to create a new item with the provided data.
-      const item = await Model.create(itemBody);
-      if (!item) {
-        // If the creation is unsuccessful, throw an APIError indicating the status and a custom error message.
-        throw new APIError({
-          status: 400,
-          message: `Cannot Create ${Model.modelName}`,
-        });
+      console.log(itemBody);
+      try {
+        // Process media files if present in the itemBody
+        if (itemBody.media?.length > 0) {
+          itemBody.media = await MediaUtil.processMediaFiles(itemBody.media);
+        }
+        console.log(itemBody);
+        // Create a new item using the provided model
+        const newItem = await Model.create(itemBody);
+        return newItem;
+      } catch (error) {
+        throw new APIError({ status: 400, message: error.message });
       }
-      return item;
     },
 
     /**
-     * Update an item by its unique identifier (ID).
-     *
-     * @param {string} id - The unique identifier of the item to update.
-     * @param {Object} itemBody - The data to update the item.
-     * @returns {Promise<Model|null>} - The updated item, or null if not found.
-     * @throws {APIError} - Throws an error if there's an issue with the update process or if the item is not found.
+     * Updates an existing item in the database by its ID.
+     * @param {string} id - The ID of the item to update.
+     * @param {Object} itemBody - The data with which to update the item.
+     * @returns {Promise<Object>} - A promise resolving to the updated item.
+     * @throws {APIError} - Throws an error if the update fails.
      */
     async update(id, itemBody) {
-      // Attempt to update the item by its ID with the provided data.
-      const item = await Model.findByIdAndUpdate(id, itemBody);
+      // Start a Mongoose session for the transaction
+      const session = await mongoose.startSession();
+      session.startTransaction();
+
+      try {
+        // Find the item by ID within the session
+        const item = await Model.findById(id).session(session);
+        if (!item) {
+          // Throw a 404 error if the item is not found
+          throw new APIError({
+            status: 404,
+            message: `No ${Model.modelName} Found with this ID`,
+          });
+        }
+
+        // Exclude 'media' from the fields to update
+        const fieldsToUpdate = Object.keys(itemBody).filter(
+          (field) => field !== "media"
+        );
+
+        // Update fields other than 'media'
+        fieldsToUpdate.forEach((field) => {
+          item[field] = itemBody[field];
+        });
+
+        // Handle media updates (additions and deletions)
+        const { media } = itemBody;
+        if (media) {
+          let deletedMedia = [];
+          if (media.length !== item.media.length) {
+            const filteredMedia = item.media.filter((item) =>
+              media.includes(item)
+            );
+            deletedMedia = item.media.filter((item) => !media.includes(item));
+            item.media = filteredMedia;
+          }
+
+          if (media && media.length > 0) {
+            item.media = item.media.concat(
+              await MediaUtil.processMediaFiles(media)
+            );
+          }
+
+          if (deletedMedia.length > 0) {
+            await MediaUtil.deleteUnusedMediaFiles(deletedMedia);
+          }
+        }
+
+        // Save the updated item within the session
+        await item.save({ session });
+        await session.commitTransaction();
+        return item;
+      } catch (error) {
+        // Handle errors, abort transaction, and throw APIError
+        await session.abortTransaction();
+        throw new APIError({
+          status: 500,
+          message: "Something went wrong! Cannot update the item.",
+        });
+      } finally {
+        // End the session
+        session.endSession();
+      }
+    },
+
+    /**
+     * Deletes an item from the database by its ID.
+     * @param {string} id - The ID of the item to delete.
+     * @returns {Promise<null>} - A promise indicating successful deletion.
+     * @throws {APIError} - Throws a 404 error if the item is not found.
+     */
+    async delete(id) {
+      // Find and delete the item by ID
+      const item = await Model.findByIdAndDelete(id);
       if (!item) {
-        // If the item is not found for updating, throw an APIError indicating the status and a custom error message.
+        // Throw a 404 error if the item is not found
         throw new APIError({
           status: 404,
           message: `No ${Model.modelName} Found with this ID`,
         });
       }
-      return item;
-    },
-
-    /**
-     * Delete an item by its unique identifier (ID).
-     *
-     * @param {string} id - The unique identifier of the item to delete.
-     * @returns {Promise<null>} - Returns null to indicate successful deletion.
-     * @throws {APIError} - Throws an error if there's an issue with the deletion process or if the item is not found.
-     */
-    async delete(id) {
-      // Attempt to find and delete the item by its ID.
-      const item = await Model.findByIdAndDelete(id);
-      if (!item) {
-        // If the item is not found for deletion, throw an APIError indicating the status and a custom error message.
-        throw APIError({
-          status: 404,
-          message: `No ${Model.modelName} Found with this ID`,
-        });
-      }
-      // Return null to indicate successful deletion.
-      return null;
+      return null; // Indicate successful deletion
     },
   };
 
-  return service;
+  return service; // Return the service object
 };
 
-// Export the createService function to make it available for use with various Mongoose models.
 export default createService;

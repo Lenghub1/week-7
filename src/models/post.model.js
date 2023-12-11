@@ -9,9 +9,10 @@ const postSchema = new mongoose.Schema(
       trim: true,
       min: 3,
       max: 160,
+      index: true,
     },
-    body: {
-      type: {},
+    content: {
+      type: Object,
       require: true,
       trim: true,
     },
@@ -19,6 +20,7 @@ const postSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       require: true,
+      index: true,
     },
     isUpdated: {
       type: Boolean,
@@ -26,22 +28,30 @@ const postSchema = new mongoose.Schema(
     },
     media: [
       {
-        type: Buffer,
+        url: String,
+        type: { type: String, enum: ["image", "video"] },
       },
     ],
-    upvote: {
-      type: Number,
-      default: 0,
+    reactions: {
+      type: Map,
+      of: Boolean,
     },
-    downvote: {
+    commentCounts: {
       type: Number,
       default: 0,
     },
     slug: { type: String, unique: true, index: true },
-    excerpt: {
+
+    type: {
       type: String,
-      max: 300,
+      enum: ["public", "restricted", "private"],
+      index: true,
     },
+    tags: [
+      {
+        type: String,
+      },
+    ],
   },
   {
     timestamps: true,
@@ -49,8 +59,9 @@ const postSchema = new mongoose.Schema(
     toJSON: { virtuals: true },
   }
 );
+
 postSchema.pre("save", function (next) {
-  this.slug = slugify(this.title, { lower: true });
+  this.slug = slugify(`${this.title}${Date.now().toString()}`, { lower: true });
   next();
 });
 

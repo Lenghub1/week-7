@@ -1,4 +1,4 @@
-import APIError from "../utils/APIError.js";
+import APIError from "../../utils/APIError.js";
 
 const verifySellerStatus = () => {
   return (req, res, next) => {

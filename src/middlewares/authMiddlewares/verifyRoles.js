@@ -1,4 +1,4 @@
-import APIError from "../utils/APIError.js";
+import APIError from "../../utils/APIError.js";
 
 // Verify user roles
 // 1. Get user's role

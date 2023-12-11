@@ -1,9 +1,9 @@
-import catchAsync from "../utils/catchAsync.js";
-import Session from "../models/session.model.js";
-import authService from "../services/auth.service.js";
+import catchAsync from "../../utils/catchAsync.js";
+import Session from "../../models/session.model.js";
+import authService from "../../services/auth.service.js";
 import axios from "axios";
 import dotenv from "dotenv";
-import authController from "../controllers/auth.controller.js";
+import authController from "../../controllers/auth.controller.js";
 
 dotenv.config();
 
@@ -37,13 +37,13 @@ const handleSignIn = catchAsync(async (req, res, next) => {
     const location = response?.data;
     if (location.country && location.loc && location.region) {
       address = `${location?.region}, ${location?.country}`;
-      coordinates = location?.loc.split(",").map((element) => Number(element));
+      coordinates = location?.loc?.split(",").map((element) => Number(element));
     } else {
       address = "Unlocated";
       coordinates = [0, 0];
     }
   } catch (err) {
-    console.error("Error fetching IP information:", err.response.data.error);
+    console.error("Error fetching IP information:", err.response?.data.error);
     address = "Unlocated";
     coordinates = [0, 0];
   }
@@ -52,15 +52,12 @@ const handleSignIn = catchAsync(async (req, res, next) => {
   const newRefreshToken = authService.signRefreshToken(req.user._id);
   if (cookies?.jwt) {
     const refreshToken = cookies.jwt;
-    const session = await Session.findOne({ refreshToken });
-
-    // Detected refresh token reuse!
+    const session = await Session.findOneAndDelete({ refreshToken });
+    // Refresh token may expired and required user to log in again, so there is no session in db
     if (!session) {
-      // clear out ALL sessions
-      await Session.deleteMany({ userId: req.user._id });
+      authController.clearCookie(res);
     }
-
-    res.clearCookie("jwt", { httpOnly: true, sameSite: "None", secure: true });
+    authController.clearCookie(res);
   }
   await Session.create({
     userId: req.user._id,
@@ -77,13 +74,9 @@ const handleSignIn = catchAsync(async (req, res, next) => {
   authController.signCookie(res, newRefreshToken);
   res.status(200).json({
     message: "Login succeed.",
-    data: {
+    user: {
       id: req.user.id,
       role: req.user.role,
-      email: req.user.email,
-      firstName: req.user.firstName,
-      lastName: req.user.lastName,
-      signupMethod: req.user.signupMethod,
       accessToken,
     },
   });

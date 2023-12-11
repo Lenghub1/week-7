@@ -5,30 +5,27 @@ import { createEmailValidator } from "../../validators/email.validator.js";
 import { createPasswordValidator } from "../../validators/password.validator.js";
 import { runValidation } from "../../validators/index.js";
 import controller from "../../controllers/auth.controller.js";
-import handleSignIn from "../../middlewares/handleSignIn.js";
-import isAuth from "../../middlewares/isAuth.js";
-import verifyRoles from "../../middlewares/verifyRoles.js";
-import isRecentlySignup from "../../middlewares/isRecentlySignup.js";
-import isRecentlyForgotPwd from "../../middlewares/isRecentlyForgotPwd.js";
-import is2FA from "../../middlewares/is2FA.js";
-import verify2FACode from "../../middlewares/verify2FACode.js";
-import isRecently2FA from "../../middlewares/isRecently2FA.js";
+import handleSignIn from "../../middlewares/authMiddlewares/handleSignIn.js";
+import isAuth from "../../middlewares/authMiddlewares/isAuth.js";
+import verifyRoles from "../../middlewares/authMiddlewares/verifyRoles.js";
+import isRecentlySignup from "../../middlewares/authMiddlewares/isRecentlySignup.js";
+import isRecentlyForgotPwd from "../../middlewares/authMiddlewares/isRecentlyForgotPwd.js";
+import is2FA from "../../middlewares/authMiddlewares/is2FA.js";
+import verifyOTPCode from "../../middlewares/authMiddlewares/verifyOTPCode.js";
+import isRecently2FA from "../../middlewares/authMiddlewares/isRecently2FA.js";
 
 const router = express.Router();
 
-// Sign up with email and password
 router
   .route("/signup")
   .post(createSignupValidator, runValidation, controller.signup);
 
-// Activate account
 router
-  .route("/account-activation")
+  .route("/account/activation")
   .post(controller.accountActivation, handleSignIn);
 
-// Login with email and password
 router
-  .route("/login")
+  .route("/login/email")
   .post(
     createLoginValidator,
     runValidation,
@@ -37,51 +34,42 @@ router
     handleSignIn
   );
 
-// Login with Google
-router.route("/login-google").post(controller.googleSignIn, handleSignIn);
-
-// Verify OTP code
-router.route("/verify2FA").post(verify2FACode, handleSignIn);
-
-// Forgot password
 router
-  .route("/forgot-password")
+  .route("/login/google")
+  .post(controller.googleSignIn, is2FA, handleSignIn);
+
+router.route("/verify/2FA").post(verifyOTPCode, handleSignIn);
+
+router
+  .route("/forgot/password")
   .post(createEmailValidator, runValidation, controller.forgotPassword);
 
-// Reset password
 router
-  .route("/reset-password")
+  .route("/reset/password")
   .patch(createPasswordValidator, runValidation, controller.resetPassword);
 
-// Sign up as seller
 router
-  .route("/signup-seller")
+  .route("/signup/seller")
   .put(isAuth, verifyRoles("user"), controller.signupSeller);
 
-// Handle approve or reject seller
 router
   .route("/:sellerId/:action")
   .patch(isAuth, verifyRoles("admin"), controller.handleSeller);
 
-// Resend email to activate account
 router
-  .route("/resend-email-activation")
+  .route("/resend/email-activation")
   .post(isRecentlySignup, controller.resendActivationEmail);
 
-// Resend email to reset password
 router
-  .route("/resend-email-reset-password")
+  .route("/resend/email-reset-password")
   .post(isRecentlyForgotPwd, controller.resendEmailResetPassword);
 
-// Resend email for OTP code
 router
-  .route("/resend-email-otp")
+  .route("/resend/email-otp")
   .post(isRecently2FA, controller.resendEmailOTP);
 
-// Refresh access token
 router.route("/refresh").get(controller.refreshToken);
 
-// Logout
 router.route("/logout").post(controller.logOut);
 
 export default router;

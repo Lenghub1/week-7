@@ -7,5 +7,6 @@ export const createEmailValidator = [
     .withMessage("Email is required.")
     .isEmail()
     .withMessage("Email is invalid.")
+    .toLowerCase()
     .trim(),
 ];

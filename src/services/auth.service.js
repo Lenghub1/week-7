@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
+import bcrypt from "bcryptjs";
 import { fileURLToPath } from "url";
 
 dotenv.config();
@@ -53,11 +54,12 @@ const authService = {
       }
       const user = await User.create({
         email,
-        password,
+        password: await bcrypt.hash(password, 12),
         firstName,
         lastName,
-        active: false, // Account not yet activate
+        accountVerify: false, // Account not yet activate
       });
+      await user.save();
 
       return user;
     },
@@ -136,7 +138,7 @@ const authService = {
             );
           }
 
-          user.active = true;
+          user.accountVerify = true;
           await user.save();
 
           return user;
@@ -155,11 +157,11 @@ const authService = {
             message: "Email or password is incorrected.", // For more secure and prevent malicious from knowing which field they input wrong.
           })
         );
-      } else if (user && user.active === false) {
+      } else if (user && user.activateAccount === false) {
         return next(
           APIError({
             status: 401,
-            message: "Please sign up first!",
+            message: "Please activate your account first.",
           })
         );
       }
@@ -260,6 +262,20 @@ const authService = {
           return data;
         }
       );
+    },
+
+    async findUser(session) {
+      const userId = session.userId;
+      const user = await User.findById(userId);
+      if (!user) {
+        return next(
+          new APIError({
+            status: 404,
+            message: "User not found.",
+          })
+        );
+      }
+      return user;
     },
   },
   signupSeller: {

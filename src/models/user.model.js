@@ -23,7 +23,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       lowercase: true,
-      unique: true,
+      uniqure: true,
       trim: true,
       validate: validator.isEmail,
     },
@@ -32,6 +32,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       unique: true,
     },
+    reasonDeleteAccount: String,
     password: {
       type: String,
       required: true,
@@ -60,6 +61,10 @@ const userSchema = new mongoose.Schema(
     forgotPasswordToken: String,
     forgotPasswordExpires: Date,
     passwordChangeAt: Date,
+    accountVerify: {
+      type: Boolean,
+      default: true,
+    },
     active: {
       type: Boolean,
       default: true,
@@ -84,10 +89,20 @@ userSchema.index({ email: 1 });
 // Auto delete document if user not activate their account for 10 minutes.
 userSchema.index(
   { updatedAt: 1 },
-  { expireAfterSeconds: 10 * 60, partialFilterExpression: { active: false } }
+  {
+    expireAfterSeconds: 10 * 60,
+    partialFilterExpression: { accountVerify: false },
+  }
 );
 
-userSchema.pre("save", function (next) {
+// Virtual populate
+userSchema.virtual("sessions", {
+  ref: "Session",
+  foreignField: "userId",
+  localField: "_id",
+});
+
+userSchema.pre("save", async function (next) {
   if (this.isModified("firstName") || this.isModified("lastName")) {
     const fullName = `${this.firstName} ${this.lastName}`;
     this.slug = slugify(fullName + "-" + Date.now(), {
@@ -95,13 +110,15 @@ userSchema.pre("save", function (next) {
       strict: true,
     });
   }
+  if (this.isModified("storeName")) {
+    this.storeAndSellerName = `${this.storeName} ${this.firstName} ${this.lastName}`;
+  }
   next();
 });
 
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-
-  this.password = await bcrypt.hash(this.password, 12);
+// All mongoose method start with find will not search for user's active equal to false
+userSchema.pre(/^find/, function (next) {
+  this.find({ active: { $ne: false } });
   next();
 });
 
@@ -131,6 +148,13 @@ userSchema.methods.createOTPToken = async function () {
   this.OTP = await bcrypt.hash(OTP, salt);
   this.OTPExpires = Date.now() + 10 * 60 * 1000;
   return OTP;
+};
+
+userSchema.methods.slugEmailBeforeDelete = function (email) {
+  const slugEmail = `${email}-${Date.now()}-${crypto
+    .randomBytes(32)
+    .toString("hex")}`;
+  return slugEmail;
 };
 
 const User = mongoose.model("User", userSchema);
