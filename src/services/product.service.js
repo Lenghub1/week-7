@@ -60,8 +60,28 @@ const productService = {
   },
 
   async getUserProducts() {
-    const products = await Product.aggregate([{ $sample: { size: 10 } }]);
-    return products;
+    const products = await Product.aggregate([
+      { $sample: { size: 10 } },
+      {
+        $facet: {
+          metadata: [{ $count: "totalResults" }],
+          data: [{ $limit: 10 }],
+        },
+      },
+      { $unwind: "$metadata" },
+    ]);
+
+    if (products.length === 0) {
+      throw new APIError({
+        status: 404,
+        message: "There is no document found.",
+      });
+    }
+
+    return {
+      metadata: products[0].metadata,
+      data: products[0].data,
+    };
   },
 
   async getHotProducts(queryStr) {
