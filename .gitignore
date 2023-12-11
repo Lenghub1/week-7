@@ -49,3 +49,7 @@ jspm_packages
 
 # file store custom attributes of its containering folder
 .DS_Store
+
+# window extra configurations
+.yarn
+.yarnrc.yml

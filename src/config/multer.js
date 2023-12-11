@@ -4,6 +4,8 @@
 
 import multer from "multer";
 import APIError from "../utils/APIError.js";
+import multerS3 from "multer-s3";
+import s3Client from "./s3.js";
 
 const productMediaStorage = multer.memoryStorage();
 
@@ -26,3 +28,21 @@ export const productMediaUpload = multer({
   //   fileSize: 1000000, //1MB ~ 1million bytes
   // },
 });
+
+// Config s3 as storage of multer directly
+export const mediaUpload = (bucket, subdir) =>
+  multer({
+    storage: multerS3({
+      s3: s3Client,
+      bucket,
+      metadata: function (req, file, cb) {
+        cb(null, { fieldName: file.fieldname });
+      },
+      key: function (req, file, cb) {
+        cb(
+          null,
+          `${subdir}/media/${Date.now().toString()}${file.originalname}`
+        );
+      },
+    }),
+  }).array("media");
