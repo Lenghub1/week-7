@@ -237,7 +237,7 @@ const productServiceAdmin = {
         }
       }
 
-      if (deletedMedia.length > 0) {
+      if (deletedMedia && deletedMedia.length > 0) {
         await Promise.all(
           deletedMedia.map(async (item) => {
             try {
