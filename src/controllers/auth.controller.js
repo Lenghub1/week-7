@@ -58,9 +58,11 @@ const authController = {
   accountActivation: catchAsync(async (req, res, next) => {
     const data = req.body;
     const user = await authService.signup.activateAccount(next, data);
-    req.user = user;
-    req.user.loginMethod = "email";
-    next();
+    if (user) {
+      req.user = user;
+      req.user.loginMethod = "email";
+      next();
+    }
   }),
 
   // Login

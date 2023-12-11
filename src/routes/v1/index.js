@@ -8,7 +8,7 @@ import postRoute from "./post.route.js";
 import commentRoute from "./comment.route.js";
 import addressRoute from "./address.route.js";
 import orderRoute from "./order.route.js";
-import checkoutRoute from "./checkout.route.js";
+import paymentRoute from "./payment.route.js";
 import botRoute from "./bot.route.js";
 import userRoute from "./user.route.js";
 import productRouteAdmin from "./admin/product.route.js";
@@ -54,8 +54,8 @@ const defaultRoutes = [
     route: orderRoute,
   },
   {
-    path: "/checkout",
-    route: checkoutRoute,
+    path: "/payment",
+    route: paymentRoute,
   },
   {
     path: "/bot",
