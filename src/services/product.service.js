@@ -49,7 +49,11 @@ const productService = {
    * @returns {Promise} A promise that resolves with the retrieved product or rejects with an error if not found.
    */
   async getProduct(productId) {
-    const product = await Product.findOne({ _id: productId, status: "Public" });
+    const product = await Product.findOne({
+      _id: productId,
+      status: "Public",
+      // todo: populate shop-location and shop-name.
+    }).populate("sellerId", "firstName lastName");
     if (!product) {
       throw new APIError({
         status: 404,

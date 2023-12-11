@@ -10,7 +10,6 @@ const router = express.Router({ mergeParams: true });
 router
   .route("/")
   .get(reviewController.getReviews)
-  // TODO @later: verify if user purchased the product to be able create to a Review.
   .post(
     isAuth,
     isAbleToCreateReview,
