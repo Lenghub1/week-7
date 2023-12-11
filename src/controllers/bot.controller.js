@@ -19,9 +19,6 @@ export default async function handleTextQuery(req, res) {
     console.log(intentName);
 
     switch (intentName) {
-      case "new.order":
-        dialogflowService.processNewOrder(result);
-        break;
       case "add_order":
         result.fulfillmentText = result.fulfillmentText;
         break;
