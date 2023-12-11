@@ -4,21 +4,24 @@ import catchAsync from "../utils/catchAsync.js";
 
 const isAbleToCreateReview = catchAsync(async (req, res, next) => {
   const { productId } = req.params;
-  const { id: userId } = req.user;
+  const { id: userId, role: userRole } = req.user;
 
-  const orders = await Order.find({ userId });
+  if (userRole !== "admin") {
+    const orders = await Order.find({ userId });
 
-  const selectedOrders = orders.filter(
-    (order) =>
-      order.cartItems.some((item) => item.productId.toString() === productId) &&
-      order.shipping.status === "delivered"
-  );
+    const selectedOrders = orders.filter(
+      (order) =>
+        order.cartItems.some(
+          (item) => item.productId.toString() === productId
+        ) && order.shipping.status === "delivered"
+    );
 
-  if (selectedOrders.length === 0) {
-    throw new APIError({
-      status: 400,
-      message: "You must purchase the product before create a review.",
-    });
+    if (selectedOrders.length === 0) {
+      throw new APIError({
+        status: 400,
+        message: "You must purchase the product before create a review.",
+      });
+    }
   }
 
   next();

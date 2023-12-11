@@ -7,18 +7,20 @@ import catchAsync from "../utils/catchAsync.js";
  */
 const isCreatedReview = catchAsync(async (req, res, next) => {
   const { productId } = req.params;
-  const { id: userId } = req.user;
+  const { id: userId, role: userRole } = req.user;
 
-  const existingReview = await Review.findOne({
-    product: productId,
-    userId,
-  });
-
-  if (existingReview) {
-    throw new APIError({
-      status: 400,
-      message: "You have already reviewed this product.",
+  if (userRole !== "admin") {
+    const existingReview = await Review.findOne({
+      product: productId,
+      userId,
     });
+
+    if (existingReview) {
+      throw new APIError({
+        status: 400,
+        message: "You have already reviewed this product.",
+      });
+    }
   }
 
   next();
