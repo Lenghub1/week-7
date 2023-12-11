@@ -4,10 +4,10 @@ import APIError from "../utils/APIError.js";
 import Product from "../models/product.model.js";
 
 const reviewService = {
-  async createReview(productId, reviewInput) {
+  async createReview(productId, userId, reviewInput) {
     // Start a session
     const session = await mongoose.startSession();
-    const reviewData = { product: productId, ...reviewInput };
+    const reviewData = { product: productId, userId, ...reviewInput };
 
     try {
       // Start the transaction
@@ -30,7 +30,7 @@ const reviewService = {
         _id: review._id,
         review: review.review,
         rating: review.rating,
-        userId: review.userId,
+        userId,
       });
       // Limit the reviews array to 10
       product.reviews = product.reviews.slice(0, 10);
@@ -42,12 +42,13 @@ const reviewService = {
       session.endSession();
       return review;
     } catch (error) {
+      console.log(error);
       // If an error occurs, abort the transaction
       await session.abortTransaction();
       session.endSession();
       throw new APIError({
         status: 400,
-        message: "Cannot create a comment!",
+        message: "Cannot create a review!",
         error: error,
       });
     }

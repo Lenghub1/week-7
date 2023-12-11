@@ -6,6 +6,7 @@ const usersProductController = {
   getHotProducts: factory.getAll(service.getHotProducts),
   getTopProducts: factory.getAll(service.getTopProducts),
   getByCategories: factory.getAll(service.getProductsByCategories),
+  getProductDetails: factory.getById(service.getProduct),
 };
 
 export default usersProductController;
