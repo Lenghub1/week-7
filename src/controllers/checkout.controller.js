@@ -1,9 +1,24 @@
-import factory from "./factory.js";
-import checkoutService from "../services/checkout.service.js";
+import paymentService from "@/services/checkout.service.js";
 
-const checkoutController = {
-  allPayment: factory.getAll(checkoutService.getAllPayment),
-  createStripe: factory.create(checkoutService.createPayment),
+const createPayment = async function (req, res) {
+  try {
+    const approvalUrl = await paymentService.createPayment(req.body);
+    res.redirect(approvalUrl);
+  } catch (error) {
+    res.status(500).send(error);
+  }
 };
 
-export default checkoutController;
+const executePayment = async function (req, res) {
+  try {
+    const payment = await paymentService.executePayment(
+      req.query.paymentId,
+      req.query.PayerID
+    );
+    res.send(payment);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+};
+
+export default { createPayment, executePayment };
