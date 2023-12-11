@@ -2,6 +2,8 @@
  * @fileoverview I test API fetures but using aggregate pipeline instead
  */
 
+import mongoose from "mongoose";
+
 class APIFeatures {
   constructor(model, queryStr, isAdmin = false, generatePipeline) {
     this.model = model;
@@ -85,9 +87,23 @@ class APIFeatures {
       if (Array.isArray(queryObj[eachKey])) {
         queryObj[eachKey] = { $all: queryObj[eachKey] };
       }
+      // // Convert to $elemMatch to match each element regardless of order
+      // if (Array.isArray(queryObj[eachKey]))
+      //   queryObj[eachKey] = { $elemMatch: { $in: [...queryObj[eachKey]] } };
+
+      // Convert sellerId to ObjectId (if not, it cannot filter it)
+      if (eachKey == "sellerId")
+        queryObj[eachKey] = new mongoose.Types.ObjectId(queryObj[eachKey]);
     });
 
     this.aggPipe.push({ $match: queryObj });
+
+    return this;
+  }
+
+  filterDeleteStatus(seeDeleted = false) {
+    if (!seeDeleted)
+      this.aggPipe.push({ $match: { status: { $ne: "deleted" } } });
 
     return this;
   }

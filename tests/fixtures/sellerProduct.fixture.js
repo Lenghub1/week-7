@@ -15,7 +15,7 @@ function _chooseRandomPrice(min, max) {
   return randomPrice;
 }
 
-export const insertManyProducts = async (n) => {
+export const insertManyProducts = async (n, sellerId) => {
   const products = [];
   for (let i = 0; i < n; i++) {
     const basePrice = _chooseRandomPrice(1, 100);
@@ -34,6 +34,7 @@ export const insertManyProducts = async (n) => {
         min: 1,
         max: 3,
       }),
+      sellerId,
     });
   }
   return await Product.insertMany(products);
