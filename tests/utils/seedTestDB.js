@@ -101,9 +101,9 @@ function generateSeedProducts(n) {
 
 async function seedDB() {
   try {
-    const seedSellers = generateSeedSellers(50);
-    await Seller.deleteMany();
-    await Seller.insertMany(seedSellers);
+    // const seedSellers = generateSeedSellers(50);
+    // await Seller.deleteMany();
+    // await Seller.insertMany(seedSellers);
 
     const seedCategories = generateSeedCategories();
     await Category.deleteMany();
