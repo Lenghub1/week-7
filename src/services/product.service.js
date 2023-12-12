@@ -66,6 +66,7 @@ const productService = {
   async getUserProducts() {
     let products = await Product.aggregate([
       { $sample: { size: 10 } },
+      { $match: { status: "Public" } },
       {
         $facet: {
           metadata: [{ $count: "totalResults" }],
@@ -96,7 +97,8 @@ const productService = {
   },
 
   async getHotProducts(queryStr) {
-    const features = new APIFeatures(Product, queryStr)
+    const filterQueryString = { ...queryStr, status: "Public" };
+    const features = new APIFeatures(Product, filterQueryString)
       .search()
       .filter()
       .sort()
@@ -120,6 +122,7 @@ const productService = {
       ...queryStr,
       averageRating: { gte: "4.5" },
       soldAmount: { gte: "100" },
+      status: "Public",
     };
 
     const features = new APIFeatures(Product, topProductsQuery)
@@ -145,7 +148,9 @@ const productService = {
     if (queryStr.categories)
       queryStr.categories = queryStr.categories.split(",");
 
-    const features = new APIFeatures(Product, queryStr)
+    const filterQueryString = { ...queryStr, status: "Public" };
+
+    const features = new APIFeatures(Product, filterQueryString)
       .search()
       .filter()
       .sort()
