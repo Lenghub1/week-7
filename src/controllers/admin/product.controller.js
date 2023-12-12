@@ -42,14 +42,17 @@ const productControllerAdmin = {
     });
   }),
 
-  updateProduct: catchAsync(async (req, res, next) => { 
+  updateProduct: catchAsync(async (req, res, next) => {
     const product = await adminService.updateProduct({
       productInput: req.body,
       newImgCover: req.files.imgCover,
       newMedia: req.files.newMedia,
       productId: req.params.id,
     });
-    res.status(200).json(product);
+    res.status(200).json({
+      message: "Data updated",
+      data: product,
+    });
   }),
 };
 

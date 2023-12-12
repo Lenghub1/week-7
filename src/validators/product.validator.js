@@ -2,7 +2,6 @@ import { check, query } from "express-validator";
 
 const EXCLUDED_FIELDS = [
   "soldAmount",
-  "sellerId",
   "reviews",
   "reviewCount",
   "averageRating",
@@ -60,6 +59,7 @@ export const updateProductValidator = [
   // Prevent update on specific fields
   (req, res, next) => {
     EXCLUDED_FIELDS.map((item) => delete req.body[item]);
+    if (req.user.role === "seller") delete req.body["sellerId"];
     next();
   },
   check("title")
