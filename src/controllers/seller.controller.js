@@ -18,7 +18,7 @@ const sellerController = {
     );
 
     return res.status(201).json({
-      message: "Product Created",
+      status: "success",
       data: { newProduct },
     });
   }),
@@ -32,7 +32,7 @@ const sellerController = {
       req.body
     );
     return res.status(200).json({
-      message: "Product Updated",
+      status: "success",
       data: updatedProduct,
     });
   }),
@@ -42,7 +42,7 @@ const sellerController = {
     const products = await service.getOwnProducts(req.query);
 
     return res.json({
-      message: "Data Retrieved",
+      status: "success",
       data: products,
     });
   }),
@@ -54,7 +54,7 @@ const sellerController = {
     );
 
     return res.json({
-      message: "Data Retrieved",
+      status: "success",
       data: product,
     });
   }),
@@ -66,7 +66,9 @@ const sellerController = {
     );
 
     if (deleteResult.modifiedCount == 0)
-      return res.status(404).json({ message: "no file deleted" });
+      return res
+        .status(404)
+        .json({ status: "fail", message: "no file deleted" });
 
     return res.status(204).json({
       message: "Data deleted",

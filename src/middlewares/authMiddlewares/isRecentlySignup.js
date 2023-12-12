@@ -13,12 +13,12 @@ const isRecentlySignup = catchAsync(async (req, res, next) => {
         message: "Please Sign up first!",
       })
     );
-  } else if (user.active === true) {
+  } else if (user.accountVerify === true) {
     return next(
       new APIError({
         status: 400,
         message:
-          "Your account is already active. No need to resend activation.",
+          "Your account is already verified. No need to resend activation.",
       })
     );
   }

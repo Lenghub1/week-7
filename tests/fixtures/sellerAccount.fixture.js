@@ -5,12 +5,12 @@ import app from "../../src/app";
 import bcrypt from "bcryptjs";
 
 export const loginAsSeller = async ({ email, password }) => {
-  const res = await request(app).post("/api/v1/auth/login").send({
+  const res = await request(app).post("/api/v1/auth/login/email").send({
     email,
     password,
   });
 
-  return res.body.data.accessToken;
+  return res.body.user.accessToken;
 };
 
 export const insertOneSeller = async (sellerStatus) => {
@@ -19,7 +19,7 @@ export const insertOneSeller = async (sellerStatus) => {
     lastName: faker.person.lastName().replace(/\W/g, ""),
     storeName: faker.company.name(),
     email: faker.person.firstName() + faker.string.nanoid() + "@test.com",
-    password: "Password@123",
+    password: await bcrypt.hash("Password@123", 12),
     dateOfBirth: "2023-01-12",
     storeAddress: "ggwp addresss",
     storeLocation: [0, 0],

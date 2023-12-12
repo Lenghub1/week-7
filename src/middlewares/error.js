@@ -3,7 +3,7 @@ import APIError from "../utils/APIError.js";
 
 const handler = (err, req, res, next) => {
   const response = {
-    status: err.status,
+    status: String(err.status).startsWith("4") ? "fail" : "error",
     message: err.message || httpStatus[err.status],
     errors: err.errors,
     stack: err.stack,
