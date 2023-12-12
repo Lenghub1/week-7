@@ -10,7 +10,7 @@ import verifyRoles from "../../middlewares/authMiddlewares/verifyRoles.js";
 import { createSignupValidator } from "../../validators/signup.validator.js";
 import verifyMe from "../../middlewares/userMiddlewares/verifyMe.js";
 import { uploadProductMedia } from "../../middlewares/uploadFiles.js";
-
+import notificationRouter from "@/routes/v1/notification.route.js";
 const router = express.Router();
 
 router.use(isAuth);
@@ -45,6 +45,8 @@ router.route("/:sessionId/logout").delete(controller.logOutOne);
 router
   .route("/confirm/email")
   .post(createEmailValidator, runValidation, controller.confirmNewEmail);
+
+router.use("/:userId/notification", notificationRouter);
 
 // Admin interact with users ----
 router.use(verifyRoles("admin"));

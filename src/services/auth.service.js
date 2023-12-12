@@ -9,6 +9,7 @@ import fs from "fs";
 import path from "path";
 import bcrypt from "bcryptjs";
 import { fileURLToPath } from "url";
+import Notification from "@/models/notification.model.js";
 
 dotenv.config();
 
@@ -289,6 +290,14 @@ const authService = {
           })
         );
       }
+      await Notification.insertNotification(
+        "6560669998161a8467e3705d",
+        req.user.id,
+        "Request to become seller",
+        `Mr/Ms ${user.lastName} request to become seller`,
+        "Activate Shop",
+        req.user.id
+      );
       return user;
     },
 
@@ -336,6 +345,14 @@ const authService = {
     async updateSellerStatus(seller, action) {
       if (action === "approve") {
         seller.sellerStatus = "active";
+        await Notification.insertNotification(
+          seller.id,
+          "6560669998161a8467e3705d",
+          "Seller Activated",
+          `Congratz Mr/Ms ${seller.lastName} to become ours seller `,
+          "Shop Activated",
+          seller.id
+        );
         await seller.save();
       } else {
         seller.sellerStatus = "inactive";

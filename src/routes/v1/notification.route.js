@@ -1,9 +1,9 @@
 import express from "express";
 import service from "@/controllers/notification.controller.js";
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
-router.get("/:userId", service.getNotifications);
+router.get("/", service.getNotifications);
 
 router.patch("/:notificationId", service.markNotificationAsOpened);
 

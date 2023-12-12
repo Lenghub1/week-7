@@ -25,6 +25,7 @@ const NotificationService = {
       }
 
       notification.opened = true;
+      
       await notification.save();
 
       return notification;

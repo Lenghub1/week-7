@@ -15,14 +15,24 @@ export default async function handleTextQuery(req, res) {
   try {
     const result = await dialogflowService.detectTextIntent(text);
     const intentName = result.intent.displayName;
-
     console.log(intentName);
-
+  
     switch (intentName) {
       case "add_order":
         result.fulfillmentText = result.fulfillmentText;
         break;
+      case "track.order":
+        dialogflowService.processTrackOrder(result);
+        break;
+      case "order.id":
+        if (!dialogflowService.isTrackOrder) {
+          result.fulfillmentText = "Please start tracking an order first.";
+        } else {
+          result.fulfillmentText = "Thank you ! , here is your status";
+          dialogflowService.processTrackOrderDone(result);
+        }
 
+        break;
       case "order.remove":
         result.fulfillmentText = result.fulfillmentText;
         break;

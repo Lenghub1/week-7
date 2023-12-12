@@ -201,6 +201,7 @@ const authController = {
   // 3. Update seller status to active
   handleSeller: catchAsync(async (req, res, next) => {
     const { sellerId, action } = req.params;
+    
     const seller = await authService.signupSeller.verifySeller(sellerId, next);
     await authService.signupSeller.updateSellerStatus(seller, action);
     return res.status(201).json({
