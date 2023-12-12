@@ -201,7 +201,6 @@ const authController = {
   // 3. Update seller status to active
   handleSeller: catchAsync(async (req, res, next) => {
     const { sellerId, action } = req.params;
-    
     const seller = await authService.signupSeller.verifySeller(sellerId, next);
     await authService.signupSeller.updateSellerStatus(seller, action);
     return res.status(201).json({
@@ -234,7 +233,7 @@ const authController = {
   resendActivationEmail: catchAsync(async (req, res, next) => {
     const data = req?.user;
     const token = await authService.signup.signTokenForActivateAccount(data);
-    const emailData = authService.signup.createEmail(token, data);
+    const emailData = await authService.signup.createEmail(token, data);
     const resultSendEmail = await sendEmailWithNodemailer(emailData);
     authService.signup.verifyResult(next, resultSendEmail);
     return res.status(200).json({
