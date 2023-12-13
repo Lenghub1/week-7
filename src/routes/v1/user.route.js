@@ -11,6 +11,8 @@ import { createSignupValidator } from "../../validators/signup.validator.js";
 import verifyMe from "../../middlewares/userMiddlewares/verifyMe.js";
 import { uploadProductMedia } from "../../middlewares/uploadFiles.js";
 import notificationRouter from "@/routes/v1/notification.route.js";
+import resizeImage from "@/middlewares/resizeImage.js";
+
 const router = express.Router();
 
 router.use(isAuth);
@@ -21,7 +23,9 @@ router
   .patch(verifyMe, controller.updateMe)
   .delete(verifyMe, controller.deleteAccount);
 
-router.route("/upload/image").post(uploadProductMedia, controller.uploadImage);
+router
+  .route("/upload/image")
+  .post(uploadProductMedia, resizeImage(1 / 1), controller.uploadImage);
 
 router
   .route("/update/password")
