@@ -1,13 +1,8 @@
-import BotService from "@/services/bot.service.js";
 import dotenv from "dotenv";
-
+import { dialogflowService } from "@/utils/dialogflow.js";
 dotenv.config();
 
-const dialogflowService = new BotService(
-  process.env.GOOGLE_PROJECT_ID,
-  process.env.DIALOGFLOW_SESSION_ID,
-  process.env.DIALOGFLOW_SESSION_LANGUAGE_CODE
-);
+
 
 export default async function handleTextQuery(req, res) {
   const { text } = req.body;
@@ -15,8 +10,8 @@ export default async function handleTextQuery(req, res) {
   try {
     const result = await dialogflowService.detectTextIntent(text);
     const intentName = result.intent.displayName;
-    console.log(intentName);
-  
+    
+
     switch (intentName) {
       case "add_order":
         result.fulfillmentText = result.fulfillmentText;
@@ -28,7 +23,15 @@ export default async function handleTextQuery(req, res) {
         if (!dialogflowService.isTrackOrder) {
           result.fulfillmentText = "Please start tracking an order first.";
         } else {
-          result.fulfillmentText = "Thank you ! , here is your status";
+          const trackId = result.parameters.fields.itemid.stringValue;
+          console.log(trackId);
+          const shipping =
+            await dialogflowService.getOrderStatusByShippingId(trackId);
+          if (shipping) {
+            result.fulfillmentText = `Thank you ! , here is your status ${shipping}`;
+          } else {
+            result.fulfillmentMessages = "Sorry we cant find your ShippingId";
+          }
           dialogflowService.processTrackOrderDone(result);
         }
 

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import Product from "./product.model.js";
-
+import { generateString } from "@/utils/generateString.js";
 const orderSchema = mongoose.Schema(
   {
     userId: {
@@ -72,6 +72,9 @@ const orderSchema = mongoose.Schema(
         default: "pending",
       },
     },
+    tracking_number: {
+      type: String,
+    },
   },
   {
     timestamps: true,
@@ -80,6 +83,7 @@ const orderSchema = mongoose.Schema(
 
 orderSchema.pre("save", async function (next) {
   if (this.isNew) {
+    this.tracking_number = generateString();
     for (let item of this.cartItems) {
       const product = await Product.findById(item.productId);
       if (product && product.availableStock >= item.quantity) {

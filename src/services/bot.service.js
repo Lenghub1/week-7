@@ -1,6 +1,7 @@
-import { SessionsClient } from "@google-cloud/dialogflow";
+import { SessionsClient, EntityTypesClient } from "@google-cloud/dialogflow";
 import APIError from "@/utils/APIError.js";
 import Order from "@/models/order.model.js";
+
 class BotService {
   constructor(projectId, sessionId, languageCode) {
     // Use the GOOGLE_APPLICATION_CREDENTIALS environment variable to authenticate
@@ -12,6 +13,8 @@ class BotService {
     );
     this.languageCode = languageCode;
     this.isTrackOrder = false;
+    this.projectId = projectId;
+    this.entityTypesClient = new EntityTypesClient();
   }
   processTrackOrder() {
     this.isTrackOrder = true;
@@ -20,21 +23,24 @@ class BotService {
     this.isTrackOrder = false;
   }
   processDone;
-  async getOrderByNumberValue(numberValue) {
+
+  async getOrderStatusByShippingId(trackNumber) {
     try {
-      // Assuming your Order schema has a field called 'orderNumber'
-      const order = await Order.findById(numberValue);
+      const order = await Order.findOne({
+        tracking_number: trackNumber,
+      });
 
-      if (!order) {
-        throw new Error("Order not found");
+      if (order) {
+        return order.shipping.status;
+      } else {
+        return "Shipping ID not found";
       }
-
-      return order;
     } catch (error) {
-      console.error("Error getting order:", error);
-      throw new Error("Error getting order");
+      console.error(error);
+      throw error;
     }
   }
+
   async detectTextIntent(text) {
     const request = {
       session: this.sessionPath,
@@ -51,6 +57,38 @@ class BotService {
     } catch (error) {
       console.error("Error detecting text intent:", error);
       throw new APIError({ status: 500, message: "Internal server error" });
+    }
+  }
+  async addEntityValues(entityTypeName, newValues) {
+    try {
+      // Retrieve the existing entity type
+      const [existingEntityType] = await this.entityTypesClient.getEntityType({
+        name: `projects/${this.projectId}/locations/global/agent/entityTypes/${entityTypeName}`,
+      });
+
+      if (!existingEntityType) {
+        throw new Error(`Entity type ${entityTypeName} not found.`);
+      }
+
+      // Add the new values to the existing entity type
+      const updatedEntityType = {
+        ...existingEntityType,
+        entities: [
+          ...(existingEntityType.entities || []),
+          ...newValues.map((value) => ({ value })),
+        ],
+      };
+
+      // Update the entity type in Dialogflow
+      await this.entityTypesClient.updateEntityType({
+        entityType: updatedEntityType,
+        updateMask: {
+          paths: ["entities"],
+        },
+      });
+
+    } catch (error) {
+      console.error(`Error adding entity values: ${error.message}`);
     }
   }
 }

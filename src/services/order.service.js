@@ -14,6 +14,9 @@ import {
 import mongoose from "mongoose";
 import { getFileSignedUrl } from "../config/s3.js";
 import Address from "@/models/address.model.js";
+import { dialogflowService } from "@/utils/dialogflow.js";
+import dotenv from "dotenv";
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -101,7 +104,7 @@ const orderService = {
     switch (status) {
       case "approved":
         emailSubject = "Order Approved";
-        emailBody = emailApprove.replace("${orderId}", order._id);
+        emailBody = emailApprove.replace("${orderId}", order.tracking_number);
         break;
 
       case "shipped":
@@ -121,7 +124,7 @@ const orderService = {
           .replace("${total}", order.totalPrice)
           .replace("${totall}", order.totalPrice)
           .replace("${payment}", order.paymentMethod)
-          .replace("${orderId}", order._id)
+          .replace("${orderId}", order.tracking_number)
           .replace("${adress}", address.addressLine)
           .replace("${phoneNumber}", address.phoneNumber);
 
@@ -227,6 +230,10 @@ const orderService = {
     };
 
     const order = await Order.create(orderBody);
+
+    dialogflowService.addEntityValues(process.env.UNQILD, [
+      order.tracking_number,
+    ]);
 
     if (!user) {
       throw new APIError({ status: 404, message: "User not found." });
