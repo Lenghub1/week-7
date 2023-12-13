@@ -10,16 +10,11 @@ const productServiceAdmin = {
   async createProduct(imgCover, media, productInput) {
     const allFiles = [];
     try {
-      const foundProduct = await Product.findOne({
+      // Check if seller has already had product with this title
+      await Product.checkProductExists({
         sellerId: productInput.sellerId,
         title: productInput.title,
-      }).select("title sellerId");
-      if (foundProduct) {
-        throw new APIError({
-          status: 400,
-          message: `Found product with same title: '${productInput.title}'`,
-        });
-      }
+      });
 
       // generate file names
       const imgCoverName = utils.generateFileName(
@@ -130,6 +125,13 @@ const productServiceAdmin = {
         throw new APIError({
           message: `Cannot find product with this ID: ${productId}`,
           status: 400,
+        });
+      }
+
+      if (productInput.title) {
+        await Product.checkProductExists({
+          sellerId: product.sellerId,
+          title: productInput.title,
         });
       }
 
@@ -254,10 +256,7 @@ const productServiceAdmin = {
       return product;
     } catch (error) {
       await session.abortTransaction();
-      throw new APIError({
-        status: 500,
-        message: "Something went wrong! Cannot update the product.",
-      });
+      throw error;
     } finally {
       session.endSession();
     }

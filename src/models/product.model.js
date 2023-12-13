@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import slugify from "slugify";
 import utils from "../utils/utils.js";
+import APIError from "@/utils/APIError.js";
+import catchAsync from "@/utils/catchAsync.js";
 
 const productSchema = new mongoose.Schema(
   {
@@ -144,6 +146,26 @@ productSchema.pre("findOneAndUpdate", function (next) {
     this._update.unitPrice = utils.calculateUnitPrice(this._update.basePrice);
   next();
 });
+
+productSchema.statics.checkProductExists = async function ({
+  title,
+  sellerId,
+}) {
+  const foundProduct = await this.findOne({
+    sellerId,
+    title,
+  }).select("title sellerId status");
+
+  if (foundProduct) {
+    if (foundProduct.status !== "Deleted") {
+      throw new APIError({
+        status: 400,
+        message: "Found product with the same title.",
+      });
+    }
+  }
+  return;
+};
 
 const Product = mongoose.model("Product", productSchema);
 export default Product;
