@@ -23,7 +23,7 @@ export default async function handleTextQuery(req, res) {
         if (!dialogflowService.isTrackOrder) {
           result.fulfillmentText = "Please start tracking an order first.";
         } else {
-          const trackId = result.parameters.fields.itemid.stringValue;
+          const trackId = result.parameters.fields.id.stringValue;
           console.log(trackId);
           const shipping =
             await dialogflowService.getOrderStatusByShippingId(trackId);
