@@ -15,6 +15,7 @@ class BotService {
     this.isTrackOrder = false;
     this.projectId = projectId;
     this.entityTypesClient = new EntityTypesClient();
+    this.isOrder = false;
   }
   processTrackOrder() {
     this.isTrackOrder = true;
@@ -22,8 +23,13 @@ class BotService {
   processTrackOrderDone() {
     this.isTrackOrder = false;
   }
-  processDone;
 
+  procressOrder() {
+    this.isOrder = true;
+  }
+  procressOrderDone() {
+    this.isOrder = false;
+  }
   async getOrderStatusByShippingId(trackNumber) {
     try {
       const order = await Order.findOne({
@@ -86,11 +92,11 @@ class BotService {
           paths: ["entities"],
         },
       });
-
     } catch (error) {
       console.error(`Error adding entity values: ${error.message}`);
     }
   }
+  
 }
 
 export default BotService;

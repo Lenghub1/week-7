@@ -2,19 +2,25 @@ import dotenv from "dotenv";
 import { dialogflowService } from "@/utils/dialogflow.js";
 dotenv.config();
 
-
-
 export default async function handleTextQuery(req, res) {
   const { text } = req.body;
 
   try {
     const result = await dialogflowService.detectTextIntent(text);
     const intentName = result.intent.displayName;
-    
 
     switch (intentName) {
-      case "add_order":
-        result.fulfillmentText = result.fulfillmentText;
+      case "add.order":
+        if (!dialogflowService.isOrder) {
+          result.fulfillmentText =
+            "please create order before add product to cart . Example: create order ...";
+        } else {
+          result.fulfillmentText = result.fulfillmentText;
+        }
+
+        break;
+      case "create.order":
+        dialogflowService.procressOrder(result);
         break;
       case "track.order":
         dialogflowService.processTrackOrder(result);
@@ -40,7 +46,9 @@ export default async function handleTextQuery(req, res) {
         result.fulfillmentText = result.fulfillmentText;
         break;
       case "order.completed":
+        dialogflowService.procressOrderDone(result);
         result.fulfillmentText = "Do you want to checkout ?";
+
         break;
       default:
     }
