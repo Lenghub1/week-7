@@ -52,11 +52,8 @@ const handleSignIn = catchAsync(async (req, res, next) => {
   const newRefreshToken = authService.signRefreshToken(req.user._id);
   if (cookies?.jwt) {
     const refreshToken = cookies.jwt;
-    const session = await Session.findOneAndDelete({ refreshToken });
+    await Session.findOneAndDelete({ refreshToken });
     // Refresh token may expired and required user to log in again, so there is no session in db
-    if (!session) {
-      authController.clearCookie(res);
-    }
     authController.clearCookie(res);
   }
   await Session.create({
@@ -73,11 +70,13 @@ const handleSignIn = catchAsync(async (req, res, next) => {
   });
   authController.signCookie(res, newRefreshToken);
   res.status(200).json({
-    message: "Login succeed.",
-    user: {
-      id: req.user.id,
-      role: req.user.role,
-      accessToken,
+    status: "success",
+    data: {
+      user: {
+        id: req.user.id,
+        role: req.user.role,
+        accessToken,
+      },
     },
   });
 });

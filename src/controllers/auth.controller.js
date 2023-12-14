@@ -40,12 +40,14 @@ const authController = {
       data
     );
     return res.status(201).json({
-      message: "Please Check your email to activate your rukhak account.",
+      status: "success",
       data: {
-        _id: user._id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        user: {
+          _id: user._id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+        },
       },
     });
   }),
@@ -122,6 +124,7 @@ const authController = {
     const user = await authService.refreshToken.findUser(session);
     authController.signCookie(res, refreshToken);
     res.status(200).json({
+      status: "success",
       user: {
         id: user._id,
         role: user.role,
@@ -147,7 +150,7 @@ const authController = {
     const resultSendEmail = sendEmailWithNodemailer(emailData);
     authService.forgotPassword.verifyResult(next, resultSendEmail);
     return res.status(200).json({
-      message: "Please check your email to reset your password.",
+      status: "success",
     });
   }),
 
@@ -164,7 +167,7 @@ const authController = {
     );
     await authService.forgotPassword.createNewPassword(data, user);
     return res.status(201).json({
-      message: "Password has been reseted.",
+      status: "success",
     });
   }),
 
@@ -220,7 +223,7 @@ const authController = {
   logOut: catchAsync(async (req, res, next) => {
     const cookies = req?.cookies;
     const refreshToken = await authService.logOut.checkJWT(res, cookies);
-    await authService.logOut.verifySession(res, refreshToken);
+    await authService.logOut.deleteSession(res, refreshToken);
     authController.clearCookie(res);
     return res.status(204).send();
   }),

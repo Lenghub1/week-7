@@ -46,12 +46,10 @@ const authService = {
       const { email, password, firstName, lastName } = data;
 
       if (!resultSendEmail) {
-        return next(
-          new APIError({
-            status: 500,
-            message: "Internal server error",
-          })
-        );
+        throw new APIError({
+          status: 500,
+          message: "Internal server error",
+        });
       }
       const user = await User.create({
         email,
@@ -84,59 +82,49 @@ const authService = {
 
     verifyResult(next, resultSendEmail) {
       if (!resultSendEmail) {
-        return next(
-          new APIError({
-            status: 500,
-            message: "Internal server error.",
-          })
-        );
+        throw new APIError({
+          status: 500,
+          message: "Internal server error.",
+        });
       }
     },
 
     activateAccount(next, data) {
       const { token } = data;
       if (!token) {
-        return next(
-          new APIError({
-            status: 401,
-            message: "Token is undefined! Please signup again.",
-          })
-        );
+        throw new APIError({
+          status: 401,
+          message: "Token is undefined! Please signup again.",
+        });
       }
       return jwt.verify(
         token,
         process.env.ACCOUNT_ACTIVATION_TOKEN,
         async (err, decoded) => {
           if (err) {
-            return next(
-              new APIError({
-                status: 401,
-                message: "Link Expired! Please signup again",
-              })
-            );
+            throw new APIError({
+              status: 401,
+              message: "Link Expired! Please signup again",
+            });
           }
 
           const { email } = decoded;
 
           if (!email) {
-            return next(
-              new APIError({
-                status: 401,
-                message:
-                  "Please sign up again! Make sure to fill in all required information.",
-              })
-            );
+            throw new APIError({
+              status: 401,
+              message:
+                "Please sign up again! Make sure to fill in all required information.",
+            });
           }
 
           const user = await User.findOne({ email });
 
           if (!user) {
-            return next(
-              new APIError({
-                status: 410,
-                message: "Account activation expired. Please sign up again.",
-              })
-            );
+            throw new APIError({
+              status: 410,
+              message: "Account activation expired. Please sign up again.",
+            });
           }
 
           user.accountVerify = true;
@@ -152,59 +140,48 @@ const authService = {
       const { email, password } = data;
       const user = await User.findOne({ email });
       if (!user || !(await user.verifyPassword(password))) {
-        return next(
-          new APIError({
-            status: 400,
-            message: "Email or password is incorrected.", // For more secure and prevent malicious from knowing which field they input wrong.
-          })
-        );
+        throw new APIError({
+          status: 400,
+          message: "Email or password is incorrected.", // For more secure and prevent malicious from knowing which field they input wrong.
+        });
       } else if (user && user.accountVerify === false) {
-        return next(
-          new APIError({
-            status: 401,
-            message: "Please activate your account first.",
-          })
-        );
+        throw new APIError({
+          status: 401,
+          message: "Please activate your account first.",
+        });
       }
 
       return user;
     },
   },
   googleSignIn: {
-    verifyIdToken(next, client, data) {
+    async verifyIdToken(next, client, data) {
       const { credential } = data;
-      return client
-        .verifyIdToken({
-          idToken: credential,
-          audience: process.env.GOOGLE_CLIENT_ID,
-        })
-        .then(async (response) => {
-          const { email_verified, given_name, family_name, email } =
-            response.payload;
-          if (email_verified) {
-            const user = await User.findOne({ email });
-            if (user) {
-              return user;
-            }
-            const newUser = new User({
-              firstName: given_name,
-              lastName: family_name,
-              email,
-              active: true,
-              signupMethod: "google",
-            });
-            await newUser.save({ validateBeforeSave: false });
-
-            return newUser;
-          }
-          return next(
-            new APIError({
-              status: 400,
-              message:
-                "Google login failed. Please try again later or choose another method.",
-            })
-          );
+      const ticket = await client.verifyIdToken({
+        idToken: credential,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      const payload = ticket.getPayload();
+      const { email_verified, given_name, family_name, email } = payload;
+      if (email_verified) {
+        const user = await User.findOne({ email });
+        if (user) {
+          return user;
+        }
+        const newUser = new User({
+          firstName: given_name,
+          lastName: family_name,
+          email,
+          active: true,
+          signupMethod: "google",
         });
+        await newUser.save({ validateBeforeSave: false });
+      }
+      throw new APIError({
+        status: 400,
+        message:
+          "Google login failed. Please try again later or choose another method.",
+      });
     },
   },
   refreshToken: {
@@ -475,15 +452,8 @@ const authService = {
       return cookies.jwt;
     },
 
-    async verifySession(res, refreshToken) {
-      const session = await Session.findOneAndDelete({ refreshToken });
-      if (!session) {
-        res.clearCookie("jwt", {
-          httpOnly: true,
-          sameSite: "None",
-          secure: true,
-        });
-      }
+    async deleteSession(res, refreshToken) {
+      await Session.findOneAndDelete({ refreshToken });
     },
   },
 };
