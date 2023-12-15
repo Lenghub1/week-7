@@ -51,10 +51,6 @@ const defaultRoutes = [
     route: addressRoute,
   },
   {
-    path: "/orders",
-    route: orderRoute,
-  },
-  {
     path: "/payment",
     route: paymentRoute,
   },

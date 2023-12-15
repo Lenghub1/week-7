@@ -6,7 +6,9 @@ const orderController = {
   getOrder: factory.getById(orderService.getOrder),
   addOrder: factory.create(orderService.createOrder),
   updateOrder: factory.updateById(orderService.updateOrder),
+  userUpdateOrder: factory.updateById(orderService.userUpdateOrder),
   deleteOrder: factory.deleteById(orderService.deleteOrder),
+
 };
 
 export default orderController;

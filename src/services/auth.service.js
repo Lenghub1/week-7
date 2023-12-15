@@ -262,14 +262,7 @@ const authService = {
           message: "User not found.",
         });
       }
-      await Notification.insertNotification(
-        "6560669998161a8467e3705d",
-        req.user.id,
-        "Request to become seller",
-        `Mr/Ms ${user.lastName} request to become seller`,
-        "Activate Shop",
-        req.user.id
-      );
+      
       return user;
     },
 
@@ -305,6 +298,14 @@ const authService = {
         await session.commitTransaction();
         session.endSession();
 
+        await Notification.insertNotification(
+          "6560669998161a8467e3705d",
+          req.user.id,
+          "Request to become seller",
+          `Mr/Ms ${user.lastName} request to become seller`,
+          "Activate Shop",
+          req.user.id
+        );
         return seller;
       } catch (err) {
         await session.abortTransaction();
@@ -328,6 +329,8 @@ const authService = {
     async updateSellerStatus(seller, action) {
       if (action === "approve") {
         seller.sellerStatus = "active";
+        await seller.save();
+
         await Notification.insertNotification(
           seller.id,
           "6560669998161a8467e3705d",
@@ -336,7 +339,7 @@ const authService = {
           "Shop Activated",
           seller.id
         );
-        await seller.save();
+        
       } else {
         seller.sellerStatus = "inactive";
         seller.role = "user";

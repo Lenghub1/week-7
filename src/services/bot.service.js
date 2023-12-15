@@ -43,7 +43,7 @@ class BotService {
       }
     } catch (error) {
       console.error(error);
-      throw error;
+      throw new APIError({ status: 500, message: "Internal server error" });
     }
   }
 
@@ -96,7 +96,6 @@ class BotService {
       console.error(`Error adding entity values: ${error.message}`);
     }
   }
-  
 }
 
 export default BotService;

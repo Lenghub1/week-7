@@ -73,7 +73,61 @@ const orderService = {
 
     return order;
   },
+  userUpdateOrder: async (orderId, orderBody) => {
+    const order = await Order.findById(orderId);
+    if (!order)
+      throw new APIError({ status: 404, message: "Order not found." });
+    if (
+      orderBody.shipping.status === "cancelled" &&
+      order.shipping.status === "pending"
+    ) {
+      const updatedOrder = await Order.findByIdAndUpdate(
+        orderId,
+        { "shipping.status": "cancelled" },
+        { new: true }
+      );
 
+      if (!updatedOrder) {
+        throw new APIError({ status: 404, message: "Order not found." });
+      }
+
+      const cartItemsWithDetails = await Promise.all(
+        updatedOrder.cartItems.map(getOrderDetails)
+      );
+      const cartItemsHTML = cartItemsWithDetails
+        .map(generateCartItemHTMLRow)
+        .join("");
+
+      const { status } = updatedOrder.shipping;
+      const seller = await User.findById(cartItemsWithDetails[0]?.sellerId);
+      const address = await Address.findById(updatedOrder.shipping.address);
+
+      const [emailSubject, emailBody] = await getEmailSubjectAndBody(
+        status,
+        updatedOrder,
+        seller,
+        address,
+        cartItemsHTML
+      );
+
+      const mailOptions = {
+        from: process.env.EMAIL_FROM,
+        to: seller.email,
+        subject: emailSubject,
+        html: emailBody,
+      };
+
+      await sendEmail(status, mailOptions);
+      console.log(updatedOrder);
+
+      return updatedOrder;
+    } else {
+      throw new APIError({
+        status: 403,
+        message: "You don't have permission to perform this action.",
+      });
+    }
+  },
   deleteOrder: async (orderId) => {
     const order = await Order.findByIdAndDelete(orderId);
     if (!order)

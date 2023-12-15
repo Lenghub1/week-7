@@ -10,6 +10,7 @@ import { uploadProductMedia } from "@/middlewares/uploadFiles.js";
 import isAuth from "@/middlewares/authMiddlewares/isAuth.js";
 import verifyRoles from "@/middlewares/authMiddlewares/verifyRoles.js";
 import verifySellerStatus from "@/middlewares/authMiddlewares/verifySellerStatus.js";
+import orderController from "@/controllers/order.controller.js";
 
 const router = express.Router();
 
@@ -58,5 +59,19 @@ router
     verifySellerStatus(),
     controller.deleteProduct
   );
+
+// add method seller orderRoute
+
+router
+  .route("/orders/:id")
+  .get(orderController.getOrder)
+  .patch(
+    isAuth,
+    verifyRoles(ROLE),
+    verifySellerStatus(),
+    orderController.updateOrder
+  )
+  .delete(orderController.deleteOrder);
+
 
 export default router;

@@ -12,6 +12,7 @@ import verifyMe from "../../middlewares/userMiddlewares/verifyMe.js";
 import { uploadProductMedia } from "../../middlewares/uploadFiles.js";
 import notificationRouter from "@/routes/v1/notification.route.js";
 import resizeImage from "@/middlewares/resizeImage.js";
+import orderController from "@/controllers/order.controller.js";
 
 const router = express.Router();
 
@@ -52,6 +53,9 @@ router
 
 router.use("/:userId/notification", notificationRouter);
 
+// update user update order
+
+router.route("/order/:id").patch(orderController.userUpdateOrder);
 // Admin interact with users ----
 router.use(verifyRoles("admin"));
 
