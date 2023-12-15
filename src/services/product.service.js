@@ -5,7 +5,7 @@
 import Product from "../models/product.model.js";
 import APIError from "@/utils/APIError.js";
 import APIFeatures from "@/utils/APIFeatures.js";
-
+import { getFileSignedUrl } from "@/config/s3.js";
 /**
  * @typedef {Object} ProductInput
  * @property {string} title - The title of the product.
@@ -64,8 +64,9 @@ const productService = {
   },
 
   async getUserProducts() {
-    const products = await Product.aggregate([
+    let products = await Product.aggregate([
       { $sample: { size: 10 } },
+      { $match: { status: "Public" } },
       {
         $facet: {
           metadata: [{ $count: "totalResults" }],
@@ -75,7 +76,14 @@ const productService = {
       { $unwind: "$metadata" },
     ]);
 
-    if (products.length === 0) {
+    const { metadata, data } = products[0];
+
+    await Promise.all(
+      data?.map(async (each) => {
+        each.imgCover = await getFileSignedUrl(each.imgCover);
+      })
+    );
+    if (data.length === 0) {
       throw new APIError({
         status: 404,
         message: "There is no document found.",
@@ -83,13 +91,14 @@ const productService = {
     }
 
     return {
-      metadata: products[0].metadata,
-      data: products[0].data,
+      metadata,
+      data,
     };
   },
 
   async getHotProducts(queryStr) {
-    const features = new APIFeatures(Product, queryStr)
+    const filterQueryString = { ...queryStr, status: "Public" };
+    const features = new APIFeatures(Product, filterQueryString)
       .search()
       .filter()
       .sort()
@@ -99,6 +108,12 @@ const productService = {
     let products = await features.execute();
     products = products[0];
 
+    await Promise.all(
+      products?.data.map(async (each) => {
+        each.imgCover = await getFileSignedUrl(each.imgCover);
+      })
+    );
+
     return products;
   },
 
@@ -107,6 +122,7 @@ const productService = {
       ...queryStr,
       averageRating: { gte: "4.5" },
       soldAmount: { gte: "100" },
+      status: "Public",
     };
 
     const features = new APIFeatures(Product, topProductsQuery)
@@ -119,6 +135,12 @@ const productService = {
     let products = await features.execute();
     products = products[0];
 
+    await Promise.all(
+      products?.data.map(async (each) => {
+        each.imgCover = await getFileSignedUrl(each.imgCover);
+      })
+    );
+
     return products;
   },
 
@@ -126,7 +148,9 @@ const productService = {
     if (queryStr.categories)
       queryStr.categories = queryStr.categories.split(",");
 
-    const features = new APIFeatures(Product, queryStr)
+    const filterQueryString = { ...queryStr, status: "Public" };
+
+    const features = new APIFeatures(Product, filterQueryString)
       .search()
       .filter()
       .sort()
@@ -135,6 +159,12 @@ const productService = {
 
     let products = await features.execute();
     products = products[0];
+
+    await Promise.all(
+      products?.data.map(async (each) => {
+        each.imgCover = await getFileSignedUrl(each.imgCover);
+      })
+    );
 
     if (!products)
       throw new APIError({
