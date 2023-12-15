@@ -12,8 +12,8 @@ const userController = {
     const { query } = req;
     const users = await userService.getAll(query);
     return res.status(200).json({
-      message: "Users retrieved.",
-      users,
+      status: "success",
+      data: { users },
     });
   }),
 
@@ -24,8 +24,8 @@ const userController = {
     const data = req.body;
     const user = await userService.createOne(data);
     return res.status(201).json({
-      message: "New user created.",
-      user,
+      status: "success",
+      data: { user },
     });
   }),
 
@@ -35,17 +35,18 @@ const userController = {
   // 3. Return a user
   getOneUser: catchAsync(async (req, res, next) => {
     const { userId } = req.params;
-    const user = await userService.getOne.verifyUser(next, userId);
-    const imageURL = await userService.getOne.getImageURL(next, user);
+    const user = await userService.getOne.verifyUser(userId);
+    const imageURL = await userService.getOne.getImageURL(user);
     if (imageURL) {
+      user.imageURL = imageURL;
       return res.status(200).json({
-        message: "success!",
-        user: { ...user, imageURL },
+        status: "success",
+        data: { user },
       });
     }
     return res.status(200).json({
-      message: "success!",
-      user: { ...user },
+      status: "success",
+      data: { user },
     });
   }),
 
@@ -56,23 +57,19 @@ const userController = {
   updateOneUser: catchAsync(async (req, res, next) => {
     const { userId } = req.params;
     const data = req.body;
-    const user = await userService.updateOne.verifyAndUpdateUser(
-      next,
-      userId,
-      data
-    );
+    const user = await userService.updateOne.verifyAndUpdateUser(userId, data);
     return res.status(200).json({
-      message: "User updated",
-      user,
+      status: "success",
+      data: { user },
     });
   }),
 
   uploadImage: catchAsync(async (req, res, next) => {
     const { user } = req;
-    const file = userService.uploadImage.verifyFile(req, next);
+    const file = userService.uploadImage.verifyFile(req);
     await userService.uploadImage.createImage(file, user);
     return res.status(201).json({
-      message: "profile image successfully uploaded",
+      status: "success",
     });
   }),
 
@@ -82,7 +79,7 @@ const userController = {
   // 3. Return 204 (No content)
   deleteOneUser: catchAsync(async (req, res, next) => {
     const { userId } = req.params;
-    await userService.deleteOne.verifyUserAndDelete(next, userId);
+    await userService.deleteOne.verifyUserAndDelete(userId);
     return res.status(204).send();
   }),
 
@@ -93,11 +90,10 @@ const userController = {
   updateMe: catchAsync(async (req, res, next) => {
     const data = req.body;
     const { user } = req;
-    const filteredData = await userService.updateMe.verifyData(next, data);
-    const updatedUser = await userService.updateMe.update(user, filteredData);
+    const filteredData = await userService.updateMe.verifyData(data);
+    await userService.updateMe.update(user, filteredData);
     return res.status(200).json({
-      message: "Your profile information successfullay updated.",
-      user: updatedUser,
+      status: "success",
     });
   }),
 
@@ -109,15 +105,15 @@ const userController = {
   // 5. Send email along the otp code
   confirmNewEmail: catchAsync(async (req, res, next) => {
     const data = req.body;
-    const user = await userService.updateEmail.verifyUser(next, data);
-    const newEmail = await userService.updateEmail.verifyNewEmail(next, data);
+    const user = await userService.updateEmail.verifyUser(data);
+    const newEmail = await userService.updateEmail.verifyNewEmail(data);
     const OTP = await user.createOTPToken();
     await user.save({ validateBeforeSave: false });
     const emailData = await userService.updateEmail.createEmail(OTP, newEmail);
     const resultSendEmail = await sendEmailWithNodemailer(emailData);
-    await userService.updateEmail.verifyResultSendEmail(next, resultSendEmail);
+    await userService.updateEmail.verifyResultSendEmail(resultSendEmail);
     return res.status(200).json({
-      message: `We've sent a 6-digit verification code to your email (${newEmail}). Kindly check your inbox and confirm your email address by entering the code.`,
+      status: "success",
       data: {
         newEmail,
       },
@@ -133,7 +129,7 @@ const userController = {
     const data = req.body;
     const email = await userService.updateEmail.update(user, data);
     return res.status(201).json({
-      message: "Email successfully updated!",
+      status: "success",
       data: {
         email,
       },
@@ -146,7 +142,7 @@ const userController = {
   deleteAccount: catchAsync(async (req, res, next) => {
     const data = req.body;
     const { user } = req;
-    await userService.deleteAccount.verifyPassword(next, data, user);
+    await userService.deleteAccount.verifyPassword(data, user);
     await userService.deleteAccount.delete(user, data);
     authController.clearCookie(res);
     res.status(204).send(); // No Content
@@ -159,9 +155,9 @@ const userController = {
   logOutOne: catchAsync(async (req, res, next) => {
     const data = req.params;
     const { user } = req;
-    const session = await userService.logOutOne.verifySession(next, user, data);
+    await userService.logOutOne.verifySession(user, data);
     return res.status(200).json({
-      message: `device ${session.deviceType} successfully loggd out!`,
+      status: "success",
     });
   }),
 
@@ -173,7 +169,7 @@ const userController = {
   updatePassword: catchAsync(async (req, res, next) => {
     const data = req.body;
     const user = await userService.updatePassword.getCurrentUser(req);
-    await userService.updatePassword.verifyAndUpdatePassword(user, data, next);
+    await userService.updatePassword.verifyAndUpdatePassword(user, data);
     await userService.updatePassword.removeSession(user);
     req.user = user;
     return next();
@@ -186,11 +182,11 @@ const userController = {
   enable2FAByPassword: catchAsync(async (req, res, next) => {
     const data = req.body;
     const { action } = req.params;
-    const user = await userService.enable2FA.verifyUser(req, next, action);
-    await userService.enable2FA.verifyPassword(next, user, data);
+    const user = await userService.enable2FA.verifyUser(req, action);
+    await userService.enable2FA.verifyPassword(user, data);
     await userService.enable2FA.enable(user, action);
     return res.status(200).json({
-      message: `2-Step-Verification successfully ${action}d!`,
+      status: "success",
     });
   }),
 
@@ -202,15 +198,14 @@ const userController = {
   // 5. Verify the result sending email
   enable2FAByOTP: catchAsync(async (req, res, next) => {
     const { action } = req.params;
-    const user = await userService.enable2FA.verifyUser(req, next, action);
+    const user = await userService.enable2FA.verifyUser(req, action);
     const OTP = await user.createOTPToken();
     await user.save({ validateBeforeSave: false });
     const emailData = await userService.enable2FA.createEmail(OTP, user.email);
     const resultSendEmail = sendEmailWithNodemailer(emailData);
-    await userService.enable2FA.confirmResultSendEmail(next, resultSendEmail);
+    await userService.enable2FA.confirmResultSendEmail(resultSendEmail);
     return res.status(201).json({
-      message:
-        "Please verify your OTP code that we have sent to your email address.",
+      status: "success",
       data: {
         email: user.email,
       },
@@ -226,7 +221,7 @@ const userController = {
     const { user } = req;
     await userService.enable2FA.enable(user, action);
     return res.status(200).json({
-      message: `2-Step-Verification successfully ${action}d!`,
+      status: "success",
     });
   }),
 };
