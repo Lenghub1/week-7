@@ -13,6 +13,7 @@ import botRoute from "./bot.route.js";
 import userRoute from "./user.route.js";
 import productRouteAdmin from "./admin/product.route.js";
 import sellerRouteAdmin from "./admin/seller.route.js";
+import categoryRoute from "./category.route.js";
 
 const router = express.Router();
 
@@ -72,6 +73,10 @@ const defaultRoutes = [
   {
     path: "/admin/sellers",
     route: sellerRouteAdmin,
+  },
+  {
+    path: "/category",
+    route: categoryRoute,
   },
 ];
 
