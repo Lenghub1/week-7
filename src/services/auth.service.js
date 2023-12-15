@@ -10,6 +10,7 @@ import path from "path";
 import bcrypt from "bcryptjs";
 import { fileURLToPath } from "url";
 import Notification from "@/models/notification.model.js";
+import mongoose from "mongoose";
 
 dotenv.config();
 
@@ -42,7 +43,7 @@ const authService = {
         .replaceAll(".", "RUKHAK2023"); // Prevent page not found on client side.
     },
 
-    async createNewUser(next, resultSendEmail, data) {
+    async createNewUser(resultSendEmail, data) {
       const { email, password, firstName, lastName } = data;
 
       if (!resultSendEmail) {
@@ -80,7 +81,7 @@ const authService = {
       return emailData;
     },
 
-    verifyResult(next, resultSendEmail) {
+    verifyResult(resultSendEmail) {
       if (!resultSendEmail) {
         throw new APIError({
           status: 500,
@@ -89,7 +90,7 @@ const authService = {
       }
     },
 
-    activateAccount(next, data) {
+    activateAccount(data) {
       const { token } = data;
       if (!token) {
         throw new APIError({
@@ -136,7 +137,7 @@ const authService = {
     },
   },
   login: {
-    async verifyUserByEmailAndPassword(data, next) {
+    async verifyUserByEmailAndPassword(data) {
       const { email, password } = data;
       const user = await User.findOne({ email });
       if (!user || !(await user.verifyPassword(password))) {
@@ -155,7 +156,7 @@ const authService = {
     },
   },
   googleSignIn: {
-    async verifyIdToken(next, client, data) {
+    async verifyIdToken(client, data) {
       const { credential } = data;
       const ticket = await client.verifyIdToken({
         idToken: credential,
@@ -185,20 +186,18 @@ const authService = {
     },
   },
   refreshToken: {
-    checkCookie(cookies, next) {
+    checkCookie(cookies) {
       if (!cookies?.jwt) {
-        return next(
-          new APIError({
-            status: 401,
-            message:
-              "Unauthorized: Access is denied due to invalid credentials. Please login again.",
-          })
-        );
+        throw new APIError({
+          status: 401,
+          message:
+            "Unauthorized: Access is denied due to invalid credentials. Please login again.",
+        });
       }
       return cookies?.jwt;
     },
 
-    async verifySession(next, cookieRefreshToken) {
+    async verifySession(cookieRefreshToken) {
       const session = await Session.findOne({
         refreshToken: cookieRefreshToken,
       });
@@ -209,17 +208,17 @@ const authService = {
           cookieRefreshToken,
           process.env.REFRESH_TOKEN_SECRET,
           async (err, decoded) => {
-            if (err) return next(new APIError({ status: 403 })); // Forbidden
+            if (err) throw new APIError({ status: 403 }); // Forbidden
             // Required all devices with cuurent user's id to log in again!
             await Session.deleteMany({ userId: decoded.userId });
-            return next(new APIError({ status: 403 }));
+            throw new APIError({ status: 403, message: "Unauthorize" });
           }
         );
       }
       return session;
     },
 
-    verifyRefreshToken(next, cookieRefreshToken, session) {
+    verifyRefreshToken(cookieRefreshToken, session) {
       return jwt.verify(
         cookieRefreshToken,
         process.env.REFRESH_TOKEN_SECRET,
@@ -227,7 +226,7 @@ const authService = {
           // error means refresh token may expired (required to log in again )
           if (err || session.userId.toString() !== decoded.userId) {
             await session.deleteOne();
-            return next(new APIError({ status: 403 }));
+            throw new APIError({ status: 403, message: "Unauthorize" });
           }
 
           const { userId } = decoded;
@@ -246,26 +245,22 @@ const authService = {
       const userId = session.userId;
       const user = await User.findById(userId);
       if (!user) {
-        return next(
-          new APIError({
-            status: 404,
-            message: "User not found.",
-          })
-        );
+        throw new APIError({
+          status: 404,
+          message: "User not found.",
+        });
       }
       return user;
     },
   },
   signupSeller: {
-    async verifyUserById(req, next) {
+    async verifyUserById(req) {
       const user = await User.findById(req.user.id);
       if (!user) {
-        return next(
-          new APIError({
-            status: 404,
-            message: "User does not exist.",
-          })
-        );
+        throw new APIError({
+          status: 404,
+          message: "User not found.",
+        });
       }
       await Notification.insertNotification(
         "6560669998161a8467e3705d",
@@ -279,42 +274,53 @@ const authService = {
     },
 
     async createSeller(sellerData, user) {
-      const {
-        storeName,
-        storeAddress,
-        phoneNumber,
-        storeLocation,
-        dateOfBirth,
-      } = sellerData;
-      user.role = "seller";
-      const seller = new Seller({
-        _id: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        password: user.password,
-        role: user.role,
-        storeName,
-        storeAddress,
-        phoneNumber,
-        storeLocation,
-        dateOfBirth,
-      });
-      await User.findByIdAndRemove(user.id);
-      await seller.save();
+      const session = await mongoose.startSession();
+      session.startTransaction();
 
-      return seller;
+      try {
+        const {
+          storeName,
+          storeAddress,
+          phoneNumber,
+          storeLocation,
+          dateOfBirth,
+        } = sellerData;
+        user.role = "seller";
+        const seller = new Seller({
+          _id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          password: user.password,
+          role: user.role,
+          storeName,
+          storeAddress,
+          phoneNumber,
+          storeLocation,
+          dateOfBirth,
+        });
+        await User.findByIdAndRemove(user.id);
+        await seller.save();
+
+        await session.commitTransaction();
+        session.endSession();
+
+        return seller;
+      } catch (err) {
+        await session.abortTransaction();
+        throw err;
+      } finally {
+        session.endSession();
+      }
     },
 
-    async verifySeller(sellerId, next) {
+    async verifySeller(sellerId) {
       const seller = await User.findById(sellerId);
       if (!seller) {
-        next(
-          new APIError({
-            status: 404,
-            message: `Document Not Found: User id ${sellerId}, does not exist in data base.`,
-          })
-        );
+        throw new APIError({
+          status: 404,
+          message: `Document Not Found: User id ${sellerId}, does not exist in data base.`,
+        });
       }
       return seller;
     },
@@ -339,16 +345,14 @@ const authService = {
     },
   },
   forgotPassword: {
-    async verifyUserByEmail(next, data) {
+    async verifyUserByEmail(data) {
       const { email } = data;
       const user = await User.findOne({ email });
       if (!user) {
-        return next(
-          new APIError({
-            status: 404,
-            message: "Email does not exist.",
-          })
-        );
+        throw new APIError({
+          status: 404,
+          message: "Email does not exist.",
+        });
       }
       return user;
     },
@@ -370,14 +374,12 @@ const authService = {
       return emailData;
     },
 
-    verifyResult(next, resultSendEmail) {
+    verifyResult(resultSendEmail) {
       if (!resultSendEmail) {
-        return next(
-          new APIError({
-            status: 500,
-            message: "Internal server error. Unable to send email.",
-          })
-        );
+        throw new APIError({
+          status: 500,
+          message: "Internal server error. Unable to send email.",
+        });
       }
     },
 
@@ -390,7 +392,7 @@ const authService = {
       return hashedToken;
     },
 
-    async verifyUserByToken(hashedToken, next) {
+    async verifyUserByToken(hashedToken) {
       const user = await User.findOne({
         forgotPasswordToken: hashedToken,
         forgotPasswordExpires: { $gt: Date.now() },
@@ -400,12 +402,11 @@ const authService = {
         user.forgotPasswordToken = undefined;
         user.forgotPasswordExpires = undefined;
         await user.save();
-        return next(
-          new APIError({
-            status: 400,
-            message: "Token is invalid or has expired, Please request again.",
-          })
-        );
+
+        throw new APIError({
+          status: 400,
+          message: "Token is invalid or has expired, Please request again.",
+        });
       }
 
       return user;
@@ -435,20 +436,18 @@ const authService = {
       return emailData;
     },
 
-    verifyResult(next, resultSendEmail) {
+    verifyResult(resultSendEmail) {
       if (!resultSendEmail) {
-        return next(
-          new APIError({
-            status: 500,
-            message: "Internal server error.",
-          })
-        );
+        throw new APIError({
+          status: 500,
+          message: "Internal server error.",
+        });
       }
     },
   },
   logOut: {
     checkJWT(res, cookies) {
-      if (!cookies?.jwt) return res.status(204); // No Content
+      if (!cookies?.jwt) return res.status(204).send(); // No Content
       return cookies.jwt;
     },
 

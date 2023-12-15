@@ -3,7 +3,6 @@ import notificationService from "@/services/notification.service.js";
 import APIError from "@/utils/APIError.js";
 
 const notificationController = {
-  
   getNotifications: catchAsync(async (req, res, next) => {
     const { userId } = req.params;
     const notifications = await notificationService.getNotifications(userId);

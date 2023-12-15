@@ -55,22 +55,20 @@ const userService = {
   },
 
   getOne: {
-    async verifyUser(next, userId) {
+    async verifyUser(userId) {
       const user = await User.findById(userId)
         .populate({ path: "sessions" })
         .select("-password -__v");
       if (!user) {
-        return next(
-          new APIError({
-            status: 404,
-            message: "No user found with that ID!",
-          })
-        );
+        throw new APIError({
+          status: 404,
+          message: "No user found with that ID!",
+        });
       }
       return user;
     },
 
-    async getImageURL(next, user) {
+    async getImageURL(user) {
       let imageURL;
       if (user.profilePicture) {
         try {
@@ -90,13 +88,13 @@ const userService = {
   },
 
   updateOne: {
-    async verifyAndUpdateUser(next, userId, data) {
+    async verifyAndUpdateUser(userId, data) {
       const user = await User.findByIdAndUpdate(userId, data, {
         new: true,
         runValidators: true,
       });
       if (!user) {
-        return next({
+        throw new APIError({
           status: 404,
           message: "No user found with that ID!",
         });
@@ -106,28 +104,24 @@ const userService = {
   },
 
   deleteOne: {
-    async verifyUserAndDelete(next, userId) {
+    async verifyUserAndDelete(userId) {
       const user = await User.findByIdAndDelete(userId);
       if (!user) {
-        return next(
-          new APIError({
-            status: 404,
-            message: "No user found with that ID.",
-          })
-        );
+        throw new APIError({
+          status: 404,
+          message: "No user found with that ID.",
+        });
       }
     },
   },
 
   updateMe: {
-    async verifyData(next, data) {
+    async verifyData(data) {
       if (data?.password || data?.email) {
-        return next(
-          new APIError({
-            status: 400,
-            message: "This route is not for update password or email.",
-          })
-        );
+        throw new APIError({
+          status: 400,
+          message: "This route is not for update password or email.",
+        });
       }
       const filteredData = filteredObj(
         data,
@@ -151,15 +145,13 @@ const userService = {
   },
 
   uploadImage: {
-    verifyFile(req, next) {
+    verifyFile(req) {
       const file = req.files;
       if (!file) {
-        return next(
-          new APIError({
-            status: 400,
-            message: "Image is required!",
-          })
-        );
+        throw new APIError({
+          status: 400,
+          message: "Image is required!",
+        });
       }
       return file;
     },
@@ -184,12 +176,10 @@ const userService = {
           profileImage[0].mimetype
         );
       } catch (err) {
-        return next(
-          new APIError({
-            status: "400",
-            message: "Upload image fail. Please try again later.",
-          })
-        );
+        throw new APIError({
+          status: "400",
+          message: "Upload image fail. Please try again later.",
+        });
       }
 
       user.profilePicture = imageName;
@@ -199,31 +189,27 @@ const userService = {
   },
 
   updateEmail: {
-    async verifyUser(next, data) {
+    async verifyUser(data) {
       const { currentEmail } = data;
       const user = await User.findOne({ email: currentEmail });
       if (!user) {
-        return next(
-          new APIError({
-            status: 401,
-            message: "User not found!",
-          })
-        );
+        throw new APIError({
+          status: 401,
+          message: "User not found!",
+        });
       }
       return user;
     },
 
-    async verifyNewEmail(next, data) {
+    async verifyNewEmail(data) {
       const { email } = data;
       const newEmail = email;
       const userWithEmail = await User.findOne({ email: newEmail });
       if (userWithEmail) {
-        return next(
-          new APIError({
-            status: 409, // Indicates a conflict
-            message: "Email address is already in use by another user.",
-          })
-        );
+        throw new APIError({
+          status: 409, // Indicates a conflict
+          message: "Email address is already in use by another user.",
+        });
       }
       return newEmail;
     },
@@ -242,14 +228,12 @@ const userService = {
       return emailData;
     },
 
-    verifyResultSendEmail(next, resultSendEmail) {
+    verifyResultSendEmail(resultSendEmail) {
       if (!resultSendEmail) {
-        return next(
-          new APIError({
-            status: 500,
-            message: "Internal server error.",
-          })
-        );
+        throw new APIError({
+          status: 500,
+          message: "Internal server error.",
+        });
       }
     },
 
@@ -262,19 +246,17 @@ const userService = {
   },
 
   logOutOne: {
-    async verifySession(next, user, data) {
+    async verifySession(user, data) {
       const { sessionId } = data;
       const session = await Session.findOneAndDelete({
         _id: sessionId,
         userId: user._id.toString(),
       });
       if (!session) {
-        return next(
-          new APIError({
-            status: 404,
-            message: "Device not found!",
-          })
-        );
+        throw new APIError({
+          status: 404,
+          message: "Device not found!",
+        });
       }
       return session;
     },
@@ -284,25 +266,21 @@ const userService = {
     async getCurrentUser(req) {
       const user = await User.findById(req.user._id);
       if (!user) {
-        return next(
-          new APIError({
-            status: 404,
-            message: "User not found!",
-          })
-        );
+        throw new APIError({
+          status: 404,
+          message: "User not found!",
+        });
       }
       return user;
     },
 
-    async verifyAndUpdatePassword(user, data, next) {
+    async verifyAndUpdatePassword(user, data) {
       const { currentPassword, newPassword } = data;
       if (!(await user.verifyPassword(currentPassword))) {
-        return next(
-          new APIError({
-            status: 401,
-            message: "Your current password is incorrect.",
-          })
-        );
+        throw new APIError({
+          status: 401,
+          message: "Your current password is incorrect.",
+        });
       }
       user.password = newPassword;
       await user.save();
@@ -315,46 +293,38 @@ const userService = {
   },
 
   enable2FA: {
-    async verifyUser(req, next, action) {
+    async verifyUser(req, action) {
       const user = await User.findById(req.user._id);
       if (!user) {
-        return next(
-          new APIError({
-            status: 404,
-            message: "User not found!",
-          })
-        );
+        throw new APIError({
+          status: 404,
+          message: "User not found!",
+        });
       } else if (user && user.enable2FA && action === "enable") {
-        return next(
-          new APIError({
-            status: 400,
-            message: "Your 2-Step-Verification is already enabled.",
-          })
-        );
+        throw new APIError({
+          status: 400,
+          message: "Your 2-Step-Verification is already enabled.",
+        });
       } else if (user && !user.enable2FA && action === "disable") {
-        return next(
-          new APIError({
-            status: 400,
-            message: "Your 2-Step-Verification is already disabled.",
-          })
-        );
+        throw new APIError({
+          status: 400,
+          message: "Your 2-Step-Verification is already disabled.",
+        });
       }
       return user;
     },
 
-    async verifyPassword(next, user, data) {
+    async verifyPassword(user, data) {
       const { password } = data;
       if (
         user &&
         !(await user.verifyPassword(password)) &&
         user.signupMethod === "email"
       ) {
-        return next(
-          new APIError({
-            status: 401,
-            message: "Please double check your password and try again.",
-          })
-        );
+        throw new APIError({
+          status: 401,
+          message: "Please double check your password and try again.",
+        });
       }
     },
 
@@ -372,14 +342,12 @@ const userService = {
       return emailData;
     },
 
-    confirmResultSendEmail(next, resultSendEmail) {
+    confirmResultSendEmail(resultSendEmail) {
       if (!resultSendEmail) {
-        return next(
-          new APIError({
-            status: 500,
-            message: "Internal server error!",
-          })
-        );
+        throw new APIError({
+          status: 500,
+          message: "Internal server error!",
+        });
       }
     },
 
@@ -395,15 +363,13 @@ const userService = {
   },
 
   deleteAccount: {
-    async verifyPassword(next, data, user) {
+    async verifyPassword(data, user) {
       const { password } = data;
       if (!(await user.verifyPassword(password))) {
-        return next(
-          new APIError({
-            status: 400,
-            message: "Password is incorrect!",
-          })
-        );
+        throw new APIError({
+          status: 400,
+          message: "Password is incorrect!",
+        });
       }
     },
 
