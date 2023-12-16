@@ -72,6 +72,6 @@ router
     orderController.updateOrder
   )
   .delete(orderController.deleteOrder);
-
+router.route("/orders").get(orderController.getSellerOrder);
 
 export default router;

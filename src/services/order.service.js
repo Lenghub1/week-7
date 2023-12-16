@@ -18,7 +18,7 @@ import {
   getEmailSubjectAndBody,
   sendEmail,
 } from "@/utils/emailHelper.js";
-
+import Product from "@/models/product.model.js";
 dotenv.config();
 
 const orderService = {
@@ -126,6 +126,35 @@ const orderService = {
         status: 403,
         message: "You don't have permission to perform this action.",
       });
+    }
+  },
+  getSellerOrder: async () => {
+    try {
+      const orders = await Order.find({});
+      const seller = [];
+
+      // Check if orders exist
+      if (!orders || orders.length === 0) {
+        throw new APIError({
+          status: 404,
+          message: "Seller orders not found.",
+        });
+      }
+
+      for (const order of orders) {
+        if (order.cartItems && order.cartItems.length > 0) {
+          for (const item of order.cartItems) {
+            const product = await Product.findById(item.productId);
+            seller.push(product.sellerId);
+          }
+        }
+      }
+
+      return seller;
+    } catch (error) {
+      // Handle errors here
+      console.error(error);
+      throw error; // You may want to handle or customize the error further
     }
   },
   deleteOrder: async (orderId) => {

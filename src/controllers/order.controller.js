@@ -8,7 +8,7 @@ const orderController = {
   updateOrder: factory.updateById(orderService.updateOrder),
   userUpdateOrder: factory.updateById(orderService.userUpdateOrder),
   deleteOrder: factory.deleteById(orderService.deleteOrder),
-
+  getSellerOrder: factory.getAll(orderService.getSellerOrder),
 };
 
 export default orderController;
