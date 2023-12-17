@@ -207,7 +207,7 @@ const authController = {
   logOut: catchAsync(async (req, res, next) => {
     const cookies = req?.cookies;
     const refreshToken = await authService.logOut.checkJWT(res, cookies);
-    await authService.logOut.deleteSession(res, refreshToken);
+    await authService.logOut.deleteSession(refreshToken);
     authController.clearCookie(res);
     return res.status(204).send();
   }),

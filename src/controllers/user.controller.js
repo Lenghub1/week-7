@@ -41,7 +41,7 @@ const userController = {
       user.imageURL = imageURL;
       return res.status(200).json({
         status: "success",
-        data: { user },
+        data: { user: { ...user, imageURL } },
       });
     }
     return res.status(200).json({

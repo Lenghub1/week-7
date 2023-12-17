@@ -7,20 +7,16 @@ const isRecentlySignup = catchAsync(async (req, res, next) => {
   const { email } = req.body;
   const user = await User.findOne({ email });
   if (!user) {
-    return next(
-      new APIError({
-        status: 404,
-        message: "Please Sign up first!",
-      })
-    );
+    throw new APIError({
+      status: 404,
+      message: "Please Sign up first!",
+    });
   } else if (user.accountVerify === true) {
-    return next(
-      new APIError({
-        status: 400,
-        message:
-          "Your account is already verified. No need to resend activation.",
-      })
-    );
+    throw new APIError({
+      status: 400,
+      message:
+        "Your account is already verified. No need to resend activation.",
+    });
   }
   // set updatedAt field to current date to delay expiration time of activate account
   user.updatedAt = Date.now();

@@ -400,12 +400,7 @@ const authService = {
         forgotPasswordToken: hashedToken,
         forgotPasswordExpires: { $gt: Date.now() },
       });
-
       if (!user) {
-        user.forgotPasswordToken = undefined;
-        user.forgotPasswordExpires = undefined;
-        await user.save();
-
         throw new APIError({
           status: 400,
           message: "Token is invalid or has expired, Please request again.",
@@ -417,7 +412,7 @@ const authService = {
 
     async createNewPassword(data, user) {
       const { newPassword } = data;
-      user.password = newPassword;
+      user.password = await bcrypt.hash(newPassword, 12);
       user.forgotPasswordToken = undefined;
       user.forgotPasswordExpires = undefined;
       await user.save();
@@ -454,7 +449,7 @@ const authService = {
       return cookies.jwt;
     },
 
-    async deleteSession(res, refreshToken) {
+    async deleteSession(refreshToken) {
       await Session.findOneAndDelete({ refreshToken });
     },
   },

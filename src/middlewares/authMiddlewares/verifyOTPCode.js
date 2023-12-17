@@ -13,21 +13,17 @@ const verifyOTPCode = catchAsync(async (req, res, next) => {
     OTPExpires: { $gt: Date.now() },
   });
   if (!user) {
-    return next(
-      new APIError({
-        status: 400,
-        message: "OTP code is expired!",
-      })
-    );
+    throw new APIError({
+      status: 400,
+      message: "OTP code is expired!",
+    });
   }
   const resultCompare = await bcrypt.compare(OTP, user.OTP);
   if (!resultCompare) {
-    return next(
-      new APIError({
-        status: 500,
-        message: "Incorrect OTP code.",
-      })
-    );
+    throw new APIError({
+      status: 500,
+      message: "Incorrect OTP code.",
+    });
   }
   user.OTP = undefined;
   user.OTPExpires = undefined;

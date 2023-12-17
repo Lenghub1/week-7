@@ -7,12 +7,10 @@ import authService from "../../services/auth.service.js";
 const is2FA = catchAsync(async (req, res, next) => {
   const user = await User.findById(req.user._id);
   if (!user) {
-    return next(
-      new APIError({
-        status: 401,
-        message: "User not found.",
-      })
-    );
+    throw new APIError({
+      status: 401,
+      message: "User not found.",
+    });
   } else if (user && user.enable2FA === false) {
     return next();
   }
@@ -23,10 +21,12 @@ const is2FA = catchAsync(async (req, res, next) => {
   authService.twoFA.verifyResult(next, resultSendEmail);
 
   res.status(200).json({
-    message: "Please check your email to confirm OTP code.",
+    status: "success",
     data: {
-      email: user.email,
-      loginMethod: req.user.loginMethod,
+      user: {
+        email: user.email,
+        loginMethod: req.user.loginMethod,
+      },
     },
   });
 });

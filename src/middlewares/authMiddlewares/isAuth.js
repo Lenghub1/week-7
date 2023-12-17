@@ -13,23 +13,19 @@ const isAuth = catchAsync(async (req, res, next) => {
   const authHeader = req.headers.authorization || req.headers.Authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return next(
-      new APIError({
-        status: 401,
-        message: "You are not logged in! Please log in to get access",
-      })
-    );
+    throw new APIError({
+      status: 401,
+      message: "You are not logged in! Please log in to get access",
+    });
   }
 
   const token = authHeader.split(" ")[1];
   const session = await Session.findOne({ accessToken: token });
   if (!session) {
-    return next(
-      new APIError({
-        status: 401,
-        message: "Session expired! Please log in again.",
-      })
-    );
+    throw new APIError({
+      status: 401,
+      message: "Session expired! Please log in again.",
+    });
   }
 
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, async (err, decoded) => {
@@ -37,12 +33,10 @@ const isAuth = catchAsync(async (req, res, next) => {
     const currentUser = await User.findById(decoded.userId);
 
     if (!currentUser || currentUser.active === false) {
-      return next(
-        new APIError({
-          status: 401,
-          message: "The user belonging to this token does no longer exist.",
-        })
-      );
+      throw new APIError({
+        status: 401,
+        message: "The user belonging to this token does no longer exist.",
+      });
     }
 
     req.user = currentUser;

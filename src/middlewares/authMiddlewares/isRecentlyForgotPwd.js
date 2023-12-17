@@ -7,19 +7,15 @@ const isRecentlyForgotPwd = catchAsync(async (req, res, next) => {
   const { email } = req.body;
   const user = await User.findOne({ email });
   if (!user) {
-    return next(
-      new APIError({
-        status: 404,
-        message: "User not found!",
-      })
-    );
+    throw new APIError({
+      status: 404,
+      message: "User not found!",
+    });
   } else if (user && !user.forgotPasswordExpires) {
-    return next(
-      new APIError({
-        status: 400,
-        message: "User with this email was not requested to reset password.",
-      })
-    );
+    throw new APIError({
+      status: 400,
+      message: "User with this email was not requested to reset password.",
+    });
   }
   req.user = user;
   return next();
