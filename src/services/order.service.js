@@ -128,6 +128,79 @@ const orderService = {
       });
     }
   },
+  getUserOrder: async (userId) => {
+    const orders = await orderService.getAllOrders();
+
+    const userOrders = orders.filter(
+      (order) => order.userId.toString() === userId.sellerId
+    );
+
+    if (userOrders.length === 0) {
+      throw new APIError({ status: 404, message: "Order not found." });
+    }
+    return userOrders;
+  },
+
+  getSellerOrder: async () => {
+    try {
+      const orders = await Order.find({}).populate(
+        "cartItems.productId",
+        "sellerId"
+      );
+      const sellerOrders = [];
+
+      if (!orders || orders.length === 0) {
+        throw new APIError({
+          status: 404,
+          message: "Seller orders not found.",
+        });
+      }
+
+      for (const order of orders) {
+        if (order.cartItems && order.cartItems.length > 0) {
+          const uniqueSellerIds = new Set(
+            order.cartItems.map((item) => item.productId.sellerId)
+          );
+
+          const sellerOrder = {
+            orderId: order._id,
+            Orders: order.cartItems.map((item) => ({
+              productId: item.productId._id,
+              quantity: item.quantity,
+              itemPrice: item.itemPrice,
+              _id: item._id,
+            })),
+            sellerId: [...uniqueSellerIds],
+          };
+
+          sellerOrders.push(sellerOrder);
+        }
+      }
+
+      return {
+        message: "Data Retrieved",
+        results: sellerOrders.length,
+        docs: sellerOrders,
+      };
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+  getSellerOrderById: async (userId) => {
+    const sellerOrders = await orderService.getSellerOrder();
+
+    const filteredOrders = sellerOrders.docs.filter((order) =>
+      order.sellerId.some((id) => id.toString() === userId.sellerId)
+    );
+
+    return {
+      message: "Filtered Data Retrieved",
+      results: filteredOrders.length,
+      docs: filteredOrders,
+    };
+  },
+
   deleteOrder: async (orderId) => {
     const order = await Order.findByIdAndDelete(orderId);
     if (!order)

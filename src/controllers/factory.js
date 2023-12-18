@@ -100,11 +100,10 @@ const factory = {
       const docs = await getAllDocsService(req.query);
       res.json({
         message: "Data Retrieved",
-        results: docs.length,
+        results: docs?.length,
         docs,
       });
     });
   },
 };
-
 export default factory;

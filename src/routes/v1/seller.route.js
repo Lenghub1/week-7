@@ -66,12 +66,13 @@ router
   .route("/orders/:id")
   .get(orderController.getOrder)
   .patch(
-    isAuth,
+    isAuth, //req.user
     verifyRoles(ROLE),
     verifySellerStatus(),
     orderController.updateOrder
   )
   .delete(orderController.deleteOrder);
 
+router.route("/orders").get(isAuth, orderController.getSellerOrderById);
 
 export default router;
