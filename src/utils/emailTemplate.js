@@ -40,3 +40,13 @@ export function generateCartItemHTMLRow(cartItem) {
 </div>
   `;
 }
+export function cancelledRow(cartItem) {
+  return `
+  <tr>
+    <td> ${cartItem.productTitle}</td>
+    <td>${cartItem._doc.quantity}</td>
+    <td>$${cartItem.itemPrice.toFixed(2)}</td>
+    <td>$${(cartItem.itemPrice * cartItem._doc.quantity).toFixed(2)}</td>
+  </tr>
+  `;
+}

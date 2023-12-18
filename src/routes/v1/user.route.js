@@ -55,7 +55,10 @@ router.use("/:userId/notification", notificationRouter);
 
 // update user update order
 
-router.route("/order/:id").patch(orderController.userUpdateOrder);
+router
+  .route("/order/:id")
+  .get(orderController.getOrder)
+  .patch(orderController.userUpdateOrder);
 router.route("/order").get(isAuth, orderController.getUserOrder);
 // Admin interact with users ----
 router.use(verifyRoles("admin"));

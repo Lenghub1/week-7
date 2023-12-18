@@ -63,6 +63,10 @@ const defaultRoutes = [
     route: userRoute,
   },
   {
+    path: "/orders",
+    route: orderRoute,
+  },
+  {
     path: "/admin/products",
     route: productRouteAdmin,
   },

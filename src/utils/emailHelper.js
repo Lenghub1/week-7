@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { getFileSignedUrl } from "../config/s3.js";
 import Product from "@/models/product.model.js";
+import APIError from "./APIError.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,7 +38,8 @@ const getEmailSubjectAndBody = async (
   order,
   user,
   address,
-  cartItemsHTML
+  cartItemsHTML,
+  cancelRow
 ) => {
   switch (status) {
     case "approved":
@@ -52,7 +54,17 @@ const getEmailSubjectAndBody = async (
       return ["Order Shipped", "Your Order has been shipped."];
 
     case "cancelled":
-      return ["Order Cancelled", "Your Order has been cancelled."];
+      console.log(cancelRow);
+      return [
+        "Order Cancelled",
+        await getEmailTemplate("orderCancelled").then((template) =>
+          template
+            .replace("${CancelledRow}", `<ul>${cancelRow}</ul>`)
+            .replace("${orderId}", order.tracking_number)
+            .replace("${total}", order.totalPrice)
+            .replace("${payment}", order.paymentMethod)
+        ),
+      ];
 
     case "delivered":
       return [

@@ -4,6 +4,7 @@ import sendEmailWithNodemailer from "@/utils/email.js";
 import User from "@/models/user.model.js";
 import Notification from "@/models/notification.model.js";
 import {
+  cancelledRow,
   generateCartItemHTML,
   generateCartItemHTMLRow,
 } from "@/utils/emailTemplate.js";
@@ -54,12 +55,15 @@ const orderService = {
     const user = await User.findById(order.userId);
     const address = await Address.findById(order.shipping.address);
 
+    const cancelRow = cartItemsWithDetails.map(cancelledRow).join("");
+    console.log(cancelRow);
     const [emailSubject, emailBody] = await getEmailSubjectAndBody(
       status,
       order,
       user,
       address,
-      cartItemsHTML
+      cartItemsHTML,
+      cancelRow
     );
 
     const mailOptions = {
@@ -97,7 +101,7 @@ const orderService = {
       const cartItemsHTML = cartItemsWithDetails
         .map(generateCartItemHTMLRow)
         .join("");
-
+      const cancelRow = cartItemsHTML.map(cancelledRow).join("");
       const { status } = updatedOrder.shipping;
       const seller = await User.findById(cartItemsWithDetails[0]?.sellerId);
       const address = await Address.findById(updatedOrder.shipping.address);
@@ -107,7 +111,8 @@ const orderService = {
         updatedOrder,
         seller,
         address,
-        cartItemsHTML
+        cartItemsHTML,
+        cancelRow
       );
 
       const mailOptions = {
@@ -144,6 +149,7 @@ const orderService = {
   getSellerOrder: async () => {
     try {
       const orders = await Order.find({}).populate(
+        // populate (path that ref , select)
         "cartItems.productId",
         "sellerId"
       );
@@ -158,6 +164,7 @@ const orderService = {
 
       for (const order of orders) {
         if (order.cartItems && order.cartItems.length > 0) {
+          // on this part i can access sellerId directly from produdctId because populate
           const uniqueSellerIds = new Set(
             order.cartItems.map((item) => item.productId.sellerId)
           );
