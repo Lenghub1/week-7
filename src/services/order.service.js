@@ -78,7 +78,9 @@ const orderService = {
     return order;
   },
   userUpdateOrder: async (orderId, orderBody) => {
+
     const order = await Order.findById(orderId);
+    
     if (!order)
       throw new APIError({ status: 404, message: "Order not found." });
     if (
@@ -101,7 +103,7 @@ const orderService = {
       const cartItemsHTML = cartItemsWithDetails
         .map(generateCartItemHTMLRow)
         .join("");
-      const cancelRow = cartItemsHTML.map(cancelledRow).join("");
+      const cancelRow = cartItemsWithDetails.map(cancelledRow).join("");
       const { status } = updatedOrder.shipping;
       const seller = await User.findById(cartItemsWithDetails[0]?.sellerId);
       const address = await Address.findById(updatedOrder.shipping.address);
@@ -171,12 +173,15 @@ const orderService = {
 
           const sellerOrder = {
             orderId: order._id,
+            paymentMethod: order.paymentMethod,
             Orders: order.cartItems.map((item) => ({
               productId: item.productId._id,
               quantity: item.quantity,
               itemPrice: item.itemPrice,
               _id: item._id,
             })),
+            shipping: order.shipping,
+            createAt: order.createAt,
             sellerId: [...uniqueSellerIds],
           };
 
@@ -201,10 +206,16 @@ const orderService = {
       order.sellerId.some((id) => id.toString() === userId.sellerId)
     );
 
+    // Remove sellerId from each order
+    const ordersWithoutSellerId = filteredOrders.map((order) => {
+      const { sellerId, ...orderWithoutSellerId } = order;
+      return orderWithoutSellerId;
+    });
+
     return {
       message: "Filtered Data Retrieved",
-      results: filteredOrders.length,
-      docs: filteredOrders,
+      results: ordersWithoutSellerId.length,
+      docs: ordersWithoutSellerId,
     };
   },
 
