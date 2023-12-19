@@ -165,12 +165,13 @@ const orderService = {
       }
 
       for (const order of orders) {
+        
         if (order.cartItems && order.cartItems.length > 0) {
           // on this part i can access sellerId directly from produdctId because populate
           const uniqueSellerIds = new Set(
             order.cartItems.map((item) => item.productId.sellerId)
           );
-
+          
           const sellerOrder = {
             orderId: order._id,
             paymentMethod: order.paymentMethod,
@@ -181,6 +182,7 @@ const orderService = {
               _id: item._id,
             })),
             shipping: order.shipping,
+
             createAt: order.createAt,
             sellerId: [...uniqueSellerIds],
           };
@@ -201,7 +203,7 @@ const orderService = {
   },
   getSellerOrderById: async (userId) => {
     const sellerOrders = await orderService.getSellerOrder();
-
+    
     const filteredOrders = sellerOrders.docs.filter((order) =>
       order.sellerId.some((id) => id.toString() === userId.sellerId)
     );

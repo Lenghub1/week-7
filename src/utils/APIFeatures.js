@@ -5,6 +5,7 @@
 import mongoose from "mongoose";
 
 class APIFeatures {
+  
   constructor(model, queryStr, isAdmin = false, generatePipeline) {
     this.model = model;
     this.aggPipe = [];

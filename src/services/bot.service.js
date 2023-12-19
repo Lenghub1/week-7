@@ -2,35 +2,17 @@ import { SessionsClient, EntityTypesClient } from "@google-cloud/dialogflow";
 import APIError from "@/utils/APIError.js";
 import Order from "@/models/order.model.js";
 
-class BotService {
-  constructor(projectId, sessionId, languageCode) {
-    // Use the GOOGLE_APPLICATION_CREDENTIALS environment variable to authenticate
+function BotService(projectId, sessionId, languageCode) {
+  const sessionClient = new SessionsClient();
+  const sessionPath = sessionClient.projectAgentSessionPath(
+    projectId,
+    sessionId
+  );
+  const entityTypesClient = new EntityTypesClient();
+  let isTrackOrder = false;
+  let isOrder = false;
 
-    this.sessionClient = new SessionsClient();
-    this.sessionPath = this.sessionClient.projectAgentSessionPath(
-      projectId,
-      sessionId
-    );
-    this.languageCode = languageCode;
-    this.isTrackOrder = false;
-    this.projectId = projectId;
-    this.entityTypesClient = new EntityTypesClient();
-    this.isOrder = false;
-  }
-  processTrackOrder() {
-    this.isTrackOrder = true;
-  }
-  processTrackOrderDone() {
-    this.isTrackOrder = false;
-  }
-
-  procressOrder() {
-    this.isOrder = true;
-  }
-  procressOrderDone() {
-    this.isOrder = false;
-  }
-  async getOrderStatusByShippingId(trackNumber) {
+  async function getOrderStatusByShippingId(trackNumber) {
     try {
       const order = await Order.findOne({
         tracking_number: trackNumber,
@@ -39,7 +21,7 @@ class BotService {
       if (order) {
         return order.shipping.status;
       } else {
-        return "Shipping ID not found";
+        return "NoFound";
       }
     } catch (error) {
       console.error(error);
@@ -47,36 +29,35 @@ class BotService {
     }
   }
 
-  async detectTextIntent(text) {
+  async function detectTextIntent(text) {
     const request = {
-      session: this.sessionPath,
+      session: sessionPath,
       queryInput: {
         text: {
           text,
-          languageCode: this.languageCode,
+          languageCode: languageCode,
         },
       },
     };
     try {
-      const [response] = await this.sessionClient.detectIntent(request);
+      const [response] = await sessionClient.detectIntent(request);
       return response.queryResult;
     } catch (error) {
       console.error("Error detecting text intent:", error);
       throw new APIError({ status: 500, message: "Internal server error" });
     }
   }
-  async addEntityValues(entityTypeName, newValues) {
+
+  async function addEntityValues(entityTypeName, newValues) {
     try {
-      // Retrieve the existing entity type
-      const [existingEntityType] = await this.entityTypesClient.getEntityType({
-        name: `projects/${this.projectId}/locations/global/agent/entityTypes/${entityTypeName}`,
+      const [existingEntityType] = await entityTypesClient.getEntityType({
+        name: `projects/${projectId}/locations/global/agent/entityTypes/${entityTypeName}`,
       });
 
       if (!existingEntityType) {
         throw new Error(`Entity type ${entityTypeName} not found.`);
       }
 
-      // Add the new values to the existing entity type
       const updatedEntityType = {
         ...existingEntityType,
         entities: [
@@ -85,8 +66,7 @@ class BotService {
         ],
       };
 
-      // Update the entity type in Dialogflow
-      await this.entityTypesClient.updateEntityType({
+      await entityTypesClient.updateEntityType({
         entityType: updatedEntityType,
         updateMask: {
           paths: ["entities"],
@@ -96,6 +76,13 @@ class BotService {
       console.error(`Error adding entity values: ${error.message}`);
     }
   }
-}
 
+  return {
+    isTrackOrder,
+    isOrder,
+    getOrderStatusByShippingId,
+    detectTextIntent,
+    addEntityValues,
+  };
+}
 export default BotService;

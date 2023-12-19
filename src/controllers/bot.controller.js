@@ -20,25 +20,26 @@ export default async function handleTextQuery(req, res) {
 
         break;
       case "create.order":
-        dialogflowService.procressOrder(result);
+        dialogflowService.isOrder = true;
         break;
       case "track.order":
-        dialogflowService.processTrackOrder(result);
+        dialogflowService.isTrackOrder = true;
         break;
       case "order.id":
         if (!dialogflowService.isTrackOrder) {
           result.fulfillmentText = "Please start tracking an order first.";
         } else {
           const trackId = result.parameters.fields.id.stringValue;
-          console.log(trackId);
           const shipping =
             await dialogflowService.getOrderStatusByShippingId(trackId);
-          if (shipping) {
-            result.fulfillmentText = `Thank you ! , here is your status ${shipping}`;
+
+          if (shipping === "NoFound") {
+            result.fulfillmentText = "Sorry, we can't find your ShippingId";
           } else {
-            result.fulfillmentMessages = "Sorry we cant find your ShippingId";
+            result.fulfillmentText = `Thank you! Here is your status: ${shipping}`;
           }
-          dialogflowService.processTrackOrderDone(result);
+
+          dialogflowService.isTrackOrder = false;
         }
 
         break;
@@ -46,9 +47,8 @@ export default async function handleTextQuery(req, res) {
         result.fulfillmentText = result.fulfillmentText;
         break;
       case "order.completed":
-        dialogflowService.procressOrderDone(result);
+        dialogflowService.isOrder = false;
         result.fulfillmentText = "Do you want to checkout ?";
-
         break;
       default:
     }
